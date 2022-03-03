@@ -25,7 +25,15 @@ SECRET_KEY = 'django-insecure-fdo+5i6ua$2e%2mkv9ivccf5e=i9k7wqqg(^(9wgdlmf_-t!&&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1', 
+    '192.168.0.32',  
+    '192.168.0.33',
+    '192.168.0.16',
+    '0.0.0.0:8000'
+    ]
+
+# python manage.py runserver 192.168.0.32:8081
 
 
 # Application definition
@@ -34,10 +42,12 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    #'django.contrib.sessions', legacy not used
+    'django.contrib.sessions', #legacy not used? - used for admin
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'playground',
+    'rest_framework',
+    #'playground',
+    'myAPI',
     'debug_toolbar',
 ]
 
