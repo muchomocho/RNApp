@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Recipe, UserAccount
+from .models import Ingredients, Recipe, RecipeSteps, Tag, UserAccount, Comment
 
 '''
 class UserAccountSerializer(serializers.Serializer):
@@ -16,7 +16,7 @@ class UserAccountSerializer(serializers.Serializer):
         instance.email = validated_data.get('email', instance.email)
 '''
 
-class UserAccountModelSerializer(serializers.ModelSerializer):
+class UserAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAccount
         fields = ['user_ID', 'email']
@@ -25,3 +25,23 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ['id', 'user_ID', 'title', 'main_image_url']
+
+class RecipeStepSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecipeSteps
+        fields = ['id', 'recipe_ID', 'step_number', 'text']
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'recipe_ID', 'text']
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'user_ID', 'recipe_ID', 'text', 'date']
+
+class IngredientsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredients
+        fields = ['id', 'recipe_ID', 'ingredient_name', 'ingredient_quantity', 'ingredient_unit']
