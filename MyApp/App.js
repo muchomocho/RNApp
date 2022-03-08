@@ -1,14 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import Classtest, { ClassTest } from './Screens/ClassTest';
-import Home from './Screens/Home';
-import Testing from './Screens/testing';
+import { NavigationContainer } from '@react-navigation/native';
+import Recipe from './Screens/Recipe';
+import SingIn from './Screens/SignIn'
+import BottomTab from './Components/BottonTab/BottomTab';
+import { backgroundColor } from 'react-native/Libraries/Components/View/ReactNativeStyleAttributes';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Home/>
-    </View>
+    <NavigationContainer style={styles.container}> 
+      <BottomTab style={styles.container} />
+    </NavigationContainer>
   );
 }
 
@@ -17,8 +19,13 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
-
-    alignItems: 'stretch',
+    alignItems: 'center',
     justifyContent: 'center',
   },
+
+  tabs: {
+    height: '20%',
+    width: '100%',
+    backgroundColor: '#000' 
+  }
 });
