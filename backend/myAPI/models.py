@@ -32,7 +32,7 @@ class UserData(models.Model):
     ]
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
 
-class UserRecords(models.Model):
+class UserRecord(models.Model):
     user_ID = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     date = models.DateField()
@@ -89,7 +89,7 @@ class Recipe(models.Model):
     def __str__(self):
         return self.title
 
-class RecipeSteps(models.Model):
+class RecipeStep(models.Model):
     recipe_ID = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     step_number = models.IntegerField()
     text = models.CharField(max_length=255)
@@ -104,7 +104,7 @@ class Comment(models.Model):
     text = models.TextField(max_length=300)
     date = models.DateField()
 
-class Ingredients(models.Model):
+class Ingredient(models.Model):
     recipe_ID = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     ingredient_name = models.CharField(max_length=20)
     ingredient_quantity = models.IntegerField()

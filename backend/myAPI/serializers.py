@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Ingredients, Recipe, RecipeSteps, Tag, UserAccount, Comment
+from .models import Ingredient, Recipe, RecipeStep, Tag, UserRecord, UserAccount, Comment
 
 '''
 class UserAccountSerializer(serializers.Serializer):
@@ -19,7 +19,53 @@ class UserAccountSerializer(serializers.Serializer):
 class UserAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAccount
-        fields = ['user_ID', 'email']
+        fields = ['user_ID', 'email', 'password']
+
+class UserRecordsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserRecord
+        fields = [
+            'id', 'user_ID', 'name', 'date',
+            'energy',
+
+            # macro nutrients in grams
+            'protein',
+            'fat',
+            'saturated_fat',
+            'carbohydrate',
+            'free_sugars',
+            'salt',
+            'dietry_fibre',
+
+            # vitamins
+            # micrograms
+            'vitamin_a',
+            'vitamin_b_12',
+            'folate',
+            'vitamin_d',
+            # milligrams
+            'thiamin',
+            'riboflavin',
+            'niacin_equivalent',
+            'vitamin_b_6',
+            'vitamin_c',
+
+            # minerals
+            # milligrams
+            'iron',
+            'calcium',
+            'magnesium',
+            'potassium',
+            'zinc',
+            'copper',
+            'phosphorus',
+            'chloride',
+            # micrograms
+            'iodine',
+            'selenium',
+            # grams 
+            'sodium',
+        ]
 
 class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,7 +74,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class RecipeStepSerializer(serializers.ModelSerializer):
     class Meta:
-        model = RecipeSteps
+        model = RecipeStep
         fields = ['id', 'recipe_ID', 'step_number', 'text']
 
 class TagSerializer(serializers.ModelSerializer):
@@ -41,7 +87,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'user_ID', 'recipe_ID', 'text', 'date']
 
-class IngredientsSerializer(serializers.ModelSerializer):
+class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Ingredients
+        model = Ingredient
         fields = ['id', 'recipe_ID', 'ingredient_name', 'ingredient_quantity', 'ingredient_unit']

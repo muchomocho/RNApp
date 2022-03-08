@@ -1,6 +1,6 @@
 from cgitb import lookup
-from .models import Recipe, UserAccount
-from .serializers import RecipeSerializer, UserAccountModelSerializer
+from .models import Comment, Ingredient, Recipe, RecipeStep, UserAccount, Tag, UserRecord
+from .serializers import CommentSerializer, IngredientSerializer, RecipeSerializer, RecipeStepSerializer, UserAccountSerializer, TagSerializer, UserRecordsSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -14,9 +14,35 @@ from myAPI import serializers
 
 # Create your views here.
 
+class UserAccountViewSet(viewsets.ModelViewSet):
+    queryset = UserAccount.objects.all()
+    serializer_class = UserAccountSerializer
+
+class UserRecordViewSet(viewsets.ModelViewSet):
+    queryset = UserRecord.objects.all()
+    serializer_class = UserRecordsSerializer
+
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
+class RecipeStepViewSet(viewsets.ModelViewSet):
+    queryset = RecipeStep.objects.all()
+    serializer_class = RecipeStepSerializer
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+class IngredientViewSet(viewsets.ModelViewSet):
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+
+
 
 
 '''
