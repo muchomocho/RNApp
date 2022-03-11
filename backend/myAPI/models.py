@@ -1,20 +1,75 @@
+from django.utils import timezone
 from django.db import models
+from django.conf import settings
+from django.contrib.auth.models import (
+    BaseUserManager, AbstractBaseUser, PermissionsMixin
+)
 
 # Create your models here.
 
-# the account data of the user
-class UserAccount(models.Model):
-    # custom id registered by a user
-    user_ID = models.CharField(max_length=30, primary_key=True)
-    email = models.EmailField()
+"""
+custom user manager required to create users
+https://docs.djangoproject.com/en/4.0/topics/auth/customizing/
+"""
+
+class UserAccountManager(BaseUserManager):
+    
+    def create_user(self, username, email, password):
+        email = self.normalize_email(email)
+        user = self.model(username=username, email=email)
+        user.set_password(password)
+        user.save()
+        return user
+    
+    def create_superuser(self, username, email, password):
+        email = self.normalize_email(email)
+        user = self.model(username=username, email=email)
+        user.set_password(password)
+        
+        user.is_staff = True
+        user.is_admin = True
+
+        user.save()
+        return user
+
+"""
+custom user 
+https://docs.djangoproject.com/en/4.0/topics/auth/customizing/
+django has 'users' as a feature which has log in etc. 
+by extending abstract user, the custom user model can be used for authentication etc.
+"""
+class UserAccount(AbstractBaseUser, PermissionsMixin):
+    # pk is default
+    username = models.CharField(max_length=30, unique=True)
+    email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
+    date_created = models.DateTimeField(default=timezone.now)
+
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
+
+    objects = UserAccountManager()
+
+    # field to be used as username for log in
+    USERNAME_FIELD = 'username'
+    # other fields that are required for creation
+    REQUIRED_FIELDS = ['email']
 
     def __str__(self):
-        return self.user_ID
+        return self.username
+    
+    # required to define permissions on user
+    def has_perm(self, perm, obj=None):
+        return self.is_admin
+    
+    def has_module_perms(self, app_label):
+        return self.is_admin
+
 
 class UserData(models.Model):
     # an account have multiple users, such as family members
-    user_ID = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    username = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     age = models.IntegerField()
 
@@ -33,9 +88,9 @@ class UserData(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
 
 class UserRecord(models.Model):
-    user_ID = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    username = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
-    date = models.DateField()
+    date = models.DateTimeField(default=timezone.now)
 
     # government dietry recommendations per day
     # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/618167/government_dietary_recommendations.pdf
@@ -82,7 +137,7 @@ class UserRecord(models.Model):
 
 
 class Recipe(models.Model):
-    user_ID = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    username = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     main_image_url = models.URLField()
 
@@ -99,10 +154,10 @@ class Tag(models.Model):
     text = models.CharField(max_length=20)
 
 class Comment(models.Model):
-    user_ID = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    username = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     recipe_ID = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     text = models.TextField(max_length=300)
-    date = models.DateField()
+    date_created = models.DateTimeField(default=timezone.now)
 
 class Ingredient(models.Model):
     recipe_ID = models.ForeignKey(Recipe, on_delete=models.CASCADE)

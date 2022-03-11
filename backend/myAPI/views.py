@@ -1,4 +1,5 @@
 from cgitb import lookup
+from os import stat
 from .models import Comment, Ingredient, Recipe, RecipeStep, UserAccount, Tag, UserRecord
 from .serializers import CommentSerializer, IngredientSerializer, RecipeSerializer, RecipeStepSerializer, UserAccountSerializer, TagSerializer, UserRecordsSerializer
 from django.http import Http404
@@ -8,19 +9,122 @@ from rest_framework import status
 from rest_framework import mixins
 from rest_framework import generics
 from rest_framework import viewsets
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.shortcuts import get_object_or_404
 
 from myAPI import serializers
 
 # Create your views here.
 
+"""
+django rest framework simple jwt 
++ 
+django rest frame work permissions
+"""
+
+class UserAccountPermission(BasePermission):
+    message = 'Editing is for owner only'
+
+    def has_object_permission(self, request, view, obj):
+        print(obj.username)
+        print(request.user.username)
+
+        """
+         useraccount attributes can be seen with such as GET
+        """
+        if request.method in SAFE_METHODS:
+            return True
+        
+        """
+        All other methods are for their owners, needs authentication
+        if anonymous, there are nothing to authenticate so is false
+        """
+        if request.user.is_anonymous:
+            return False
+        
+        """
+        if authentication is passed through the user id of the db entry and the user id of the authentication token is compared
+        """
+
+        return obj.username == request.user.username
+
+"""
+django rest framework tutorials
+"""
+
 class UserAccountViewSet(viewsets.ModelViewSet):
+    permission_classes = [UserAccountPermission]
     queryset = UserAccount.objects.all()
     serializer_class = UserAccountSerializer
+    lookup_field = 'username'
+    
+    """
+    def list(self, request):
+        if request.user.is_authenticated:
+            serializer = UserAccountSerializer(self.queryset.filter(username=request.user.username), many=True)
+            return Response(serializer.data)
+        content = {'requires log in to see'}
+        return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+
+    
+    def list(self, request):
+        if request.user.is_authenticated:
+            queryset = UserAccount.objects.all()
+            serializer = UserAccountSerializer(queryset, many=True)
+            return Response(serializer.data)
+        content = {'requires authentication to see'}
+        return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+    """
+class UserRecordPermission(BasePermission):
+    message = 'Editing and viewing is for owner only'
+
+    def has_object_permission(self, request, view, obj):
+    
+        """
+        All other methods are for their owners, needs authentication
+        if anonymous, there are nothing to authenticate so is false
+        """
+
+        if request.method == 'POST' and not request.user.is_anonymous:
+            return True
+
+        """
+        if authentication is passed through the user id of the db entry and the user id of the authentication token is compared
+        """
+        return obj.username == request.user.username
 
 class UserRecordViewSet(viewsets.ModelViewSet):
+    permission_classes = [UserRecordPermission]
     queryset = UserRecord.objects.all()
     serializer_class = UserRecordsSerializer
+    #lookup_field = 'username'
+
+    """
+    requires login to view data and shows the logged in user's only
+    """
+    def list(self, request):
+        if request.user.is_authenticated:
+            serializer = UserRecordsSerializer(self.queryset.filter(username=request.user.username), many=True)
+            return Response(serializer.data)
+        content = {'requires log in to see'}
+        return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+    
+    def retrieve(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            serializer = UserRecordsSerializer(self.queryset.filter(username=request.user.username), many=True)
+            return Response(serializer.data)
+        content = {'requires log in to see'}
+        return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+    
+    def create(self, request):
+        print('auth bool: ', request.user.is_authenticated)
+        print('yo')
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()

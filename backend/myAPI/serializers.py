@@ -16,16 +16,40 @@ class UserAccountSerializer(serializers.Serializer):
         instance.email = validated_data.get('email', instance.email)
 '''
 
+
+"""
+https://www.django-rest-framework.org/api-guide/serializers/
+"""
 class UserAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAccount
-        fields = ['user_ID', 'email', 'password']
+        fields = ['id', 'username', 'email', 'password']
+        # password cant be viewed with get request
+        # commenetd out for development
+        #extra_kwargs = {'password': {'write_only': True}}
+    
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        instance = self.Meta.model(**validated_data)
+        if password is not None:
+            instance.set_password(password)
+        instance.save()
+        return instance
+    
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        if password is not None:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 class UserRecordsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRecord
         fields = [
-            'id', 'user_ID', 'name', 'date',
+            'id', 'username', 'name', 'date',
             'energy',
 
             # macro nutrients in grams
@@ -67,10 +91,21 @@ class UserRecordsSerializer(serializers.ModelSerializer):
             'sodium',
         ]
 
+    def create(self, validated_data):
+        instance = self.Meta.model(**validated_data)
+        instance.save()
+        return instance
+    
+    def update(self, instance, validated_data):
+        for (key, value) in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance
+
 class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
-        fields = ['id', 'user_ID', 'title', 'main_image_url']
+        fields = ['id', 'username', 'title', 'main_image_url']
 
 class RecipeStepSerializer(serializers.ModelSerializer):
     class Meta:
@@ -85,7 +120,7 @@ class TagSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'user_ID', 'recipe_ID', 'text', 'date']
+        fields = ['id', 'username', 'recipe_ID', 'text', 'date']
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:

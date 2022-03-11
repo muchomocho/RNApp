@@ -2,6 +2,10 @@ from posixpath import basename
 from django.urls import path, include
 from . import views
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 router = DefaultRouter()
 router.register('useraccounts', views.UserAccountViewSet, basename='useraccounts')
@@ -14,6 +18,8 @@ router.register('ingredients', views.IngredientViewSet, basename='ingredients')
 
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     #path('useraccounts/', views.UserAccountList.as_view()),
     #path('useraccounts/<str:pk>/', views.UserAccountDetail.as_view()),
     #path('recipes/', views.RecipeList.as_view()),
