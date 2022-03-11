@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser, PermissionsMixin
 )
+import datetime
 
 # Create your models here.
 
@@ -35,17 +36,18 @@ class UserAccountManager(BaseUserManager):
 """
 custom user 
 https://docs.djangoproject.com/en/4.0/topics/auth/customizing/
-django has 'users' as a feature which has log in etc. 
+django has 'users' for the system as a feature which has log in etc. 
+other libraries such as authentication utilise this, therefore it is advantageeous to use this 
 by extending abstract user, the custom user model can be used for authentication etc.
+authentication is simple jwt, settings in settings and url
 """
 class UserAccount(AbstractBaseUser, PermissionsMixin):
     # pk is default
     username = models.CharField(max_length=30, unique=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
-    date_created = models.DateTimeField(default=timezone.now)
+    date_created = models.DateTimeField(auto_now_add=True)
 
-    is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
@@ -90,7 +92,7 @@ class UserData(models.Model):
 class UserRecord(models.Model):
     username = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
-    date = models.DateTimeField(default=timezone.now)
+    date = models.DateField(auto_now_add=True)
 
     # government dietry recommendations per day
     # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/618167/government_dietary_recommendations.pdf

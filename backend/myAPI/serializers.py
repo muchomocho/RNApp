@@ -49,7 +49,7 @@ class UserRecordsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRecord
         fields = [
-            'id', 'username', 'name', 'date',
+            'username', 'name', 'date',
             'energy',
 
             # macro nutrients in grams
@@ -98,7 +98,8 @@ class UserRecordsSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         for (key, value) in validated_data.items():
-            setattr(instance, key, value)
+            if key not in ['username', 'date', 'name']:
+                setattr(instance, key, value)
         instance.save()
         return instance
 
@@ -120,7 +121,7 @@ class TagSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'username', 'recipe_ID', 'text', 'date']
+        fields = ['id', 'username', 'recipe_ID', 'text']
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:

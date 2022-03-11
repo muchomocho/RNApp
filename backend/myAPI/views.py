@@ -84,20 +84,26 @@ class UserRecordPermission(BasePermission):
         All other methods are for their owners, needs authentication
         if anonymous, there are nothing to authenticate so is false
         """
-
+  
+        print(request.method == 'POST')
+        print(request.user.is_anonymous)
+        print(type(request.user.username))
+        print(type(obj.username.username))
+        print(obj.username == request.user.username)
         if request.method == 'POST' and not request.user.is_anonymous:
             return True
 
         """
         if authentication is passed through the user id of the db entry and the user id of the authentication token is compared
+        obj.username returns the useraccount obj instance, therefore to match actual username string value it is obj.username.username
         """
-        return obj.username == request.user.username
+        return obj.username.username == request.user.username
 
 class UserRecordViewSet(viewsets.ModelViewSet):
     permission_classes = [UserRecordPermission]
     queryset = UserRecord.objects.all()
     serializer_class = UserRecordsSerializer
-    #lookup_field = 'username'
+    lookup_field = 'date'
 
     """
     requires login to view data and shows the logged in user's only
@@ -108,17 +114,15 @@ class UserRecordViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
-    
+    """
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             serializer = UserRecordsSerializer(self.queryset.filter(username=request.user.username), many=True)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
-    
+    """
     def create(self, request):
-        print('auth bool: ', request.user.is_authenticated)
-        print('yo')
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
