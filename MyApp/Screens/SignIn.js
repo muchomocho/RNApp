@@ -3,13 +3,17 @@ import React, { Component, useState } from "react";
 import { StyleSheet, Text, View, Button } from 'react-native';
 import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
+import GlobalConstant from "../Global/Global";
+import   "../Authentication";
+import * as Authentication from "../Authentication/Authentication";
 
 function Signin () {
 
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    
     const onSignIn = () => {
-        console.warn('sign in')
+        Authentication.fetchToken(username, password);
     }
 
     return (
@@ -49,6 +53,7 @@ const styles = StyleSheet.create({
       margin: 0,
       alignItems: 'stretch',
       justifyContent: 'center',
+      backgroundColor: '#fff'
     },
   });
 
