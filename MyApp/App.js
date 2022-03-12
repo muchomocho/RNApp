@@ -8,8 +8,8 @@ import { backgroundColor } from 'react-native/Libraries/Components/View/ReactNat
 
 export default function App() {
   return (
-    <NavigationContainer style={styles.container}> 
-      <BottomTab style={styles.container} />
+    <NavigationContainer> 
+      <BottomTab />
     </NavigationContainer>
   );
 }
@@ -22,10 +22,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  tabs: {
-    height: '20%',
-    width: '100%',
-    backgroundColor: '#000' 
-  }
 });
