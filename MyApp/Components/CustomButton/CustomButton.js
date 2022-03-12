@@ -3,14 +3,11 @@ import { Text, TextInput, View, StyleSheet, Pressable } from 'react-native';
 
 export default function CustomButton({ onPress, text }) {
 
-
     return (
         <Pressable onPress={onPress} style={styles.container}>
             <Text style={styles.button}>{text}</Text>
         </Pressable>
     );
-
-    
 }
 
 const styles = StyleSheet.create({
@@ -29,5 +26,5 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center'
     }
-  });
+});
 
