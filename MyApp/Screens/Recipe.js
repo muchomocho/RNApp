@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
-import Constant from '../Global/Global'
+import GlobalConstant from '../Global/Global'
 
 function Recipe({ navigation }) {
 
@@ -10,7 +10,7 @@ function Recipe({ navigation }) {
     const getRecipe = async () => {
         try {
             console.log(global.root)
-            const response = await fetch(global.root + '/api/recipes/', {
+            const response = await fetch(GlobalConstant.rootUrl + '/api/recipes/', {
                 method: "GET"
             });
             const json = await response.json();
@@ -30,7 +30,7 @@ function Recipe({ navigation }) {
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
         return reload;
-      }, [navigation]);
+    }, [navigation]);
 
 
     const styles = StyleSheet.create({
