@@ -103,7 +103,15 @@ class UserRecordsSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class RecipeTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ['id', 'username', 'title', 'main_image_url']
+
+# https://www.django-rest-framework.org/api-guide/relations/
 class RecipeSerializer(serializers.ModelSerializer):
+    steps = RecipeStepSerializer(many=True)
+
     class Meta:
         model = Recipe
         fields = ['id', 'username', 'title', 'main_image_url']
