@@ -148,9 +148,12 @@ class Recipe(models.Model):
         return self.title
 
 class RecipeStep(models.Model):
-    recipe_ID = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    recipe_ID = models.ForeignKey(Recipe, related_name='steps', on_delete=models.CASCADE)
     step_number = models.IntegerField()
     text = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ['recipe_ID', 'step_number']
 
 class Tag(models.Model):
     recipe_ID = models.ForeignKey(Recipe, on_delete=models.CASCADE)

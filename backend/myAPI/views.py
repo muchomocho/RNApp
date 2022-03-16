@@ -1,7 +1,7 @@
 from cgitb import lookup
 from os import stat
 from .models import Comment, Ingredient, Recipe, RecipeStep, UserAccount, Tag, UserRecord
-from .serializers import CommentSerializer, IngredientSerializer, RecipeSerializer, RecipeStepSerializer, UserAccountSerializer, TagSerializer, UserRecordsSerializer
+from .serializers import CommentSerializer, IngredientSerializer, RecipeSerializer, RecipeStepSerializer, RecipeTitleSerializer, UserAccountSerializer, TagSerializer, UserRecordsSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -129,6 +129,10 @@ class UserRecordViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
+
+class RecipeTitleViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeTitleSerializer
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()

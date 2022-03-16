@@ -108,18 +108,37 @@ class RecipeTitleSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ['id', 'username', 'title', 'main_image_url']
 
-# https://www.django-rest-framework.org/api-guide/relations/
-class RecipeSerializer(serializers.ModelSerializer):
-    steps = RecipeStepSerializer(many=True)
-
-    class Meta:
-        model = Recipe
-        fields = ['id', 'username', 'title', 'main_image_url']
-
 class RecipeStepSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeStep
         fields = ['id', 'recipe_ID', 'step_number', 'text']
+
+""" 
+https://www.django-rest-framework.org/api-guide/relations/
+
+Use of relations of models to use nested json formats.
+This serializer can read / write recipe with nested json with each step.
+"""
+class RecipeSerializer(serializers.ModelSerializer):
+    class StepSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = RecipeStep
+
+            # step numbers will be assigned automatically server-side as requiring it client side could mess up the unique constraint
+            fields = ['text']
+
+    steps = StepSerializer(many=True)
+
+    class Meta:
+        model = Recipe
+        fields = ['id', 'username', 'title', 'main_image_url', 'steps']
+
+    def create(self, validated_data):
+        steps_data = validated_data.pop('steps')
+        recipe = Recipe.objects.create(**validated_data)
+        for step_number, step_data in enumerate(steps_data):
+            RecipeStep.objects.create(recipe_ID=recipe, step_number=step_number, **step_data)
+        return recipe
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
