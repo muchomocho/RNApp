@@ -22,6 +22,8 @@ import * as SecureStore from 'expo-secure-store';
               setAccessToken(json.access);
               setRefreshToken(json.refresh);
 
+              GlobalConstant.username = username;
+
               getStoredAccessToken().then(access => {
                   console.log('access=', access);
               });

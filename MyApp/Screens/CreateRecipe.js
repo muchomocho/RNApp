@@ -6,12 +6,22 @@ import GlobalConstant from "../Global";
 
 function CreateRecipe() {
 
-    const user_ID = 'test_user_id'
-    const main_image_url = 'http://google.com'
+    const [username, setUsername] = useState('');
+    const main_image_url = 'http://google.com';
     const [title, setTitle] = useState('');
     const [steps, setSteps] = useState([]);
+    var recipeID = -1;
+
+    useEffect(() => { setUsername(GlobalConstant.username) }, [username]);
 
     const createRecipe = async () => {
+        console.log('global username: ', GlobalConstant.username);
+        console.log('set username: ', username);
+
+        if (username.length == 0) {
+            console.warn('requires login');
+            return
+        }
         try {
             const response = await fetch(GlobalConstant.rootUrl + '/api/recipes/', {
                 method: "POST",
@@ -20,13 +30,15 @@ function CreateRecipe() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    user_ID: user_ID,
+                    username: username,
                     title: title,
                     main_image_url: main_image_url
                 })
             });
             const json = await response.json();
-            console.log(json);
+            console.log('response: ', json);
+            console.log('response id: ', json.id);
+            recipeID = json.id;
 
             if (response.status == 201) {
                 console.warn('created!')
@@ -36,17 +48,52 @@ function CreateRecipe() {
           } catch (error) {
             console.warn(error);
           } 
-    }
+    };
+
+    const createSteps = async () => {
+        setSteps((steps) => {
+            steps.map(item => item.recipe_ID = recipeID);
+        });
+
+        try {
+            const response = await fetch(GlobalConstant.rootUrl + '/api/recipesteps/', {
+                method: "POST",
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    item
+                })
+            });
+            const json = await response.json();
+            console.log('response: ', json);
+            console.log('response id: ', json.id);
+
+            if (response.status == 201) {
+                console.warn('created!')
+            } else {
+                console.warn(json)
+            }
+          } catch (error) {
+            console.warn(error);
+          } 
+    };
+
+    const a = () => {
+        createRecipe()
+        .then(createSteps);
+    };
 
     const addStep = () => {
         setSteps([...steps, {
-                stepNumber: steps.length + 1,
+                step_number: steps.length + 1,
                 text: ''
         }]);
-    }
+    };
 
     const updateStep = (item, newText) => {
-        const index = item.stepNumber-1
+        const index = item.step_number-1
         var newItem = item;
         newItem.text = newText;
         /*
@@ -66,9 +113,9 @@ function CreateRecipe() {
     }
 
     const deleteStep = (item) => {
-        const index = item.stepNumber-1;
+        const index = item.step_number-1;
         var laterStep = steps.slice(index+1);
-        laterStep.map(step => {step.stepNumber -= 1;})
+        laterStep.map(step => {step.step_number -= 1;})
 
         setSteps(
             [
@@ -80,7 +127,7 @@ function CreateRecipe() {
     const renderStepsData = (item) => {
         return(
             <View style={[styles.steps, styles.shadow]}>
-                <Text>{item.stepNumber}</Text>
+                <Text>{item.step_number}</Text>
                 <CustomInput 
                 value={item.text}
                 setValue={(text)=>{updateStep(item, text)}}
@@ -110,7 +157,7 @@ function CreateRecipe() {
             renderItem = {({item}) => (
                 renderStepsData(item)
             )}
-            keyExtractor = {item => `${item.stepNumber}`}
+            keyExtractor = {item => `${item.step_number}`}
 
             ListFooterComponent={
                 <View style={styles.buttonContainer}>
@@ -121,7 +168,7 @@ function CreateRecipe() {
                 />
 
                 <CustomButton 
-                onPress={createRecipe} 
+                onPress={a} 
                 text={'submit'}
                 />
                 </View>

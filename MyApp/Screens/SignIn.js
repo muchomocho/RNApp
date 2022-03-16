@@ -13,6 +13,7 @@ function Signin () {
     const [password, setPassword] = useState('')
     
     const onSignIn = () => {
+        console.log('sign in attempt')
         Authentication.fetchToken(username, password);
     }
 

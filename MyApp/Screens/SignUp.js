@@ -47,6 +47,7 @@ function SignUp ({ navigation }) {
     const createUser = async () => {
       if (validate(username, email, password1, password2)) {
         try {
+          console.log(GlobalConstant.rootUrl);
             const response = await fetch(GlobalConstant.rootUrl + '/api/useraccounts/', {
                 method: "POST",
                 headers: {
@@ -54,7 +55,7 @@ function SignUp ({ navigation }) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    user_ID: user_ID,
+                    username: username,
                     email: email,
                     password: password1
                 })
