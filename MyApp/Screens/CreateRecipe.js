@@ -32,7 +32,8 @@ function CreateRecipe() {
                 body: JSON.stringify({
                     username: username,
                     title: title,
-                    main_image_url: main_image_url
+                    main_image_url: main_image_url,
+                    steps: steps
                 })
             });
             const json = await response.json();
@@ -48,41 +49,6 @@ function CreateRecipe() {
           } catch (error) {
             console.warn(error);
           } 
-    };
-
-    const createSteps = async () => {
-        setSteps((steps) => {
-            steps.map(item => item.recipe_ID = recipeID);
-        });
-
-        try {
-            const response = await fetch(GlobalConstant.rootUrl + '/api/recipesteps/', {
-                method: "POST",
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    item
-                })
-            });
-            const json = await response.json();
-            console.log('response: ', json);
-            console.log('response id: ', json.id);
-
-            if (response.status == 201) {
-                console.warn('created!')
-            } else {
-                console.warn(json)
-            }
-          } catch (error) {
-            console.warn(error);
-          } 
-    };
-
-    const a = () => {
-        createRecipe()
-        .then(createSteps);
     };
 
     const addStep = () => {
@@ -168,7 +134,7 @@ function CreateRecipe() {
                 />
 
                 <CustomButton 
-                onPress={a} 
+                onPress={createRecipe} 
                 text={'submit'}
                 />
                 </View>
