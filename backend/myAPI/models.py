@@ -72,7 +72,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
 class UserData(models.Model):
     # an account have multiple users, such as family members
-    username = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    username = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='people', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     age = models.IntegerField()
 
@@ -156,7 +156,7 @@ class RecipeStep(models.Model):
         unique_together = ['recipe_ID', 'step_number']
 
 class Tag(models.Model):
-    recipe_ID = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    recipe = models.ManyToManyField(Recipe, related_name='tags')
     text = models.CharField(max_length=20)
 
 class Comment(models.Model):

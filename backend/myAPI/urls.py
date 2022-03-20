@@ -9,6 +9,8 @@ from rest_framework_simplejwt.views import (
 
 router = DefaultRouter()
 router.register('useraccounts', views.UserAccountViewSet, basename='useraccounts')
+router.register('userdata', views.UserDataViewSet, basename='userdata')
+router.register('userprofile', views.UserProfileViewSet, basename='userprofile')
 router.register('userrecords', views.UserRecordViewSet, basename='userrecords')
 router.register('recipetitles', views.RecipeTitleViewSet, basename='recipetitles')
 router.register('recipes', views.RecipeViewSet, basename='recipes')
