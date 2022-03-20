@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
 import GlobalConstant from '../Global/Global'
+import * as Authentication from "../Authentication/Authentication";
 
 function Recipe({ navigation }) {
 
     const [data, setData] = useState([]);
 
     // https://reactnative.dev/docs/network
-    const getUserAccount = async () => {
+    const getUserData = async (token) => {
         try {
-            console.log(global.root)
-            const response = await fetch(GlobalConstant.rootUrl + '/api/useraccounts/' + GlobalConstant.username + '/', {
-                method: "GET"
+            const response = await fetch(GlobalConstant.rootUrl + '/api/userprofile/', {
+                method: "GET",
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + token
+                  },
             });
             const json = await response.json();
             console.log(json)
@@ -19,14 +24,19 @@ function Recipe({ navigation }) {
           } catch (error) {
             console.error(error);
           } 
-    }
+    };
+
+    const createUserAccount = async () => {
+
+    };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     useEffect(() => {
         const reload = navigation.addListener('focus', () => {
           // The screen is focused
           // Call any action
-          getUserAccount();
+          Authentication.getStoredAccessToken()
+          .then((token) => getUserAccount(token));
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
