@@ -7,6 +7,7 @@ import Recipe from '../../Screens/Recipe';
 import ClassTest from '../../Screens/ClassTest';
 import CreateRecipe from '../../Screens/CreateRecipe';
 import SignUp from '../../Screens/SignUp';
+import AccountProfile from '../../Screens/AccountProfile'
 
 const Tab = createBottomTabNavigator();
 
@@ -48,6 +49,7 @@ const BottomTab = () => {
             <Tab.Screen name='Sign up' component={SignUp} />
             <Tab.Screen name='Recipe' component={Recipe} />
             <Tab.Screen name='Create' component={CreateRecipe} />
+            <Tab.Screen name='Profile' component={AccountProfile}/>
         </Tab.Navigator>
     )
 }
