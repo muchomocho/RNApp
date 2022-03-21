@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Ingredient, Recipe, RecipeStep, Tag, UserData, UserRecord, UserAccount, Comment
+from .models import Ingredient, RecipeIngredient, Recipe, RecipeStep, Tag, UserData, UserRecord, UserAccount, Comment
 
 '''
 class UserAccountSerializer(serializers.Serializer):
@@ -49,7 +49,7 @@ class UserRecordsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRecord
         fields = [
-            'username', 'name', 'date',
+            'user', 'name', 'date',
             'energy',
 
             # macro nutrients in grams
@@ -98,7 +98,7 @@ class UserRecordsSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         for (key, value) in validated_data.items():
-            if key not in ['username', 'date', 'name']:
+            if key not in ['user', 'date', 'name']:
                 setattr(instance, key, value)
         instance.save()
         return instance
@@ -113,27 +113,37 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserAccount
-        fields = ['id', 'username', 'email', 'people']
+        fields = ['id', 'user', 'email', 'people']
 
 class RecipeTitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
-        fields = ['id', 'username', 'title', 'main_image_url']
+        fields = ['id', 'user', 'title', 'main_image_url']
 
 class RecipeStepSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeStep
-        fields = ['id', 'recipe_ID', 'step_number', 'text']
+        fields = ['id', 'recipe', 'step_number', 'text']
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'recipe', 'text']
 
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'name']
+
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecipeIngredient
+        fields = ['id', 'recipe', 'ingredient', 'ingredient_quantity', 'ingredient_unit']
+
 """ 
 https://www.django-rest-framework.org/api-guide/relations/
 
-Use of relations of models to use nested json formats.
+Use of relations of models to use nested json formats in POST, GET etc.
 This serializer can read / write recipe with nested json with each step.
 """
 class RecipeSerializer(serializers.ModelSerializer):
@@ -142,6 +152,11 @@ class RecipeSerializer(serializers.ModelSerializer):
             model = Tag
             fields = ['text']
 
+    class SimpleRecipeIngredientSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = RecipeIngredient
+            fields = ['ingredient', 'ingredient_quantity', 'ingredient_unit']
+
     class SimpleStepSerializer(serializers.ModelSerializer):
         class Meta:
             model = RecipeStep
@@ -149,16 +164,20 @@ class RecipeSerializer(serializers.ModelSerializer):
             # step numbers will be assigned automatically server-side as requiring it client side could mess up the unique constraint
             fields = ['text']
 
+    ingredients = SimpleRecipeIngredientSerializer(many=True)
     steps = SimpleStepSerializer(many=True)
     tags = SimpleTagSerializer(many=True)
 
     class Meta:
         model = Recipe
-        fields = ['id', 'username', 'title', 'main_image_url', 'tags', 'steps']
+        fields = ['id', 'user', 'title', 'main_image_url', 'tags', 'ingredients', 'steps']
 
     def create(self, validated_data):
         tags_data = validated_data.pop('tags')
+        ingredients_data = validated_data.pop('ingredients')
         steps_data = validated_data.pop('steps')
+
+        validated_data['user'] = self.context['request'].user
         recipe = Recipe.objects.create(**validated_data)
 
         for tag_data in tags_data:
@@ -167,17 +186,21 @@ class RecipeSerializer(serializers.ModelSerializer):
                 recipe.tags.add(Tag.objects.create(**tag_data))
             else:
                 recipe.tags.add(instance_list[0])
+        
+        for ingredient_data in ingredients_data:
+            ingredient_name = ingredient_data.get('ingredient')
+            print('iname', ingredient_name)
+            instance_list = Ingredient.objects.filter(name=ingredient_name)
+            if len(instance_list) == 0:
+                Ingredient.objects.create(name=ingredient_name)
+            RecipeIngredient.objects.create(recipe=recipe, **ingredient_data)
             
         for step_number, step_data in enumerate(steps_data):
-            RecipeStep.objects.create(recipe_ID=recipe, step_number=step_number, **step_data)
+            RecipeStep.objects.create(recipe=recipe, step_number=step_number, **step_data)
+
         return recipe
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ['id', 'username', 'recipe_ID', 'text']
-
-class IngredientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ingredient
-        fields = ['id', 'recipe_ID', 'ingredient_name', 'ingredient_quantity', 'ingredient_unit']
+        fields = ['id', 'user', 'recipe', 'text']

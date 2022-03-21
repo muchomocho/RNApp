@@ -72,7 +72,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
 class UserData(models.Model):
     # an account have multiple users, such as family members
-    username = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='people', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='people', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     age = models.IntegerField()
 
@@ -89,9 +89,10 @@ class UserData(models.Model):
         (OTHER, 'Other')
     ]
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    unique_together = ['user', 'name']
 
 class UserRecord(models.Model):
-    username = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     date = models.DateField(auto_now_add=True)
 
@@ -140,7 +141,7 @@ class UserRecord(models.Model):
 
 
 class Recipe(models.Model):
-    username = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     main_image_url = models.URLField()
 
@@ -148,26 +149,33 @@ class Recipe(models.Model):
         return self.title
 
 class RecipeStep(models.Model):
-    recipe_ID = models.ForeignKey(Recipe, related_name='steps', on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, related_name='steps', on_delete=models.CASCADE)
     step_number = models.IntegerField()
     text = models.CharField(max_length=255)
 
     class Meta:
-        unique_together = ['recipe_ID', 'step_number']
+        unique_together = ['recipe', 'step_number']
 
 class Tag(models.Model):
     recipe = models.ManyToManyField(Recipe, related_name='tags')
     text = models.CharField(max_length=20)
 
 class Comment(models.Model):
-    username = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
-    recipe_ID = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     text = models.TextField(max_length=300)
     date_created = models.DateTimeField(default=timezone.now)
 
 class Ingredient(models.Model):
-    recipe_ID = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient_name = models.CharField(max_length=20)
+    name = models.CharField(max_length=20, unique=True)
+    # TODO - ingredient data
+
+    def __str__(self):
+        return self.name
+
+class RecipeIngredient(models.Model):
+    recipe = models.ForeignKey(Recipe, related_name='ingredients', on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, to_field='name', on_delete=models.CASCADE)
     ingredient_quantity = models.IntegerField()
     ingredient_unit = models.CharField(max_length=10)
 

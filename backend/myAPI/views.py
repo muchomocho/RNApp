@@ -1,8 +1,8 @@
 from cgitb import lookup
 from email import message
 from os import stat
-from .models import Comment, Ingredient, Recipe, RecipeStep, UserAccount, Tag, UserData, UserRecord
-from .serializers import CommentSerializer, IngredientSerializer, RecipeSerializer, RecipeStepSerializer, RecipeTitleSerializer, UserAccountSerializer, TagSerializer, UserDataSerializer, UserRecordsSerializer, UserProfileSerializer
+from .models import Comment, Ingredient, RecipeIngredient, Recipe, RecipeStep, UserAccount, Tag, UserData, UserRecord
+from .serializers import CommentSerializer, IngredientSerializer, RecipeIngredientSerializer, RecipeSerializer, RecipeStepSerializer, RecipeTitleSerializer, UserAccountSerializer, TagSerializer, UserDataSerializer, UserRecordsSerializer, UserProfileSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -85,12 +85,6 @@ class UserRecordPermission(BasePermission):
         All other methods are for their owners, needs authentication
         if anonymous, there are nothing to authenticate so is false
         """
-  
-        print(request.method == 'POST')
-        print(request.user.is_anonymous)
-        print(type(request.user.username))
-        print(type(obj.username.username))
-        print(obj.username == request.user.username)
         if request.method == 'POST' and not request.user.is_anonymous:
             return True
 
@@ -98,7 +92,7 @@ class UserRecordPermission(BasePermission):
         if authentication is passed through the user id of the db entry and the user id of the authentication token is compared
         obj.username returns the useraccount obj instance, therefore to match actual username string value it is obj.username.username
         """
-        return obj.username.username == request.user.username
+        return obj.user.username == request.user.username
 
 class UserRecordViewSet(viewsets.ModelViewSet):
     permission_classes = [UserRecordPermission]
@@ -111,14 +105,15 @@ class UserRecordViewSet(viewsets.ModelViewSet):
     """
     def list(self, request):
         if request.user.is_authenticated:
-            serializer = UserRecordsSerializer(self.queryset.filter(username=request.user.username), many=True)
+            serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username), many=True)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+
     """
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            serializer = UserRecordsSerializer(self.queryset.filter(username=request.user.username), many=True)
+            serializer = UserRecordsSerializer(self.queryset.get(user=request.user.username, date=request.date))
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -145,9 +140,9 @@ class UserDataPermission(BasePermission):
 
         """
         if authentication is passed through the user id of the db entry and the user id of the authentication token is compared
-        obj.username returns the useraccount obj instance, therefore to match actual username string value it is obj.username.username
+        obj.user returns the useraccount obj instance, therefore to match actual username string value it is obj.username.username
         """
-        return obj.username.username == request.user.username
+        return obj.user.username == request.user.username
 
 class UserDataViewSet(viewsets.ModelViewSet):
     permission_classes = [UserDataPermission]
@@ -156,7 +151,7 @@ class UserDataViewSet(viewsets.ModelViewSet):
 
     def list(self, request):
         if request.user.is_authenticated:
-            serializer = UserDataSerializer(self.queryset.filter(username=request.user.id), many=True)
+            serializer = UserDataSerializer(self.queryset.filter(user=request.user.id), many=True)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -164,7 +159,7 @@ class UserDataViewSet(viewsets.ModelViewSet):
     def create(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -172,18 +167,18 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [UserDataPermission]
     queryset = UserAccount.objects.all()
     serializer_class = UserProfileSerializer
-    lookup_field = 'username'
+    lookup_field = 'user'
 
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            serializer = UserProfileSerializer(self.queryset.get(username=request.user.username))
+            serializer = UserProfileSerializer(self.queryset.get(user=request.user.username))
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
     def list(self, request):
         if request.user.is_authenticated:
-            serializer = UserProfileSerializer(self.queryset.filter(username=request.user.username), many=True)
+            serializer = UserProfileSerializer(self.queryset.filter(user=request.user.username), many=True)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -211,6 +206,10 @@ class CommentViewSet(viewsets.ModelViewSet):
 class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+
+class RecipeIngredientViewSet(viewsets.ModelViewSet):
+    queryset = RecipeIngredient.objects.all()
+    serializer_class = RecipeIngredientSerializer
 
 
 

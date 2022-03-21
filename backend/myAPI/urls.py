@@ -18,6 +18,7 @@ router.register('tags', views.TagViewSet, basename='tags')
 router.register('comments', views.CommentViewSet, basename='comments')
 router.register('recipesteps', views.RecipeStepViewSet, basename='recipesteps')
 router.register('ingredients', views.IngredientViewSet, basename='ingredients')
+router.register('recipeingredients', views.RecipeIngredientViewSet, basename='recipeingredients')
 
 urlpatterns = [
     path('api/', include(router.urls)),
