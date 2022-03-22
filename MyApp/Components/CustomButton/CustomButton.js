@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
         marginVertical: 10,
-        borderRadius: 10,
+        borderRadius: 5,
         alignItems: 'center'
     }
 });
