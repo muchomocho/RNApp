@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 
     export const fetchToken = async (username, password) => {
         try {
-            const response = await fetch(GlobalConstant.rootUrl + '/api/token/', {
+            const response = await fetch(GlobalConstant.rootUrl + 'api/token/', {
                 method: "POST",
                 headers: {
                     Accept: 'application/json',
@@ -44,7 +44,7 @@ import * as SecureStore from 'expo-secure-store';
     export const refreshAccessToken = async () => {
         const refreshToken = getStoredRefreshToken()
         try {
-            const response = await fetch(GlobalConstant.rootUrl + '/api/token/refresh/', {
+            const response = await fetch(GlobalConstant.rootUrl + 'api/token/refresh/', {
                 method: "POST",
                 headers: {
                     Accept: 'application/json',
