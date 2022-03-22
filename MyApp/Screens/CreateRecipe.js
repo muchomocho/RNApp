@@ -23,7 +23,7 @@ function CreateRecipe() {
             return
         }
         try {
-            const response = await fetch(GlobalConstant.rootUrl + '/api/recipes/', {
+            const response = await fetch(GlobalConstant.rootUrl + 'api/recipes/', {
                 method: "POST",
                 headers: {
                     Accept: 'application/json',
@@ -116,7 +116,7 @@ function CreateRecipe() {
                 value={title}
                 setValue={setTitle}
                 placeholder={'Enter recipe title'}
-            />
+                />
             }
             style={styles.list}
             data = {steps}
