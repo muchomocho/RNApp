@@ -4,12 +4,19 @@ import { NavigationContainer } from '@react-navigation/native';
 import Recipe from './Screens/Recipe';
 import SingIn from './Screens/SignIn'
 import BottomTab from './Components/BottonTab/BottomTab';
-import { backgroundColor } from 'react-native/Libraries/Components/View/ReactNativeStyleAttributes';
+import CreateProfile from './Screens/CreateProfile';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+// https://reactnative.dev/docs/navigation
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer> 
-      <BottomTab />
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name={'Tab'} component={BottomTab}/>
+        <Stack.Screen name={'CreateProfile'} component={CreateProfile}/>
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
