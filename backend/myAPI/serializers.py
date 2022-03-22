@@ -113,7 +113,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserAccount
-        fields = ['id', 'user', 'email', 'people']
+        fields = ['id', 'username', 'email', 'people']
 
 class RecipeTitleSerializer(serializers.ModelSerializer):
     class Meta:
