@@ -48,7 +48,7 @@ function SignUp ({ navigation }) {
       if (validate(username, email, password1, password2)) {
         try {
           console.log(GlobalConstant.rootUrl);
-            const response = await fetch(GlobalConstant.rootUrl + '/api/useraccounts/', {
+            const response = await fetch(GlobalConstant.rootUrl + 'api/useraccounts/', {
                 method: "POST",
                 headers: {
                     Accept: 'application/json',
