@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
+import GlobalConstant from "../Global/Global";
 
 function UserDetail() {
 
@@ -7,7 +8,7 @@ function UserDetail() {
 
     const getRecipe = async () => {
         try {
-            const response = await fetch('api/recipes/', {
+            const response = await fetch(GlobalConstant.rootUrl + 'api/recipes/', {
                 method: "GET"
             });
             const json = await response.json();
