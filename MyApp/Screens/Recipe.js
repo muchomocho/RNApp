@@ -9,12 +9,10 @@ function Recipe({ navigation }) {
     // https://reactnative.dev/docs/network
     const getRecipe = async () => {
         try {
-            console.log(global.root)
-            const response = await fetch(GlobalConstant.rootUrl + '/api/recipes/', {
+            const response = await fetch(GlobalConstant.rootUrl + 'api/recipetitles/', {
                 method: "GET"
             });
             const json = await response.json();
-            console.log(json)
             setData(json);
           } catch (error) {
             console.error(error);
@@ -35,22 +33,55 @@ function Recipe({ navigation }) {
 
 
     const styles = StyleSheet.create({
-        cardStyle: {
+        container: {
+            flexDirection: 'row',
+            height: 150,
             width: '95%',
-            backgroundColor: '#eee',
-            borderRadius: 30,
+            backgroundColor: '#fff',
+            borderRadius: 5,
             padding: 10,
-            margin: 10
-        }
+            margin: 10,
+
+            elevation: 3,
+            shadowColor: '#eee',
+            shadowRadius: 0,
+            shadowOpacity: 0.2,
+            shadowOffset: {
+                width: 0,
+                height: 100
+            },
+        },
+        detail: {
+            marginLeft: 10,
+            flex: 1,
+            overflow: 'hidden'
+        },
+        detailTitle: {
+            flexWrap: 'wrap',
+            fontSize: 16,
+            overflow: 'hidden'
+        },
+        detailText: {
+            flexWrap: 'wrap',
+            overflow: 'hidden'
+        },
+        image: {
+            flexGrow: 1,
+  
+            backgroundColor: '#eee',
+            textAlign: 'center',
+            textAlignVertical: 'center'
+        },
     });
 
     const renderData = (item) => {
         return(
-            <View style={styles.cardStyle}>
-                <Text>{item.id}</Text>
-                <Text>{item.user_ID}</Text>
-                <Text>{item.title}</Text>
-                <Text>{item.main_image_url}</Text>
+            <View style={styles.container}>
+                <Text style={styles.image}>{item.id}</Text>
+                <View style={styles.detail}>
+                    <Text style={styles.detailTitle}>{item.title}</Text>
+                    <Text style={styles.detailText}>created by {item.user}</Text>
+                </View>
             </View>
         )
     }
@@ -62,6 +93,11 @@ function Recipe({ navigation }) {
             return renderData(item)
         }}
         keyExtractor = {item => `${item.id}`}
+        
+        ListFooterComponent={
+            <Text></Text>
+        }
+        ListFooterComponentStyle={{marginBottom: 100}}
         />
 )
 
