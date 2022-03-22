@@ -108,6 +108,12 @@ class UserDataSerializer(serializers.ModelSerializer):
         model = UserData
         fields = ['id', 'name', 'age', 'gender']
 
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        instance = self.Meta.model(**validated_data)
+        instance.save()
+        return instance
+
 class UserProfileSerializer(serializers.ModelSerializer):
     people = UserDataSerializer(many=True)
     
@@ -177,7 +183,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients_data = validated_data.pop('ingredients')
         steps_data = validated_data.pop('steps')
 
-        validated_data['user'] = self.context['request'].user
+        #validated_data['user'] = self.context['request'].user
         recipe = Recipe.objects.create(**validated_data)
 
         for tag_data in tags_data:
@@ -189,7 +195,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         
         for ingredient_data in ingredients_data:
             ingredient_name = ingredient_data.get('ingredient')
-            print('iname', ingredient_name)
             instance_list = Ingredient.objects.filter(name=ingredient_name)
             if len(instance_list) == 0:
                 Ingredient.objects.create(name=ingredient_name)
