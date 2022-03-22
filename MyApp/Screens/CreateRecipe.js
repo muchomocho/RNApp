@@ -6,13 +6,17 @@ import GlobalConstant from "../Global";
 
 function CreateRecipe() {
 
-    const [username, setUsername] = useState('');
+    //const [username, setUsername] = useState('');
     const main_image_url = 'http://google.com';
     const [title, setTitle] = useState('');
     const [steps, setSteps] = useState([]);
-    var recipeID = -1;
+    const [tags, setTags] = useState([]);
+    const [ingredients, setIngredients] = useState([]);
+    const username = GlobalConstant.username
 
-    useEffect(() => { setUsername(GlobalConstant.username) }, [username]);
+    useEffect(() => { 
+        //setUsername(GlobalConstant.username) 
+    }, [username]);
 
     const createRecipe = async () => {
         console.log('global username: ', GlobalConstant.username);
@@ -30,16 +34,17 @@ function CreateRecipe() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    username: username,
+                    user: username,
                     title: title,
                     main_image_url: main_image_url,
-                    steps: steps
+                    steps: steps,
+                    tags: tags,
+                    ingredients: ingredients
                 })
             });
             const json = await response.json();
             console.log('response: ', json);
             console.log('response id: ', json.id);
-            recipeID = json.id;
 
             if (response.status == 201) {
                 console.warn('created!')
