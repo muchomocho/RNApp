@@ -156,29 +156,48 @@ class UserDataViewSet(viewsets.ModelViewSet):
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
     
-    def create(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def retrieve(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            serializer = UserDataSerializer(self.queryset.get(user=request.user.id))
+            return Response(serializer.data)
+        content = {'requires log in to see'}
+        return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+
+class UserProfilePermission(BasePermission):
+    message = 'editing is for owner only'
+
+    def has_object_permission(self, request, view, obj):
+    
+        """
+        All other methods are for their owners, needs authentication
+        if anonymous, there are nothing to authenticate so is false
+        """
+  
+        if request.method == 'POST' and not request.user.is_anonymous:
+            return True
+
+        """
+        if authentication is passed through the user id of the db entry and the user id of the authentication token is compared
+        obj.user returns the useraccount obj instance, therefore to match actual username string value it is obj.username.username
+        """
+        return obj.username == request.user.username
 
 class UserProfileViewSet(viewsets.ModelViewSet):
-    permission_classes = [UserDataPermission]
+    permission_classes = [UserProfilePermission]
     queryset = UserAccount.objects.all()
     serializer_class = UserProfileSerializer
-    lookup_field = 'user'
+    lookup_field = 'username'
 
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            serializer = UserProfileSerializer(self.queryset.get(user=request.user.username))
+            serializer = UserProfileSerializer(self.queryset.get(username=request.user.username))
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
     def list(self, request):
         if request.user.is_authenticated:
-            serializer = UserProfileSerializer(self.queryset.filter(user=request.user.username), many=True)
+            serializer = UserProfileSerializer(self.queryset.filter(username=request.user.username), many=True)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
