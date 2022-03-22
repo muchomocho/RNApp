@@ -2,6 +2,13 @@ import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
 import GlobalConstant from '../Global/Global'
 import * as Authentication from "../Authentication/Authentication";
+import CustomButton from "../Components/CustomButton";
+import CreateProfile from "./CreateProfile";
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+// https://reactnative.dev/docs/navigation
+const Stack = createNativeStackNavigator();
 
 function AccountProfile({ navigation }) {
 
@@ -24,6 +31,9 @@ function AccountProfile({ navigation }) {
           } catch (error) {
             console.error(error);
           } 
+    };
+
+    const createUserPerson = async (token) => {
     };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
@@ -97,6 +107,7 @@ function AccountProfile({ navigation }) {
     }
 
     return(
+        <View>
         <FlatList
         ListHeaderComponent={
             <View style={styles.account}>
@@ -115,8 +126,19 @@ function AccountProfile({ navigation }) {
         }}
         keyExtractor = {item => `${item.id}`}
         
+        ListFooterComponent={
+            <View>
+                <CustomButton
+                onPress={()=>{navigation.navigate('CreateProfile')}}
+                />
+            </View>
+        }
         />
-        
+
+        <Stack.Navigator>
+            <Stack.Screen name={'createProfile'} component={CreateProfile} />
+        </Stack.Navigator>
+        </View>
     )
 
     
