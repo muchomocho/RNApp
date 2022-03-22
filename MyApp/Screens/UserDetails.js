@@ -7,7 +7,7 @@ function UserDetail() {
 
     const getRecipe = async () => {
         try {
-            const response = await fetch('http://192.168.0.32:8081/api/recipes/', {
+            const response = await fetch('api/recipes/', {
                 method: "GET"
             });
             const json = await response.json();
