@@ -13,7 +13,10 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator 
+      screenOptions={{
+        headerShown: false
+      }}>
         <Stack.Screen name={'Tab'} component={BottomTab}/>
         <Stack.Screen name={'CreateProfile'} component={CreateProfile}/>
       </Stack.Navigator>

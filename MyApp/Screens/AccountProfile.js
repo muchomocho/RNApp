@@ -17,7 +17,9 @@ function AccountProfile({ navigation }) {
     // https://reactnative.dev/docs/network
     const getUserProfile = async (token) => {
         try {
-            const response = await fetch(GlobalConstant.rootUrl + 'api/userprofile/' + GlobalConstant.username + '/', {
+            const urlEnding = (GlobalConstant.username.length > 0) ? (GlobalConstant.username + '/') : ''
+            console.log(urlEnding);
+            const response = await fetch(GlobalConstant.rootUrl + 'api/userprofile/' + urlEnding, {
                 method: "GET",
                 headers: {
                     Accept: 'application/json',
@@ -33,115 +35,138 @@ function AccountProfile({ navigation }) {
           } 
     };
 
-    const createUserPerson = async (token) => {
-    };
-
     // https://reactnavigation.org/docs/function-after-focusing-screen/
+    // function is called when screen is focused (switched onto)
     useEffect(() => {
         const reload = navigation.addListener('focus', () => {
-          // The screen is focused
-          // Call any action
-          Authentication.getStoredAccessToken()
-          .then((token) => getUserProfile(token));
+          Authentication.tokenRequest(
+              requestFunction=getUserProfile, 
+              onFail=navigation.navigate('Sign in')
+              );
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
         return reload;
     }, [navigation]);
 
-
-    const styles = StyleSheet.create({
-        account:{
-            width: '95%',
-            backgroundColor: '#561ddb',
-            borderRadius: 5,
-            padding: 20,
-            margin: 10,
-        },
-        accountText:{
-            color: '#fff'
-        },
-        people: {
-            width: '95%',
-            backgroundColor: '#fff',
-            borderRadius: 5,
-            padding: 20,
-            margin: 10,
-
-            elevation: 3,
-            shadowColor: '#eee',
-            shadowRadius: 0,
-            shadowOpacity: 0.2,
-            shadowOffset: {
-                width: 0,
-                height: 100
-            },
-        },
-        peopleDetailContainer:{
-            flexDirection: 'row',
-            borderBottomColor: '#000',
-            borderBottomWidth: 0
-        },
-        peopleTextName:{
-            fontSize: 20,
-        },
-        peopleText: {
-            marginLeft: 10,
-        }
-    });
-
     const renderData = (item) => {
         return(
-            <View style={styles.people}>
-                <Text style={styles.peopleTextName}>{item.name}</Text>
-                <View style={styles.peopleDetailContainer}>
-                    <Text>Age</Text>
-                    <Text style={styles.peopleText}>{item.age}</Text>
+            <View style={styles.peopleTab}>
+                <View style={styles.iconContainer}>
                 </View>
                 <View style={styles.peopleDetailContainer}>
-                    <Text>Gender</Text>
-                    <Text style={styles.peopleText}>{item.gender}</Text>
+                    <Text style={styles.peopleTextName}>{item.name}</Text>
+                    <View style={styles.labelContainer}>
+                        <Text>Age</Text>
+                        <Text style={styles.peopleText}>{item.age}</Text>
+                    </View>
+                    <View style={styles.labelContainer}>
+                        <Text>Gender</Text>
+                        <Text style={styles.peopleText}>{item.gender}</Text>
+                    </View>
                 </View>
             </View>
         )
     }
 
+    // https://reactnative.dev/docs/flatlist
     return(
-        <View>
-        <FlatList
-        ListHeaderComponent={
-            <View style={styles.account}>
-                <Text style={styles.accountText}>
-                    {data.username}
-                </Text>
-                <Text style={styles.accountText}>
-                    {data.email}
-                </Text>
-            </View>
-        }
-        
-        data = {data.people}
-        renderItem = {({item}) => {
-            return renderData(item)
-        }}
-        keyExtractor = {item => `${item.id}`}
-        
-        ListFooterComponent={
-            <View>
-                <CustomButton
-                onPress={()=>{navigation.navigate('CreateProfile')}}
-                />
-            </View>
-        }
-        />
-
-        <Stack.Navigator>
-            <Stack.Screen name={'createProfile'} component={CreateProfile} />
-        </Stack.Navigator>
+        <View >
+            <FlatList
+            style={styles.container}
+            ListHeaderComponent={
+                <View style={[styles.account, styles.header]}>
+                    <Text style={styles.accountText}>
+                        {data.username}
+                    </Text>
+                    <Text style={styles.accountText}>
+                        {data.email}
+                    </Text>
+                </View>
+            }
+            
+            data = {data.people}
+            renderItem = {({item}) => {
+                return renderData(item)
+            }}
+            keyExtractor = {item => `${item.id}`}
+            
+            ListFooterComponent={
+                <View style={styles.footer}>
+                    <CustomButton
+                    buttonStyle={styles.button}
+                    text={'create new'}
+                    onPress={()=>{navigation.navigate('CreateProfile')}}
+                    />
+                </View>
+            }
+            />
         </View>
     )
-
     
 }
+
+const styles = StyleSheet.create({
+    container: {
+        width: '100%',
+        //alignContent: 'center'
+    },
+    header: {
+        marginTop: '15%'
+    },
+    footer: {
+        alignItems: 'center',
+        marginBottom: '30%'
+    },
+    account:{
+        backgroundColor: '#561ddb',
+        borderRadius: 5,
+        padding: 20,
+        margin: 10,
+    },
+    accountText:{
+        color: '#fff'
+    },
+    iconContainer: {
+        flex: 1,
+        backgroundColor: '#eee',
+        borderRadius: 100
+    },
+    peopleTab: {
+        flexDirection: 'row',
+        height: 100,
+        backgroundColor: '#fff',
+        borderRadius: 5,
+        padding: 20,
+        margin: 10,
+
+        elevation: 3,
+        shadowColor: '#eee',
+        shadowRadius: 0,
+        shadowOpacity: 0.2,
+        shadowOffset: {
+            width: 0,
+            height: 100
+        },
+    },
+    peopleDetailContainer: {
+        flex: 2,
+        margin: 0
+    },
+    labelContainer:{
+        flexDirection: 'row',
+        borderBottomColor: '#000',
+        borderBottomWidth: 0
+    },
+    peopleTextName:{
+        fontSize: 20,
+    },
+    peopleText: {
+        marginLeft: 10,
+    },
+    button: {
+        width: '95%',
+    }
+});
 
 export default AccountProfile

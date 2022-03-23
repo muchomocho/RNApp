@@ -24,13 +24,6 @@ import * as SecureStore from 'expo-secure-store';
 
               GlobalConstant.username = username;
 
-              getStoredAccessToken().then(access => {
-                  console.log('access=', access);
-              });
-              getStoredRefreshToken().then(access => {
-                console.log('refresh=', access);
-            });
-
             } else if (response.status === 400) {
               console.warn('user already exists');
             } else {
@@ -40,10 +33,11 @@ import * as SecureStore from 'expo-secure-store';
             console.warn(error);
         }
     };
-
-    export const refreshAccessToken = async () => {
-        const refreshToken = getStoredRefreshToken()
+    
+    export const refreshAccessToken = () => {
+        console.log('refreshing token...')
         try {
+            getStoredRefreshToken().then(async (refreshToken) => {
             const response = await fetch(GlobalConstant.rootUrl + 'api/token/refresh/', {
                 method: "POST",
                 headers: {
@@ -54,23 +48,24 @@ import * as SecureStore from 'expo-secure-store';
                     refresh: refreshToken
                 })
             });
-
-            const token = await response.json();
+        
+            const json = await response.json();
             console.log(json);
 
             if (response.status == 201) {
               console.warn('token acquired!')
-              setAccessToken(token.access);
+              setAccessToken(json.access);
               return true;
             } else if (response.status === 400) {
-              console.warn('user already exists')
+              console.warn('invalid refresh token')
             } else {
               console.warn(json)
             }
-          } catch (error) {
+        });
+        } catch (error) {
             console.warn(error);
-          }
-          return false;
+        }
+        return false;
     };
 
     /* 
@@ -87,21 +82,6 @@ import * as SecureStore from 'expo-secure-store';
         }
     };
 
-    export const getStoredAccessToken = async () => {
-        var value = null;
-        try {
-            value = await SecureStore.getItemAsync('access');
-            if (value !== null) {
-                // We have data!!
-                console.log('from funtion get access', value);
-            }
-        } catch (error) {
-            // Error retrieving data
-            console.log('get access token failed: ' + error)
-        }
-        return value
-    };
-
     export const setRefreshToken = async (refreshToken) => {
         try {
             await SecureStore.setItemAsync(
@@ -114,10 +94,10 @@ import * as SecureStore from 'expo-secure-store';
     };
 
     export const getStoredRefreshToken = async () => {
-        var value = null;
+        var value = '';
         try {
             value = await SecureStore.getItemAsync('refresh');
-            if (value !== null) {
+            if (value !== '') {
                 // We have data!!
                 console.log('from funtion get refresh', value);
             }
@@ -126,6 +106,50 @@ import * as SecureStore from 'expo-secure-store';
             console.log('get refresh token failed: ' + error)
         }
         return value
+    };
+    
+    export const getStoredAccessToken = async () => {
+        var value = '';
+        try {
+            value = await SecureStore.getItemAsync('access');
+            if (value !== '') {
+                // We have data!!
+                console.log('from funtion get access', value);
+            }
+        } catch (error) {
+            // Error retrieving data
+            console.log('get access token failed: ' + error)
+        }
+        return value
+    };
+
+    export const tokenRequest = async (requestFunction, onFail) => {
+        console.log('token request')
+        // first try get stored jwt access token (proof logged in / authentication)
+        getStoredAccessToken()
+        .then(token => {
+            // if token is stored, send http request
+            if (token.length > 0) {
+              requestFunction(token);
+              // TODO when request fails
+            } else {
+                // if token is not stored, attempt to refresh with refresh token
+                getStoredRefreshToken()
+                .then(isRefreshed => {
+                    if (isRefreshed) {
+                        // if refreshed, get access token and send http request
+                        Authentication.getStoredAccessToken()
+                        .then(refreshedToken => {
+                            requestFunction(refreshedToken);
+                        });
+                    } else {
+                        console.log('fail')
+                        // if all fails, run onFail()
+                        onFail()
+                    }
+                });
+            }
+        });
     };
 
 
