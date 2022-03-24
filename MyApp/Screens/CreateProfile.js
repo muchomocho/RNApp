@@ -83,7 +83,7 @@ function CreateProfile({ navigation }) {
           placeholder={"Enter your gender"}
           />
 
-          <CustomButton onPress={onSubmit} text={'sign in'}/>
+          <CustomButton onPress={onSubmit} text={'submit'}/>
         </View>
     )  
 }
