@@ -6,6 +6,7 @@ import CustomButton from "../Components/CustomButton";
 import CreateProfile from "./CreateProfile";
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as APIRequest from '../Request/APIRequest';
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
@@ -15,10 +16,10 @@ function AccountProfile({ navigation }) {
     const [data, setData] = useState([]);
 
     // https://reactnative.dev/docs/network
+    /*
     const getUserProfile = async (token) => {
         try {
             const urlEnding = (GlobalConstant.username.length > 0) ? (GlobalConstant.username + '/') : ''
-            console.log(urlEnding);
             const response = await fetch(GlobalConstant.rootUrl + 'api/userprofile/' + urlEnding, {
                 method: "GET",
                 headers: {
@@ -29,20 +30,49 @@ function AccountProfile({ navigation }) {
             });
             const json = await response.json();
             console.log(json)
+            console.log(json.code)
+            console.log(json.code === 'token_not_valid')
+            if (json.code === 'token_not_valid') {
+                return false;
+            }
             setData(json);
+            return true;
           } catch (error) {
             console.error(error);
+            return false;
           } 
+    };*/
+
+    const getUserProfile = async () => {
+        try {
+            const endpoint = 'api/userprofile/' + ((GlobalConstant.username.length > 0) ? (GlobalConstant.username + '/') : '');
+            const result = await APIRequest.apiRequest({
+                method: 'GET',
+                endpoint: endpoint,
+                isAuthRequired: true
+            });
+            console.log('status= ', result.response.status);
+            if (result.response.status === 401) {
+                console.log('unauth')
+                return false
+            }
+            
+            console.log('response json: ', result.json);
+            setData(result.json);
+        } catch (error) {console.log(error);}
     };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     // function is called when screen is focused (switched onto)
     useEffect(() => {
         const reload = navigation.addListener('focus', () => {
-          Authentication.tokenRequest(
-              requestFunction=getUserProfile, 
-              onFail=navigation.navigate('Sign in')
-              );
+            getUserProfile()
+            .then(result => { 
+                console.log('result', result)
+                if (result === false) {
+                    navigation.navigate('Sign in');
+                }
+             });
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
@@ -74,23 +104,27 @@ function AccountProfile({ navigation }) {
         <View >
             <FlatList
             style={styles.container}
+
+            // top of list
             ListHeaderComponent={
                 <View style={[styles.account, styles.header]}>
                     <Text style={styles.accountText}>
-                        {data.username}
+                        Username: {data.username}
                     </Text>
                     <Text style={styles.accountText}>
-                        {data.email}
+                        emal: {data.email}
                     </Text>
                 </View>
             }
             
+            // main list content
             data = {data.people}
             renderItem = {({item}) => {
                 return renderData(item)
             }}
             keyExtractor = {item => `${item.id}`}
             
+            // bottom of list
             ListFooterComponent={
                 <View style={styles.footer}>
                     <CustomButton
@@ -102,7 +136,7 @@ function AccountProfile({ navigation }) {
             }
             />
         </View>
-    )
+    );
     
 }
 
@@ -151,7 +185,11 @@ const styles = StyleSheet.create({
     },
     peopleDetailContainer: {
         flex: 2,
-        margin: 0
+        margin: 0, 
+        //backgroundColor: '#000',
+        marginLeft: '10%',
+        //alignContent: 'center',
+        //alignItems: 'center'
     },
     labelContainer:{
         flexDirection: 'row',
