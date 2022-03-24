@@ -139,7 +139,7 @@ function SignUp ({ navigation }) {
           isSecure={true}
           />
 
-          <CustomButton onPress={createUser} text={'sign in'}/>
+          <CustomButton onPress={createUser} text={'submit'}/>
         </View>
     )
 }
