@@ -34,10 +34,10 @@ import * as SecureStore from 'expo-secure-store';
         }
     };
     
-    export const refreshAccessToken = () => {
+    export const refreshAccessToken = async () => {
         console.log('refreshing token...')
         try {
-            getStoredRefreshToken().then(async (refreshToken) => {
+            const refreshToken = await getStoredRefreshToken();
             const response = await fetch(GlobalConstant.rootUrl + 'api/token/refresh/', {
                 method: "POST",
                 headers: {
@@ -51,21 +51,22 @@ import * as SecureStore from 'expo-secure-store';
         
             const json = await response.json();
             console.log(json);
+            console.log(response.status);
 
-            if (response.status == 201) {
+            if (response.status == 200) {
               console.warn('token acquired!')
-              setAccessToken(json.access);
-              return true;
+              await setAccessToken(json.access);
+              console.warn('access', json.access);
+              return json.access;
             } else if (response.status === 400) {
               console.warn('invalid refresh token')
             } else {
               console.warn(json)
             }
-        });
         } catch (error) {
             console.warn(error);
         }
-        return false;
+        return '';
     };
 
     /* 
@@ -123,15 +124,35 @@ import * as SecureStore from 'expo-secure-store';
         return value
     };
 
+
     export const tokenRequest = async (requestFunction, onFail) => {
-        console.log('token request')
+        try {
+            const result = await requestFunction();
+            const json = await result.response.json;
+            console.log('json code',json.code);
+            if (json.code === 'token_not_valid') {
+
+            }
+
+        } catch (error) {
+            onFail();
+        }
+    };
+    /*
+    export const tokenRequest = async (requestFunction, onFail) => {
         // first try get stored jwt access token (proof logged in / authentication)
         getStoredAccessToken()
         .then(token => {
             // if token is stored, send http request
             if (token.length > 0) {
-              requestFunction(token);
-              // TODO when request fails
+              requestFunction(token)
+              .then((success) => {
+                  if (success) {
+                      return
+                  }
+                  // when request fails
+                  onFail();
+              });
             } else {
                 // if token is not stored, attempt to refresh with refresh token
                 getStoredRefreshToken()
@@ -143,13 +164,12 @@ import * as SecureStore from 'expo-secure-store';
                             requestFunction(refreshedToken);
                         });
                     } else {
-                        console.log('fail')
                         // if all fails, run onFail()
                         onFail()
                     }
                 });
             }
         });
-    };
+    };*/
 
 
