@@ -1,8 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import Recipe from './Screens/Recipe';
-import SingIn from './Screens/SignIn'
 import BottomTab from './Components/BottonTab/BottomTab';
 import CreateProfile from './Screens/CreateProfile';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
