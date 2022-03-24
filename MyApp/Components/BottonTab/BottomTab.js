@@ -2,14 +2,19 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { StyleSheet } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
 import SignIn from '../../Screens/SignIn'
-import Recipe from '../../Screens/Recipe';
-import ClassTest from '../../Screens/ClassTest';
+import RecipeList from '../../Screens/RecipeList';
 import CreateRecipe from '../../Screens/CreateRecipe';
 import SignUp from '../../Screens/SignUp';
 import AccountProfile from '../../Screens/AccountProfile'
+import RecipeDetail from '../../Screens/RecipeDetail';
 
+// https://reactnative.dev/docs/navigation
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
 
 const BottomTab = () => {
     return (
@@ -50,9 +55,19 @@ const BottomTab = () => {
               }}
             />
             <Tab.Screen name='Sign up' component={SignUp} />
-            <Tab.Screen name='Recipe' component={Recipe} />
+            <Tab.Screen name='Recipe' component={RecipeList} />
             <Tab.Screen name='Create' component={CreateRecipe} />
             <Tab.Screen name='Profile' component={AccountProfile}/>
+            <Tab.Screen 
+            name='Recipe detail' 
+            component={RecipeDetail} 
+            options={{
+                tabBarItemStyle:{
+                    height: 0, 
+                    width: 0,
+                    //backgroundColor: '#000', 
+                    position: 'absolute'
+                }}}/>
         </Tab.Navigator>
     )
 }
