@@ -168,7 +168,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             model = RecipeStep
 
             # step numbers will be assigned automatically server-side as requiring it client side could mess up the unique constraint
-            fields = ['text']
+            fields = ['step_number', 'text']
 
     ingredients = SimpleRecipeIngredientSerializer(many=True)
     steps = SimpleStepSerializer(many=True)
