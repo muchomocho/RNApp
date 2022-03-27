@@ -7,6 +7,7 @@ import CreateProfile from "./CreateProfile";
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as APIRequest from '../Request/APIRequest';
+import { TouchableOpacity } from "react-native";
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
@@ -81,7 +82,9 @@ function AccountProfile({ navigation }) {
 
     const renderData = (item) => {
         return(
-            <View style={styles.peopleTab}>
+            <TouchableOpacity 
+            style={styles.peopleTab}
+            onPress={()=>{navigation.navigate('User record', {userdata: item})}}>
                 <View style={styles.iconContainer}>
                 </View>
                 <View style={styles.peopleDetailContainer}>
@@ -95,7 +98,7 @@ function AccountProfile({ navigation }) {
                         <Text style={styles.peopleText}>{item.gender}</Text>
                     </View>
                 </View>
-            </View>
+            </TouchableOpacity>
         )
     }
 
