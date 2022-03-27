@@ -6,7 +6,7 @@ import CustomButton from "../Components/CustomButton";
 import GlobalConstant from "../Global/Global";
 import * as Authentication from "../Authentication/Authentication";
 
-function Signin () {
+function Signin ({ navigation }) {
 
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
@@ -36,6 +36,7 @@ function Signin () {
             />
 
             <CustomButton onPress={onSignIn} text={'sign in'}/>
+            <CustomButton onPress={() => { navigation.navigate('Sign up') }} text={'sign up'}/>
         </View>
     )
 }
