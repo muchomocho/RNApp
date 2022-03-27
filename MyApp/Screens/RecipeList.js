@@ -1,24 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
 import { TouchableOpacity } from "react-native";
+import SearchBar from "../Components/SearchBar";
 import GlobalConstant from '../Global/Global'
+import * as APIRequest from '../Request/APIRequest'
 
 function RecipeList({ navigation }) {
 
     const [data, setData] = useState([]);
+    const [searchValue, setSearchValue] = useState('');
 
     // https://reactnative.dev/docs/network
-    const getRecipe = async () => {
+    const getRecipe = async (query='') => {
         try {
-            const response = await fetch(GlobalConstant.rootUrl + 'api/recipetitles/', {
-                method: "GET"
+            const response = await APIRequest.apiRequest({
+                method: 'GET', 
+                endpoint: 'api/recipes/' + query
             });
-            const json = await response.json();
+            const json = response.json;
+            console.log(json);
             setData(json);
           } catch (error) {
             console.error(error);
           } 
-    }
+    };
+
+    const onSearch = (searchQuery) => {
+        getRecipe('?title='+searchQuery);
+    };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     useEffect(() => {
@@ -35,7 +44,7 @@ function RecipeList({ navigation }) {
     const renderData = (item) => {
         return(
             <TouchableOpacity 
-            style={styles.container}
+            style={styles.recipeContainer}
             onPress={() => {navigation.navigate('Recipe detail', {recipe: item});}}
             >
                 <Text style={styles.image}>{item.id}</Text>
@@ -48,23 +57,43 @@ function RecipeList({ navigation }) {
     }
 
     return(
-        <FlatList
-        data = {data}
-        renderItem = {({item}) => {
-            return renderData(item)
-        }}
-        keyExtractor = {item => `${item.id}`}
-        
-        ListFooterComponent={
-            <Text></Text>
-        }
-        ListFooterComponentStyle={{marginBottom: 100}}
-        />
+        <View style={styles.container}>
+            <FlatList
+
+            ListHeaderComponent={
+                <View>
+                    <SearchBar
+                    value={searchValue}
+                    setValue={setSearchValue}
+                    onSearch={()=>{onSearch(searchValue)}}
+                    />
+                    { data.length == 0 && <Text> No results </Text> }
+                
+                </View>
+            }
+
+            data = {data}
+            renderItem = {({item}) => {
+                return renderData(item)
+            }}
+            keyExtractor = {item => `${item.id}`}
+            
+            ListFooterComponent={
+                <Text></Text>
+            }
+            ListFooterComponentStyle={{marginBottom: 100}}
+            />
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
+        marginTop: 50,
+        marginBottom: 50
+    },
+
+    recipeContainer: {
         flexDirection: 'row',
         height: 150,
         width: '95%',
