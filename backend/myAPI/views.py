@@ -105,7 +105,11 @@ class UserRecordViewSet(viewsets.ModelViewSet):
     """
     def list(self, request):
         if request.user.is_authenticated:
-            serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username), many=True)
+            name = request.query_params.get('name', None)
+            if name is None:
+                serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username), many=True)
+            else:
+                serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username, name=name), many=True)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -206,9 +210,29 @@ class RecipeTitleViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeTitleSerializer
 
+    # https://docs.djangoproject.com/en/4.0/topics/db/queries/
+    def list(self, request):
+        search_query = request.query_params.get('title', None)
+        print(search_query)
+        if search_query is None:
+            serializer = self.serializer_class(self.queryset, many=True)
+        else:
+            serializer = self.serializer_class(self.queryset.filter(title__contains=search_query), many=True)
+        return Response(serializer.data)
+
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+
+    # https://docs.djangoproject.com/en/4.0/topics/db/queries/
+    def list(self, request):
+        search_query = request.query_params.get('title', None)
+        print(search_query)
+        if search_query is None:
+            serializer = self.serializer_class(self.queryset, many=True)
+        else:
+            serializer = self.serializer_class(self.queryset.filter(title__contains=search_query), many=True)
+        return Response(serializer.data)
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
