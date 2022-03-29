@@ -106,10 +106,13 @@ class UserRecordViewSet(viewsets.ModelViewSet):
     def list(self, request):
         if request.user.is_authenticated:
             name = request.query_params.get('name', None)
+            date_range = request.query_params.get('date', None)
+
             if name is None:
                 serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username), many=True)
             else:
                 serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username, name=name), many=True)
+                
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
