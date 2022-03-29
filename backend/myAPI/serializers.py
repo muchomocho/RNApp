@@ -56,6 +56,8 @@ class UserRecordsSerializer(serializers.ModelSerializer):
             'protein',
             'fat',
             'saturated_fat',
+            'polyunsaturated_fat',
+            'monounsaturated_fat',
             'carbohydrate',
             'free_sugars',
             'salt',
