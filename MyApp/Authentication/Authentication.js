@@ -1,10 +1,10 @@
 import React from 'react';
-import GlobalConstant from '../Global/Global';
+import * as Constant from '../Constant/Constant';
 import * as SecureStore from 'expo-secure-store';
 
     export const fetchToken = async (username, password) => {
         try {
-            const response = await fetch(GlobalConstant.rootUrl + 'api/token/', {
+            const response = await fetch(Constant.ROOT_URL + 'api/token/', {
                 method: "POST",
                 headers: {
                     Accept: 'application/json',
@@ -22,7 +22,7 @@ import * as SecureStore from 'expo-secure-store';
               setAccessToken(json.access);
               setRefreshToken(json.refresh);
 
-              GlobalConstant.username = username;
+              Constant.username = username;
 
             } else if (response.status === 400) {
               console.warn('user already exists');
@@ -38,7 +38,7 @@ import * as SecureStore from 'expo-secure-store';
         console.log('refreshing token...')
         try {
             const refreshToken = await getStoredRefreshToken();
-            const response = await fetch(GlobalConstant.rootUrl + 'api/token/refresh/', {
+            const response = await fetch(Constant.ROOT_URL + 'api/token/refresh/', {
                 method: "POST",
                 headers: {
                     Accept: 'application/json',

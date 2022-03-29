@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
-import GlobalConstant from '../Global/Global'
+import * as Constant from '../Constant/Constant'
 import * as Authentication from "../Authentication/Authentication";
 import CustomButton from "../Components/CustomButton";
 import CreateProfile from "./CreateProfile";
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as APIRequest from '../Request/APIRequest';
+import * as APIRequest from '../API/ServerRequest';
 import { TouchableOpacity } from "react-native";
 
 // https://reactnative.dev/docs/navigation
@@ -16,38 +16,10 @@ function AccountProfile({ navigation }) {
 
     const [data, setData] = useState([]);
 
-    // https://reactnative.dev/docs/network
-    /*
-    const getUserProfile = async (token) => {
-        try {
-            const urlEnding = (GlobalConstant.username.length > 0) ? (GlobalConstant.username + '/') : ''
-            const response = await fetch(GlobalConstant.rootUrl + 'api/userprofile/' + urlEnding, {
-                method: "GET",
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + token
-                  },
-            });
-            const json = await response.json();
-            console.log(json)
-            console.log(json.code)
-            console.log(json.code === 'token_not_valid')
-            if (json.code === 'token_not_valid') {
-                return false;
-            }
-            setData(json);
-            return true;
-          } catch (error) {
-            console.error(error);
-            return false;
-          } 
-    };*/
-
     const getUserProfile = async () => {
         try {
-            const endpoint = 'api/userprofile/' + ((GlobalConstant.username.length > 0) ? (GlobalConstant.username + '/') : '');
-            const result = await APIRequest.apiRequest({
+            const endpoint = 'api/userprofile/' + ((Constant.username.length > 0) ? (Constant.username + '/') : '');
+            const result = await APIRequest.httpRequest({
                 method: 'GET',
                 endpoint: endpoint,
                 isAuthRequired: true

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
-import GlobalConstant from '../Global/Global'
-import * as APIRequest from '../Request/APIRequest';
+import * as ServerRequest from '../API/ServerRequest';
 
 function RecipeDetail(props) {
     const [data, setData] = useState([]);
@@ -14,7 +13,7 @@ function RecipeDetail(props) {
             // The screen is focused
             // Call any action
             try {
-                const result = await APIRequest.apiRequest({
+                const result = await ServerRequest.httpRequest({
                 method: 'GET',
                 endpoint: 'api/recipes/' + props.route.params.recipe.id + '/'
             });

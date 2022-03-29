@@ -3,7 +3,7 @@ import React, { Component, useState, useEffect } from "react";
 import { StyleSheet, Text, View, Button } from 'react-native';
 import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
-import GlobalConstant from "../Global"
+import * as Constant from "../Constant/Constant";
 
 function SignUp ({ navigation }) {
 
@@ -47,8 +47,8 @@ function SignUp ({ navigation }) {
     const createUser = async () => {
       if (validate(username, email, password1, password2)) {
         try {
-          console.log(GlobalConstant.rootUrl);
-            const response = await fetch(GlobalConstant.rootUrl + 'api/useraccounts/', {
+          console.log(Constant.ROOT_URL);
+            const response = await fetch(Constant.ROOT_URL+ 'api/useraccounts/', {
                 method: "POST",
                 headers: {
                     Accept: 'application/json',

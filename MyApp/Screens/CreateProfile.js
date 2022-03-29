@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
-import GlobalConstant from '../Global/Global'
+import * as Constant from '../Constant/Constant'
 import * as Authentication from "../Authentication/Authentication";
 import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
@@ -16,7 +16,7 @@ function CreateProfile({ navigation }) {
     // https://reactnative.dev/docs/network
     const createUserProfile = async (token) => {
         try {
-            const response = await fetch(GlobalConstant.rootUrl + 'api/userdata/', {
+            const response = await fetch(Constant.ROOT_URL + 'api/userdata/', {
                 method: "POST",
                 headers: {
                     Accept: 'application/json',

@@ -3,7 +3,6 @@ import React, { Component, useState } from "react";
 import { StyleSheet, Text, View, Button } from 'react-native';
 import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
-import GlobalConstant from "../Global/Global";
 import * as Authentication from "../Authentication/Authentication";
 
 function Signin ({ navigation }) {

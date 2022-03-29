@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
 import { TouchableOpacity } from "react-native";
 import SearchBar from "../Components/SearchBar";
-import GlobalConstant from '../Global/Global'
-import * as APIRequest from '../Request/APIRequest'
+import * as ServerRequest from '../API/ServerRequest'
 
 function RecipeList({ navigation }) {
 
@@ -13,7 +12,7 @@ function RecipeList({ navigation }) {
     // https://reactnative.dev/docs/network
     const getRecipe = async (query='') => {
         try {
-            const response = await APIRequest.apiRequest({
+            const response = await ServerRequest.httpRequest({
                 method: 'GET', 
                 endpoint: 'api/recipes/' + query
             });
