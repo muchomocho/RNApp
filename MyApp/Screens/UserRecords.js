@@ -3,14 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Dim
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as APIRequest from '../API/ServerRequest';
 import { dietDataContainer } from "../Constant/Constant";
-import {
-    LineChart,
-    BarChart,
-    PieChart,
-    ProgressChart,
-    ContributionGraph,
-    StackedBarChart
-  } from 'react-native-chart-kit'
+import { VictoryBar, VictoryChart, VictoryTheme, VictoryLine } from "victory-native";
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator(); 
@@ -48,7 +41,7 @@ function UserRecord(props) {
             setData(result.json);
         
         } catch (error) {
-        console.log('userrecord', error)
+            console.log('userrecord', error)
         }
     };
 
@@ -61,7 +54,6 @@ function UserRecord(props) {
         }
 
         var dataContainerObj = dietDataContainer();
-        dataContainerObj.labels = labels;
         for (var prop in dataContainerObj) {
             if (Object.prototype.hasOwnProperty.call(dataContainerObj, prop)) {
                 dataContainerObj[prop].data = new Array(currentMonthDays).fill(0);
@@ -80,56 +72,54 @@ function UserRecord(props) {
                 }
             }
         }
+
+        labels.forEach((element, index, Array) => {
+            if (index === (parseInt(date.getDate()) - 1)) {
+                Array[index] = 'today';
+            }
+            /*
+            else if (index === 0 || index === (Array.length - 1) ) {
+                Array[index] = element.replace('2022-', '');
+            }
+            */ 
+            else {
+                Array[index] = '|';
+            }
+        });
+
+        dataContainerObj.labels = labels;
         return dataContainerObj;
     };
 
     const plot = () => {
-        const data = formatData();
+        //const data = formatData();
+        const data = [
+            { quarter: 1, earnings: 13000 },
+            { quarter: 2, earnings: 16500 },
+            { quarter: 3, earnings: 14250 },
+            { quarter: 4, earnings: 19000 },
+
+          ];
+
+        const data2 = [
+            {quarter: 1, earnings: 20000},
+            {quarter: 4, earnings: 20000}
+        ]
 
         return (
-            <LineChart
-                data={{
-                labels: data.labels,
-                datasets: [
-                    {
-                    data: data.energy.data
-                    }
-                ]
-                }}
-                width={Dimensions.get("window").width} // from react-native
-                height={220}
-                yAxisLabel="$"
-                yAxisSuffix="k"
-                yAxisInterval={100} // optional, defaults to 1
-                chartConfig={{
-                backgroundColor: "#e26a00",
-                backgroundGradientFrom: "#fb8c00",
-                backgroundGradientTo: "#ffa726",
-                decimalPlaces: 2, // optional, defaults to 2dp
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                style: {
-                    borderRadius: 16
-                },
-                propsForDots: {
-                    r: "6",
-                    strokeWidth: "2",
-                    stroke: "#ffa726"
-                }
-                }}
-                bezier
-                style={{
-                marginVertical: 8,
-                borderRadius: 16
-                }}
-            />
+            <View>
+                <VictoryChart width={250} >
+                    <VictoryLine data={data} x="quarter" y="earnings" />
+                    <VictoryLine data={data2} x="quarter" y="earnings" />
+                </VictoryChart>
+            </View>
         );
     };
 
     // https://reactnative.dev/docs/flatlist
     // https://github.com/indiespirit/react-native-chart-kit
     return(
-        <View style={styles.container}>
+        <View style={styles.graphContainer}>
             { plot() }
         </View>
     );
@@ -201,7 +191,14 @@ const styles = StyleSheet.create({
     },
     button: {
         width: '95%',
-    }
+    },
+
+    graphContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#f5fcff"
+      }
 });
 
 export default UserRecord
