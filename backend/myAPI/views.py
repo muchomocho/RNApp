@@ -1,6 +1,8 @@
 from cgitb import lookup
+from datetime import datetime, timedelta
 from email import message
 from os import stat
+from tracemalloc import start
 from .models import Comment, Ingredient, RecipeIngredient, Recipe, RecipeStep, UserAccount, Tag, UserData, UserRecord
 from .serializers import CommentSerializer, IngredientSerializer, RecipeIngredientSerializer, RecipeSerializer, RecipeStepSerializer, RecipeTitleSerializer, UserAccountSerializer, TagSerializer, UserDataSerializer, UserRecordsSerializer, UserProfileSerializer
 from django.http import Http404
@@ -98,7 +100,6 @@ class UserRecordViewSet(viewsets.ModelViewSet):
     permission_classes = [UserRecordPermission]
     queryset = UserRecord.objects.all()
     serializer_class = UserRecordsSerializer
-    lookup_field = 'date'
 
     """
     requires login to view data and shows the logged in user's only
@@ -106,7 +107,38 @@ class UserRecordViewSet(viewsets.ModelViewSet):
     def list(self, request):
         if request.user.is_authenticated:
             name = request.query_params.get('name', None)
-            date_range = request.query_params.get('date', None)
+            from_date = request.query_params.get('from', None)
+            print(name)
+            print(from_date)
+
+            if from_date is not None:
+                # https://stackoverflow.com/questions/16870663/how-do-i-validate-a-date-string-format-in-python
+                try:
+                    start_date = datetime.strptime(from_date, '%Y-%m-%d')
+                except ValueError:
+                    error = {"date format incorrect"}
+                    return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+                target_date = datetime.now()
+                current_date = start_date
+                date_container = []
+                while current_date <= target_date:
+                    date_container.append(current_date.strftime('%Y-%m-%d'))
+                    current_date = current_date + timedelta(days=1)
+                print(date_container)
+                
+                if name is None:
+                    serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username, 
+                    date__range=[start_date, target_date]), many=True)
+                else:
+                    serializer = UserRecordsSerializer(self.queryset.filter( 
+                    date__range=[start_date, target_date]), many=True)
+
+                print(serializer.data)
+                print(serializer.data[0]['energy'])
+                
+                return Response(serializer.data)
+
 
             if name is None:
                 serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username), many=True)
