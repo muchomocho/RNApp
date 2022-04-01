@@ -94,8 +94,7 @@ class UserData(models.Model):
 class UserRecord(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
-    date = models.DateField(auto_now_add=True)
-    time = models.TimeField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True, unique=True)
 
     # government dietry recommendations per day
     # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/618167/government_dietary_recommendations.pdf
