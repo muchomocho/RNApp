@@ -3,8 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Dim
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as APIRequest from '../API/ServerRequest';
 import { dietDataContainer } from "../Constant/Constant";
-import { VictoryBar, VictoryChart, VictoryTheme, VictoryLine } from "victory-native";
-
+import UserGraph from "../Components/Chart/UserGraph";
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator(); 
 
@@ -92,28 +91,47 @@ function UserRecord(props) {
     };
 
     const plot = () => {
-        //const data = formatData();
-        const data = [
-            { quarter: 1, earnings: 13000 },
-            { quarter: 2, earnings: 16500 },
-            { quarter: 3, earnings: 14250 },
-            { quarter: 4, earnings: 19000 },
+        // dayData = nutrition data of each day
+        var dataList = dietDataContainer();
 
-          ];
-
-        const data2 = [
-            {quarter: 1, earnings: 20000},
-            {quarter: 4, earnings: 20000}
-        ]
+        // populate arrays
+        for (const dayData of data) {
+            // https://stackoverflow.com/questions/8312459/iterate-through-object-properties
+            for (var prop in dayData) {
+                // confirm daydata obj has key prop
+                if (Object.prototype.hasOwnProperty.call(dayData, prop) && Object.prototype.hasOwnProperty.call(dataList, prop)) {
+                    // check object dataList[prop] has key 'data'
+                    // if not initialise array
+                    if (!Object.prototype.hasOwnProperty.call(dataList[prop], 'data')) {
+                        dataList[prop].data = new Array();
+                    }
+                    const xData = dayData['date']
+                    const plotData = { x: xData, y: dayData[prop] };
+                    dataList[prop].data.push(plotData);
+                }
+            }
+        }
 
         return (
-            <View>
-                <VictoryChart width={250} >
-                    <VictoryLine data={data} x="quarter" y="earnings" />
-                    <VictoryLine data={data2} x="quarter" y="earnings" />
-                </VictoryChart>
-            </View>
+            <FlatList
+            data={Object.keys(dataList)}
+            renderItem={({item}) => {
+                return (
+                    <UserGraph
+                    name={item}
+                    data={dataList[item].data}
+                    userData={props.route.params.userdata}
+                    />
+                );
+            }}
+            keyExtractor={item => item}
+            />
         );
+        // return (
+        //     <UserGraph 
+        //     data={dataList.energy.data}
+        //     />
+        // );
     };
 
     // https://reactnative.dev/docs/flatlist
