@@ -63,16 +63,21 @@ export default function UserGraph ({name, data, userData, dates}) {
         else return age;
     };
 
-    const lineDomain = () => {
-
-        if (dates !== undefined && dates.length > 0) {
-            return { x: [dates[0], dates[dates.length-1]] }
-        }
-    };
+    const formatDate = (dateStr) => {
+        return dateStr.split('-')[2];
+    }
 
     const datePoint = () => {
-        if (data !== undefined && data.length > 0) {
-            return [data[data.length - 1]]; 
+        if (dates !== undefined && dates.length > 0 
+            && Object.prototype.hasOwnProperty.call(data, focusData)
+            && Object.prototype.hasOwnProperty.call(data, 'date')) {
+                const date = dates[dates.length - 1];
+                const index = data['date'].indexOf(date);
+                if (index > -1) {
+                    return [{ x: formatDate(date), y: parseFloat(data[focusData][index])}]; 
+                }
+                return [{ x: formatDate(date), y: 0 }]
+            
         }
         return [];
     };
@@ -91,16 +96,7 @@ export default function UserGraph ({name, data, userData, dates}) {
             }
         };
 
-        const plotDot = () => {
-            return (
-                <VictoryScatter
-                    style={{data: {fill: "green"}}}
-                    size={10}
-                    data={datePoint()}
-                    labels={["today"]}
-                />
-            );
-        };
+        
 
 
         return (
@@ -120,20 +116,22 @@ export default function UserGraph ({name, data, userData, dates}) {
     };
 
     const plotTarget = () => {
-        if (userData !== undefined) {
-            const line = json[ageMap(userData.age)][genderMap(userData.gender)][name];
-            if (userData.age !== null && userData.gender !== null) {
+        if (userData !== undefined && userData.age !== null && userData.gender !== null
+            && (dates !== undefined && dates.length > 0)) {
+                const line = parseFloat(json[ageMap(userData.age)][genderMap(userData.gender)][focusData]);
+                const lineData = dates.map(date => ({x: formatDate(date), y: line}));
+                console.log(lineData)
                 return (
-                    <VictoryLine domain={lineDomain()}
+                    <VictoryLine 
+                        data={lineData}
                         style={{ data: { stroke: "blue", strokeWidth: 5 } }}
-                        y={(d) => line}
                     />
                 );
-            }
         }
     };
 
     const plotDot = () => {
+        console.log(datePoint())
         return (
             <VictoryScatter
                 style={{data: {fill: "green"}}}
@@ -186,27 +184,48 @@ export default function UserGraph ({name, data, userData, dates}) {
 
             const formattedData = () => {
                 var returnArray = new Array();
-                data[focusData].forEach((element, index, array) => {
-                    returnArray.push({ x: data['date'][index], y: element })
-                });
+
+                dates.forEach(((element) => {
+                    const index = data['date'].indexOf(element)
+                    if (index > -1) {
+                        returnArray.push({ x: formatDate(element), y: parseFloat(data[focusData][index]) })
+                    }
+                    else {
+                        returnArray.push({ x: formatDate(element), y: 0 })
+                    }
+                }));
+                // data[focusData].forEach((element, index, array) => {
+                //     returnArray.push({ x: data['date'][index], y: element })
+                // });
+                console.log(returnArray)
                 return returnArray;
             };
-            console.log('yo',formattedData())
             return (
-                <VictoryChart>
+                
                     <VictoryLine
                         data={formattedData()}
                     />
-                </VictoryChart>
             );
         }
     };
 
+    const title = () => {
+        return (
+            <View style={styles.titleContainer}>
+                <Text>{ focusData } in { dietDataContainer()[focusData].unit }</Text>
+            </View>
+        );
+    };
+
     return (
         <View style={styles.container}>
-            {plot()}
-            {/* {plotTarget()} */}
-            {populateButtons()}
+            <VictoryChart>
+                { plot() }
+                { plotTarget() }
+                { plotDot() }
+            </VictoryChart>
+            { title() }
+            { populateButtons() }
         </View>
     );
 
@@ -232,8 +251,17 @@ const styles = StyleSheet.create({
         },
     },
 
+    titleContainer: {
+        alignItems: 'center',
+        marginBottom: 10
+    },
+
     buttonListContainer: {
-        height: '30%',
+        width: '95%',
+        alignSelf: 'center',
+        borderWidth: 2,
+        borderRadius: 5,
+        borderColor: '#561ddb'
         // backgroundColor: '#000'
     },
 
@@ -248,7 +276,7 @@ const styles = StyleSheet.create({
     },
 
     graph: {
-        padding: 50,
+       // padding: 50,
         width: '80%'
     }
 });
