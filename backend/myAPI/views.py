@@ -108,9 +108,11 @@ class UserRecordViewSet(viewsets.ModelViewSet):
         if request.user.is_authenticated:
             name = request.query_params.get('name', None)
             from_date = request.query_params.get('from', None)
-            print(name)
-            print(from_date)
+            nutrition_type = request.query_params.get('nutrition', None)
 
+            print(nutrition_type)
+
+            # if date is specified, turn the data into array of data
             if from_date is not None:
                 # https://stackoverflow.com/questions/16870663/how-do-i-validate-a-date-string-format-in-python
                 try:
@@ -134,10 +136,26 @@ class UserRecordViewSet(viewsets.ModelViewSet):
                     serializer = UserRecordsSerializer(self.queryset.filter( 
                     date__range=[start_date, target_date]), many=True)
 
-                print(serializer.data)
-                print(serializer.data[0]['energy'])
-                
-                return Response(serializer.data)
+                # the return data should be in the same format as usual return
+                # but rather than array of object turn it into object of arrays
+
+                data_json = serializer.data.copy()
+                return_json = data_json.pop(0)
+
+                # use the first entry and turn each value into array with that value only
+                for key, value in return_json.items():
+                    if key == 'name' or key == 'user':
+                            continue
+                    return_json[key] = [value]
+
+                # append the following data
+                for data in data_json:
+                    for key, value in data.items():
+                        if key == 'name' or key == 'user':
+                            continue
+                        return_json[key].append(value)
+
+                return Response(return_json)
 
 
             if name is None:
