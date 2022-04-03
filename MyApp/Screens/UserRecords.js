@@ -11,7 +11,7 @@ function UserRecord(props) {
     
     const [data, setData] = useState([]);
 
-    const [dateRange, setDateRange] = useState(-20);
+    const [dateRange, setDateRange] = useState(-7);
     
     const date = new Date();
 
@@ -29,12 +29,11 @@ function UserRecord(props) {
         return reload;
     }, [props]);
 
-    const calculateDate = (daysToShift) => {
-        const fromDate = new Date()
-        fromDate.setDate(date.getDate() + daysToShift)
-        const year = fromDate.getFullYear();
-        const month = fromDate.getMonth() + 1; // jan = 0
-        const day = fromDate.getDate();
+    // format the date in the format we want to use YYYY-MM-DD
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1; // jan = 0
+        const day = date.getDate();
 
         const digitFormat = (someDate) => {
             return ((''+someDate).length < 2 ? '0' + someDate : someDate)
@@ -45,22 +44,28 @@ function UserRecord(props) {
         );
     };
 
-    const datesFrom = (daysToShift) => {
+    // calculates the date from today with parameter +ve = future, -ve = past
+    const calculateDate = (daysToShift) => {
         const fromDate = new Date()
         fromDate.setDate(date.getDate() + daysToShift)
-        var current = fromDate.getDate();
+        
+        return (formatDate(fromDate));
+    };
+    
+    // returns array of dates from paramter until today
+    const datesFrom = (daysToShift) => {
+        const currentDate = new Date()
+        currentDate.setDate(date.getDate() + daysToShift)
         var dates = new Array();
-        const today = date.getDate();
-
-        for (current; current <= today; ++current) {
-            dates.push(current);
+        
+        for (;currentDate.getDate() != date.getDate(); currentDate.setDate(currentDate.getDate() + 1)) {
+            dates.push(formatDate(currentDate));
         }
         return dates
     };
 
     const getUserRecord = async () => {
         
-        console.log( calculateDate(dateRange))
         try {
             const result = await APIRequest.httpRequest({
             method: 'GET',
