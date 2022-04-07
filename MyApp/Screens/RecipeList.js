@@ -17,7 +17,6 @@ function RecipeList({ navigation }) {
                 endpoint: 'api/recipes/' + query
             });
             const json = response.json;
-            console.log(json);
             setData(json);
           } catch (error) {
             console.error(error);
@@ -58,7 +57,7 @@ function RecipeList({ navigation }) {
     return(
         <View style={styles.container}>
             <FlatList
-
+            
             ListHeaderComponent={
                 <View>
                     <SearchBar
