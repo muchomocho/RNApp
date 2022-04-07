@@ -56,14 +56,14 @@ export const dietDataContainer = () => {
         "dietry_fibre": {},
         
         "vitamin_a": {},
-        "vitamin_b_12": {},
+        "vitamin_b12": {},
         "folate": {},
         "vitamin_d": {},
         
         "thiamin": {},
         "riboflavin": {},
         "niacin_equivalent": {},
-        "vitamin_b_6": {},
+        "vitamin_b6": {},
         "vitamin_c": {},
 
         "iron": {},
@@ -92,19 +92,19 @@ export const dietDataContainer = () => {
     obj.free_sugars.unit =
     obj.salt.unit =
     obj.dietry_fibre.unit = 
-    obj.sodium.unit = 'grams'
+    obj.sodium.unit = 'g'
 
     obj.vitamin_a.unit =
-    obj.vitamin_b_12.unit =
+    obj.vitamin_b12.unit =
     obj.folate.unit =
     obj.vitamin_d.unit = 
     obj.iodine.unit =
-    obj.selenium.unit = 'micrograms'
+    obj.selenium.unit = 'microg'
 
     obj.thiamin.unit =
     obj.riboflavin.unit =
     obj.niacin_equivalent.unit =
-    obj.vitamin_b_6.unit =
+    obj.vitamin_b6.unit =
     obj.vitamin_c.unit = 
     obj.iron.unit =
     obj.calcium.unit =
@@ -113,7 +113,7 @@ export const dietDataContainer = () => {
     obj.zinc.unit =
     obj.copper.unit =
     obj.phosphorus.unit =
-    obj.chloride.unit = 'milligrams'
+    obj.chloride.unit = 'mg'
     
     return obj;
 };
