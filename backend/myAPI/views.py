@@ -136,6 +136,11 @@ class UserRecordViewSet(viewsets.ModelViewSet):
                     serializer = UserRecordsSerializer(self.queryset.filter( 
                     date__range=[start_date, target_date]), many=True)
 
+                # if empty after filter just return
+
+                if len(serializer.data) <= 0:
+                    return Response(serializer.data)
+
                 # the return data should be in the same format as usual return
                 # but rather than array of object turn it into object of arrays
 
