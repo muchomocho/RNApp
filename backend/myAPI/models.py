@@ -116,14 +116,14 @@ class UserRecord(models.Model):
     # vitamins
     # micrograms
     vitamin_a = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    vitamin_b_12 = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    vitamin_b12 = models.DecimalField(default=0, max_digits=5, decimal_places=2)
     folate = models.DecimalField(default=0, max_digits=5, decimal_places=2)
     vitamin_d = models.DecimalField(default=0, max_digits=5, decimal_places=2)
     # milligrams
     thiamin = models.DecimalField(default=0, max_digits=5, decimal_places=2)
     riboflavin = models.DecimalField(default=0, max_digits=5, decimal_places=2)
     niacin_equivalent = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    vitamin_b_6 = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    vitamin_b6 = models.DecimalField(default=0, max_digits=5, decimal_places=2)
     vitamin_c = models.DecimalField(default=0, max_digits=5, decimal_places=2)
 
     # minerals
