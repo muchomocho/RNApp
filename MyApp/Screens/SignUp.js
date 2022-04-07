@@ -6,7 +6,6 @@ import CustomButton from "../Components/CustomButton";
 import * as Constant from "../Constant/Constant";
 
 function SignUp ({ navigation }) {
-
     
     const [username, setUsername] = useState('')
     const [email, setEmail] = useState('');
