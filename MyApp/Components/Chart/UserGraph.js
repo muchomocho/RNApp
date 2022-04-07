@@ -11,6 +11,8 @@ export default function UserGraph ({name, data, userData, dates}) {
 
     const [focusData, setFocusData] = useState('energy');
 
+    console.log(dates)
+    console.log(new Date().getDate())
     //const [data, setData] = useState({});
 
     // useEffect(() => {
@@ -82,39 +84,6 @@ export default function UserGraph ({name, data, userData, dates}) {
         return [];
     };
 
-    const plotLine = () => {
-        const graphData = data
-        const plotTarget = () => {
-            const line = json[ageMap(userData.age)][genderMap(userData.gender)][name];
-            if (userData.age !== null && userData.gender !== null) {
-                return (
-                    <VictoryLine domain={lineDomain()}
-                        style={{ data: { stroke: "blue", strokeWidth: 5 } }}
-                        y={(d) => line}
-                    />
-                );
-            }
-        };
-
-        
-
-
-        return (
-            <VictoryChart width={Dimensions.get('window').width*0.9} style={{tickLabels: {angle: -60}, ...styles.graph}}>
-                <VictoryGroup>
-                    
-                    <VictoryLine
-                        style={{ data: { stroke: "green" } }}
-                        data={graphData}
-                    />
-                    {plotTarget()}
-                    {plotDot()}
-                </VictoryGroup>
-
-            </VictoryChart>
-        );
-    };
-
     const plotTarget = () => {
         if (userData !== undefined && userData.age !== null && userData.gender !== null
             && (dates !== undefined && dates.length > 0)) {
@@ -133,7 +102,7 @@ export default function UserGraph ({name, data, userData, dates}) {
     const plotDot = () => {
         console.log(datePoint())
         return (
-            <VictoryScatter
+            <VictoryBar
                 style={{data: {fill: "green"}}}
                 size={10}
                 data={datePoint()}
@@ -202,7 +171,7 @@ export default function UserGraph ({name, data, userData, dates}) {
             };
             return (
                 
-                    <VictoryLine
+                    <VictoryBar
                         data={formattedData()}
                     />
             );
