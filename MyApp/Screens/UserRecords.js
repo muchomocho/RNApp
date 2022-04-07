@@ -11,7 +11,7 @@ function UserRecord(props) {
     
     const [data, setData] = useState([]);
 
-    const [dateRange, setDateRange] = useState(-7);
+    const [dateRange, setDateRange] = useState(-6);
     
     const date = new Date();
 
@@ -48,7 +48,7 @@ function UserRecord(props) {
     const calculateDate = (daysToShift) => {
         const fromDate = new Date()
         fromDate.setDate(date.getDate() + daysToShift)
-        
+
         return (formatDate(fromDate));
     };
     
@@ -58,7 +58,7 @@ function UserRecord(props) {
         currentDate.setDate(date.getDate() + daysToShift)
         var dates = new Array();
         
-        for (;currentDate.getDate() != date.getDate(); currentDate.setDate(currentDate.getDate() + 1)) {
+        for (;currentDate.getDate() <= date.getDate(); currentDate.setDate(currentDate.getDate() + 1)) {
             dates.push(formatDate(currentDate));
         }
         return dates
