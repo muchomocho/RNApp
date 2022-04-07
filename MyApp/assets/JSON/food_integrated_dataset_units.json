@@ -77,7 +77,6 @@
     "gamma-tocotrienol": "mg",
     "dehydroretinol": "microg",
     "saturated_fat": "g",
-    "unssaturated_fat": "g",
-    "dietary_fibre": "g",
-    "unsaturated_fat": "g"
+    "unsaturated_fat": "g",
+    "dietary_fibre": "g"
 }
