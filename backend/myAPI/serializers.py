@@ -66,14 +66,14 @@ class UserRecordsSerializer(serializers.ModelSerializer):
             # vitamins
             # micrograms
             'vitamin_a',
-            'vitamin_b_12',
+            'vitamin_b12',
             'folate',
             'vitamin_d',
             # milligrams
             'thiamin',
             'riboflavin',
             'niacin_equivalent',
-            'vitamin_b_6',
+            'vitamin_b6',
             'vitamin_c',
 
             # minerals
