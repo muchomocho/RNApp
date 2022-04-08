@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser, PermissionsMixin
 )
-import datetime
+from datetime import datetime
 
 # Create your models here.
 
@@ -69,7 +69,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     def has_module_perms(self, app_label):
         return self.is_admin
 
-
+# sub accounts for users, if user wants to record data for family members etc
 class UserData(models.Model):
     # an account have multiple users, such as family members
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='people', on_delete=models.CASCADE)
@@ -91,10 +91,11 @@ class UserData(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     unique_together = ['user', 'name']
 
-class UserRecord(models.Model):
+# the nutrition data of the particular sub user data
+class UserDayRecord(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
-    date = models.DateField(auto_now_add=True, unique=True)
+    date = models.DateField(default=datetime.strftime(timezone.now('%Y-%m-%d')), unique=True)
 
     # government dietry recommendations per day
     # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/618167/government_dietary_recommendations.pdf
@@ -142,11 +143,25 @@ class UserRecord(models.Model):
     # grams 
     sodium = models.DecimalField(default=0, max_digits=5, decimal_places=2)
 
+"""
+The meal user has eaten. consists of multiple food data
+"""
+class UserMealRecord(models.Model):
+    time = models.DateField(default=datetime.strftime(timezone.now('%Y-%m-%d %H:%M:%s')), unique=True)
+    title = models.CharField(max_length=255)
 
+class NutrientRecord(models.Model):
+    parent_food = models.ForeignKey(FoodData, related_name='nutrient_data')
+    name = models.CharField(max_length=255)
+    value = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    unit = models.CharField(max_length=10)
+
+# model for a recipe 
 class Recipe(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     main_image_url = models.URLField()
+    date_created = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.title
@@ -169,8 +184,10 @@ class Comment(models.Model):
     text = models.TextField(max_length=300)
     date_created = models.DateTimeField(default=timezone.now)
 
-class Ingredient(models.Model):
-    name = models.CharField(max_length=20, unique=True)
+class FoodData(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    records = models.ForeignKey(UserMealRecord, null=True)
+
     # TODO - ingredient data
 
     def __str__(self):
@@ -178,7 +195,7 @@ class Ingredient(models.Model):
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, related_name='ingredients', on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, to_field='name', on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(FoodData, to_field='name', on_delete=models.CASCADE)
     ingredient_quantity = models.IntegerField()
     ingredient_unit = models.CharField(max_length=10)
 
