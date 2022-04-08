@@ -1,3 +1,4 @@
+from tkinter import CASCADE
 from django.utils import timezone
 from django.db import models
 from django.conf import settings
@@ -95,7 +96,7 @@ class UserData(models.Model):
 class UserDayRecord(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
-    date = models.DateField(default=datetime.strftime(timezone.now('%Y-%m-%d')), unique=True)
+    date = models.DateField(default=datetime.strftime(timezone.now(), '%Y-%m-%d'), unique=True)
 
     # government dietry recommendations per day
     # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/618167/government_dietary_recommendations.pdf
@@ -147,11 +148,26 @@ class UserDayRecord(models.Model):
 The meal user has eaten. consists of multiple food data
 """
 class UserMealRecord(models.Model):
-    time = models.DateField(default=datetime.strftime(timezone.now('%Y-%m-%d %H:%M:%s')), unique=True)
+    day_record = models.ForeignKey(UserDayRecord, related_name='meal_record', on_delete=models.CASCADE)
+    time = models.DateTimeField(default=datetime.strftime(timezone.now(), '%Y-%m-%d %H:%M'), unique=True)
     title = models.CharField(max_length=255)
 
-class NutrientRecord(models.Model):
-    parent_food = models.ForeignKey(FoodData, related_name='nutrient_data')
+
+class UserMealContent(models.Model):
+    meal = models.ForeignKey(UserMealRecord, related_name='meal_content', on_delete=models.CASCADE)
+    amount_in_grams = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+
+class FoodData(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    meal = models.ForeignKey(UserMealContent, related_name='food_data', on_delete=models.SET_NULL, null=True)
+
+    # TODO - ingredient data
+
+    def __str__(self):
+        return self.name
+        
+class NutritionalData(models.Model):
+    parent_food = models.ForeignKey(FoodData, related_name='nutrient_data', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     value = models.DecimalField(default=0, max_digits=5, decimal_places=2)
     unit = models.CharField(max_length=10)
@@ -183,15 +199,6 @@ class Comment(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     text = models.TextField(max_length=300)
     date_created = models.DateTimeField(default=timezone.now)
-
-class FoodData(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    records = models.ForeignKey(UserMealRecord, null=True)
-
-    # TODO - ingredient data
-
-    def __str__(self):
-        return self.name
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, related_name='ingredients', on_delete=models.CASCADE)
