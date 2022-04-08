@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 from email import message
 from os import stat
 from tracemalloc import start
-from .models import Comment, Ingredient, RecipeIngredient, Recipe, RecipeStep, UserAccount, Tag, UserData, UserRecord
-from .serializers import CommentSerializer, IngredientSerializer, RecipeIngredientSerializer, RecipeSerializer, RecipeStepSerializer, RecipeTitleSerializer, UserAccountSerializer, TagSerializer, UserDataSerializer, UserRecordsSerializer, UserProfileSerializer
+from .models import Comment, FoodData, RecipeIngredient, Recipe, RecipeStep, UserAccount, Tag, UserData, UserDayRecord, UserMealRecord
+from .serializers import CommentSerializer, FoodDataSerializer, RecipeIngredientSerializer, RecipeSerializer, RecipeStepSerializer, RecipeTitleSerializer, UserAccountSerializer, TagSerializer, UserDataSerializer, UserDayRecordSerializer, UserMealRecordSerializer, UserProfileSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -98,8 +98,8 @@ class UserRecordPermission(BasePermission):
 
 class UserRecordViewSet(viewsets.ModelViewSet):
     permission_classes = [UserRecordPermission]
-    queryset = UserRecord.objects.all()
-    serializer_class = UserRecordsSerializer
+    queryset = UserDayRecord.objects.all()
+    serializer_class = UserDayRecordSerializer
 
     """
     requires login to view data and shows the logged in user's only
@@ -130,10 +130,10 @@ class UserRecordViewSet(viewsets.ModelViewSet):
                 print(date_container)
                 
                 if name is None:
-                    serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username, 
+                    serializer = UserDayRecordSerializer(self.queryset.filter(user=request.user.username, 
                     date__range=[start_date, target_date]), many=True)
                 else:
-                    serializer = UserRecordsSerializer(self.queryset.filter( 
+                    serializer = UserDayRecordSerializer(self.queryset.filter( 
                     date__range=[start_date, target_date]), many=True)
 
                 # if empty after filter just return
@@ -164,9 +164,9 @@ class UserRecordViewSet(viewsets.ModelViewSet):
 
 
             if name is None:
-                serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username), many=True)
+                serializer = UserDayRecordSerializer(self.queryset.filter(user=request.user.username), many=True)
             else:
-                serializer = UserRecordsSerializer(self.queryset.filter(user=request.user.username, name=name), many=True)
+                serializer = UserDayRecordSerializer(self.queryset.filter(user=request.user.username, name=name), many=True)
                 
             return Response(serializer.data)
         content = {'requires log in to see'}
@@ -186,7 +186,20 @@ class UserRecordViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
+
+
+class UserMealViewSet(viewsets.ModelViewSet):
+    #permission_classes = [UserRecordPermission]
+    queryset = UserMealRecord.objects.all()
+    serializer_class = UserMealRecordSerializer
+
+    def list(self, request):
+        if request.user.is_authenticated:
+            serializer = self.serializer_class(self.queryset, many=True)
+            return Response(serializer.data)
+        return Response()
+
+
 class UserDataPermission(BasePermission):
     message = 'editing is for owner only'
 
@@ -264,6 +277,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
+
 class RecipeTitleViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeTitleSerializer
@@ -304,9 +318,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
-class IngredientViewSet(viewsets.ModelViewSet):
-    queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
+class FoodDataViewSet(viewsets.ModelViewSet):
+    queryset = FoodData.objects.all()
+    serializer_class = FoodDataSerializer
 
 class RecipeIngredientViewSet(viewsets.ModelViewSet):
     queryset = RecipeIngredient.objects.all()
