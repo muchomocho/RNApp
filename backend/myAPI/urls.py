@@ -7,17 +7,21 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+# drf-nested-routers
+from rest_framework_nested import routers
+
 router = DefaultRouter()
 router.register('useraccounts', views.UserAccountViewSet, basename='useraccounts')
-router.register('userdata', views.UserDataViewSet, basename='userdata')
+router.register('userdata', views.UserDataViewSet, basename='useraccounts-userdata')
 router.register('userprofile', views.UserProfileViewSet, basename='userprofile')
 router.register('userrecords', views.UserRecordViewSet, basename='userrecords')
+router.register('usermealrecords', views.UserMealViewSet, basename='usermealrecords')
 router.register('recipetitles', views.RecipeTitleViewSet, basename='recipetitles')
 router.register('recipes', views.RecipeViewSet, basename='recipes')
 router.register('tags', views.TagViewSet, basename='tags')
 router.register('comments', views.CommentViewSet, basename='comments')
 router.register('recipesteps', views.RecipeStepViewSet, basename='recipesteps')
-router.register('ingredients', views.IngredientViewSet, basename='ingredients')
+router.register('fooddata', views.FoodDataViewSet, basename='fooddata')
 router.register('recipeingredients', views.RecipeIngredientViewSet, basename='recipeingredients')
 
 urlpatterns = [
