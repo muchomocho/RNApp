@@ -1,5 +1,9 @@
+import decimal
+import unicodedata
 from rest_framework import serializers
-from .models import FoodData, NutritionalData, RecipeIngredient, Recipe, RecipeStep, Tag, UserData, UserDayRecord, UserMealContent, UserMealRecord, UserAccount, Comment
+from .models import *
+import json
+import os
 
 '''
 class UserAccountSerializer(serializers.Serializer):
@@ -45,12 +49,71 @@ class UserAccountSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
+class UserDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserData
+        fields = ['id', 'name', 'age', 'gender']
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        instance = self.Meta.model(**validated_data)
+        instance.save()
+        return instance
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    people = UserDataSerializer(many=True)
+    
+    class Meta:
+        model = UserAccount
+        fields = ['id', 'username', 'email', 'people']
+
+
+class NutritionalDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NutritionalData
+        fields = ['id', 'name', 'value', 'unit']
+
+
+class FoodDataSerializer(serializers.ModelSerializer):
+
+    nutrient_data = NutritionalDataSerializer(many=True)
+
+    class Meta:
+        model = FoodData
+        fields = '__all__'
+        # fields = ['id', 'owner', 'owner_name']
+
+    def create(self, validated_data):
+        nutrient_data_list = validated_data.pop('nutrient_data')
+        food_data = FoodData.objects.create(**validated_data)
+        
+        for nutrient_data in nutrient_data_list:
+            NutritionalData.objects.create(parent_food=food_data, **nutrient_data)
+        
+        return food_data
+        
+
 class UserDayRecordSerializer(serializers.ModelSerializer):
+
+    class SimpleRecipeRecordSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Recipe
+            fields = ['id', 'title']
+
+    class SimpleUserMealRecordSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = UserMealRecord
+            fields = ['id', 'time', 'title']
+
+    # meal_record = SimpleUserMealRecordSerializer(many=True)
     class Meta:
         model = UserDayRecord
+        
         fields = [
-            'user', 'name', 'date',
-            'energy',
+            'id', 'user', 'name', 'date',
+            'energy_kcal', 'energy_kj',
 
             # macro nutrients in grams
             'protein',
@@ -92,6 +155,8 @@ class UserDayRecordSerializer(serializers.ModelSerializer):
             # grams 
             'sodium',
         ]
+        
+    #fields = '__all__'
 
     def create(self, validated_data):
         instance = self.Meta.model(**validated_data)
@@ -100,73 +165,120 @@ class UserDayRecordSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         for (key, value) in validated_data.items():
-            if key not in ['user', 'date', 'name']:
+            if key not in ['user', 'date', 'name', 'meal_record'] and key in instance.keys():
                 setattr(instance, key, value)
         instance.save()
         return instance
 
-class UserDataSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserData
-        fields = ['id', 'name', 'age', 'gender']
-
-    def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user
-        instance = self.Meta.model(**validated_data)
-        instance.save()
-        return instance
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    people = UserDataSerializer(many=True)
-    
-    class Meta:
-        model = UserAccount
-        fields = ['id', 'username', 'email', 'people']
-
-class NutritionalDataSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = NutritionalData
-        fields = ['id', 'name', 'value', 'unit']
-
-class FoodDataSerializer(serializers.ModelSerializer):
-
-    nutrient_data = NutritionalDataSerializer(many=True)
-
-    class Meta:
-        model = FoodData
-        fields = ['id', 'name', 'nutrient_data']
 
 class UserMealContentSerializer(serializers.ModelSerializer):
-    class SimpleFoodDataSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = FoodData
-            fields = ['name']
-
-    food_data = SimpleFoodDataSerializer(many=True)
 
     class Meta:
-        model = UserMealContent
+        model = UserMealRecordContent
         fields = '__all__'
 
+
 class UserMealRecordSerializer(serializers.ModelSerializer):
-    meal_content = UserMealContentSerializer(many=True)
+    class SimpleUserMealContentSerializer(serializers.ModelSerializer):
+
+        class Meta:
+            model = UserMealRecordContent
+            fields = ['id', 'food_data', 'amount_in_grams']
+
+    meal_content = SimpleUserMealContentSerializer(many=True)
 
     class Meta:
         model = UserMealRecord
-        fields = ['id', 'time', 'title', 'meal_content']
-
+        fields = ['id', 'day_record', 'time', 'title', 'meal_content']
     
     def create(self, validated_data):
 
-        validated_nutrient_data = validated_data.pop('nutrient_data')
+        meals_data = validated_data.pop('meal_content')
+   
+        try:
+            datetime.strptime(validated_data['time'], '%Y-%m-%d %H:%M')
+            meal_record = UserMealRecord.objects.create(**validated_data)
+        except:
+            meal_record = UserMealRecord.objects.create(**validated_data, time=timezone.now().strftime('%Y-%m-%d %H:%M'))
 
-        food = self.Meta.model.objects.create(**validated_data)
+        for meal_data in meals_data:
 
-        for each_nutrient_data in validated_nutrient_data:
-            print('yo')
-            NutritionalData.objects.create(parent_food=food, **each_nutrient_data)
+            food_data = meal_data.pop('food_data')
+            instance = FoodData.objects.get(id=food_data.id)
+            meal_content = UserMealRecordContent.objects.create(parent_record=meal_record, food_data=instance, **meal_data)
+            
+            meal_record.meal_content.add(meal_content)
 
-        return food
+        print(validated_data['day_record'].id)
+        user_day_record = UserDayRecord.objects.get(id=validated_data['day_record'].id)
+        user_day_record.meal_record.add(meal_record)
+        self.__record_update_helper(validated_data['day_record'].id)
+
+        return meal_record
+    
+
+    def __record_update_helper(self, record_id):
+
+        user_day_record = UserDayRecord.objects.get(id=record_id)
+        #instance = UserDayRecordSerializer(user_day_record)
+        meal_record_list = UserMealRecord.objects.filter(day_record=user_day_record)
+
+        print('name', meal_record_list)
+
+        # reference to balance units
+        dir = os.path.dirname(__file__)  # get current directory
+        file_path = os.path.join(dir, 'Assets/gov_diet_recommendation_units.json')
+        with open(file_path) as json_file:
+            units = json.load(json_file)
+
+        def _unit_converter(target_unit, from_unit): 
+            if target_unit.lower() == from_unit.lower():
+                return 1
+            def _unit_multiplier(unit):
+                if unit == 'g':
+                    return 1
+                if unit == 'mg':
+                    return decimal.Decimal(1000)
+                if unit == 'microg':
+                    return decimal.Decimal(1e+6)
+                else: 
+                    return False
+  
+            return _unit_multiplier(target_unit) / _unit_multiplier(from_unit)
+
+        new_nutrition_data = {}
+        for meal_record in meal_record_list:
+            for meal_content in UserMealRecordContent.objects.filter(parent_record=meal_record):
+                for nutrient_data in NutritionalData.objects.filter(parent_food=FoodData.objects.get(id=meal_content.food_data.id)):
+                    name = nutrient_data.name
+                    value = nutrient_data.value
+                    from_unit = nutrient_data.unit
+                    if name in units:
+                        target_unit = units[name]
+                        new_nutrition_data[name] = value * (meal_content.amount_in_grams / 100 ) * decimal.Decimal(_unit_converter(target_unit, from_unit))
+        print('ay')
+        print('r', user_day_record)
+
+        for field in user_day_record._meta.get_fields():
+            if field.name not in ['id', 'user', 'date', 'name', 'meal_record']:
+                print('field', field.name)
+                decimal.getcontext().prec = 9
+                if field.name in new_nutrition_data:
+                    print(decimal.Decimal(new_nutrition_data[field.name]))
+                    setattr(user_day_record, field.name, decimal.Decimal(new_nutrition_data[field.name]))
+                else:
+                    setattr(user_day_record, field.name, decimal.Decimal())
+        
+        for field in user_day_record._meta.get_fields():
+            print('f', field.name)
+            print(getattr(user_day_record, field.name))
+
+        class Test(serializers.ModelSerializer):
+            class Meta:
+                model = UserDayRecord
+                fields = '__all__'   
+        #print('data',Test(user_day_record).data)
+        user_day_record.save()
 
 
 class RecipeTitleSerializer(serializers.ModelSerializer):
@@ -237,16 +349,15 @@ class RecipeSerializer(serializers.ModelSerializer):
                 recipe.tags.add(instance_list[0])
         
         for ingredient_data in ingredients_data:
-            ingredient_name = ingredient_data.get('ingredient')
-            instance_list = FoodData.objects.filter(name=ingredient_name)
-            if len(instance_list) == 0:
-                FoodData.objects.create(name=ingredient_name)
+            ingeredient_id = ingredient_data.get('ingredient')
+            instance_list = FoodData.objects.filter(id=ingeredient_id)
             RecipeIngredient.objects.create(recipe=recipe, **ingredient_data)
             
         for step_number, step_data in enumerate(steps_data):
-            RecipeStep.objects.create(recipe=recipe, step_number=step_number, **step_data)
+            RecipeStep.objects.create(recipe=recipe, **step_data)
 
         return recipe
+    
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:

@@ -30,6 +30,7 @@ class UserAccountManager(BaseUserManager):
         
         user.is_staff = True
         user.is_admin = True
+        user.is_superuser = True
 
         user.save()
         return user
@@ -100,77 +101,59 @@ class UserDayRecord(models.Model):
 
     # government dietry recommendations per day
     # https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/618167/government_dietary_recommendations.pdf
-    # energy in kcal
-    energy = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    # energy in kcal, kj
+    energy_kcal = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    energy_kj = models.DecimalField(default=0, max_digits=20, decimal_places=10)
 
     # macro nutrients in grams
-    protein = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    fat = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    saturated_fat = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    polyunsaturated_fat = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    monounsaturated_fat = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    saturated_fat = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    carbohydrate = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    free_sugars = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    salt = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    dietry_fibre = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    protein = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    fat = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    saturated_fat = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    polyunsaturated_fat = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    monounsaturated_fat = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    saturated_fat = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    carbohydrate = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    free_sugars = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    salt = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    dietry_fibre = models.DecimalField(default=0, max_digits=20, decimal_places=10)
 
     # vitamins
     # micrograms
-    vitamin_a = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    vitamin_b12 = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    folate = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    vitamin_d = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    vitamin_a = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    vitamin_b12 = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    folate = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    vitamin_d = models.DecimalField(default=0, max_digits=20, decimal_places=10)
     # milligrams
-    thiamin = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    riboflavin = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    niacin_equivalent = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    vitamin_b6 = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    vitamin_c = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    thiamin = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    riboflavin = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    niacin_equivalent = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    vitamin_b6 = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    vitamin_c = models.DecimalField(default=0, max_digits=20, decimal_places=10)
 
     # minerals
     # milligrams
-    iron = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    calcium = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    magnesium = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    potassium = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    zinc = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    copper = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    phosphorus = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    chloride = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    iron = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    calcium = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    magnesium = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    potassium = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    zinc = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    copper = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    phosphorus = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    chloride = models.DecimalField(default=0, max_digits=20, decimal_places=10)
     # micrograms
-    iodine = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    selenium = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    iodine = models.DecimalField(default=0, max_digits=20, decimal_places=10)
+    selenium = models.DecimalField(default=0, max_digits=20, decimal_places=10)
     # grams 
-    sodium = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-
-"""
-The meal user has eaten. consists of multiple food data
-"""
-class UserMealRecord(models.Model):
-    day_record = models.ForeignKey(UserDayRecord, related_name='meal_record', on_delete=models.CASCADE)
-    time = models.DateTimeField(default=datetime.strftime(timezone.now(), '%Y-%m-%d %H:%M'), unique=True)
-    title = models.CharField(max_length=255)
-
-
-class UserMealContent(models.Model):
-    meal = models.ForeignKey(UserMealRecord, related_name='meal_content', on_delete=models.CASCADE)
-    amount_in_grams = models.DecimalField(default=0, max_digits=5, decimal_places=2)
+    sodium = models.DecimalField(default=0, max_digits=20, decimal_places=10)
 
 class FoodData(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    meal = models.ForeignKey(UserMealContent, related_name='food_data', on_delete=models.SET_NULL, null=True)
-
-    # TODO - ingredient data
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', null=True, on_delete=models.SET_NULL)
+    owner_name = models.CharField(max_length=255, null=True)
+    name = models.CharField(max_length=255)
+    #meal = models.ForeignKey(UserMealRecordContent, related_name='food_data', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name
-        
-class NutritionalData(models.Model):
-    parent_food = models.ForeignKey(FoodData, related_name='nutrient_data', on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
-    value = models.DecimalField(default=0, max_digits=5, decimal_places=2)
-    unit = models.CharField(max_length=10)
 
 # model for a recipe 
 class Recipe(models.Model):
@@ -202,7 +185,31 @@ class Comment(models.Model):
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, related_name='ingredients', on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(FoodData, to_field='name', on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(FoodData, on_delete=models.CASCADE)
+    ingredient_name = models.CharField(max_length=255)
     ingredient_quantity = models.IntegerField()
     ingredient_unit = models.CharField(max_length=10)
 
+"""
+The meal user has eaten. consists of multiple food data
+"""
+class UserMealRecord(models.Model):
+    day_record = models.ForeignKey(UserDayRecord, related_name='meal_record', on_delete=models.CASCADE)
+    time = models.DateTimeField(default=datetime.strftime(timezone.now(), '%Y-%m-%d %H:%M:%S'), unique=True)
+    title = models.CharField(max_length=255)
+
+class UserMealRecipeRecord(models.Model):
+    parent_record = models.ForeignKey(UserMealRecord, related_name='meal_record', on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    amount_in_grams = models.DecimalField(max_digits=5, decimal_places=2)    
+
+class UserMealRecordContent(models.Model):
+    parent_record = models.ForeignKey(UserMealRecord, related_name='meal_content', on_delete=models.CASCADE)
+    food_data = models.ForeignKey(FoodData, on_delete=models.CASCADE)
+    amount_in_grams = models.DecimalField(max_digits=5, decimal_places=2)
+
+class NutritionalData(models.Model):
+    parent_food = models.ForeignKey(FoodData, related_name='nutrient_data', on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    value = models.DecimalField(default=0, max_digits=10, decimal_places=2)
+    unit = models.CharField(max_length=10)

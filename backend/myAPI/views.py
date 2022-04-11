@@ -1,10 +1,13 @@
 from cgitb import lookup
 from datetime import datetime, timedelta
 from email import message
+import json
 from os import stat
+import re
+import string
 from tracemalloc import start
-from .models import Comment, FoodData, RecipeIngredient, Recipe, RecipeStep, UserAccount, Tag, UserData, UserDayRecord, UserMealRecord
-from .serializers import CommentSerializer, FoodDataSerializer, RecipeIngredientSerializer, RecipeSerializer, RecipeStepSerializer, RecipeTitleSerializer, UserAccountSerializer, TagSerializer, UserDataSerializer, UserDayRecordSerializer, UserMealRecordSerializer, UserProfileSerializer
+from .models import *
+from .serializers import *
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -110,7 +113,7 @@ class UserRecordViewSet(viewsets.ModelViewSet):
             from_date = request.query_params.get('from', None)
             nutrition_type = request.query_params.get('nutrition', None)
 
-            print(nutrition_type)
+            print('a', nutrition_type)
 
             # if date is specified, turn the data into array of data
             if from_date is not None:
@@ -137,15 +140,16 @@ class UserRecordViewSet(viewsets.ModelViewSet):
                     date__range=[start_date, target_date]), many=True)
 
                 # if empty after filter just return
-
+                print('ret')
                 if len(serializer.data) <= 0:
                     return Response(serializer.data)
 
                 # the return data should be in the same format as usual return
                 # but rather than array of object turn it into object of arrays
-
+                print('ret')
                 data_json = serializer.data.copy()
                 return_json = data_json.pop(0)
+                print('ret', return_json)
 
                 # use the first entry and turn each value into array with that value only
                 for key, value in return_json.items():
@@ -188,16 +192,85 @@ class UserRecordViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserMealViewSet(viewsets.ModelViewSet):
-    #permission_classes = [UserRecordPermission]
+class UserMealRecordViewSet(viewsets.ModelViewSet):
+    permission_classes = [UserRecordPermission]
     queryset = UserMealRecord.objects.all()
     serializer_class = UserMealRecordSerializer
-
+   
+   
     def list(self, request):
-        if request.user.is_authenticated:
-            serializer = self.serializer_class(self.queryset, many=True)
+        record = request.query_params.get('record', None)
+        if request.user.is_authenticated and record is not None:
+            serializer = self.serializer_class(self.queryset.filter(day_record=record), many=True)
+            
+            for index_rec, meal_record in enumerate(serializer.data):
+                for index_cont, meal_content in enumerate(meal_record['meal_content']):
+                    food_data_id = meal_content.pop('food_data')
+                    food_data = FoodDataSerializer(FoodData.objects.get(id=food_data_id)).data
+                    serializer.data[index_rec]['meal_content'][index_cont]['food_data'] = food_data
+
             return Response(serializer.data)
-        return Response()
+        return Response([])
+    
+    def create(self, request):
+        
+        record = self.__recordHelper(request=request)
+        self.__foodHelper(request)
+        # add the record data to the request data, so the data is valid for serializer to process
+        request.data['day_record'] = int(record.id)
+        serializer = self.serializer_class(data=request.data)
+
+        # rest is taken care of by serializer
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def __recordHelper(self, request):
+        # check date format, if its not in the right format default it (today)
+        data = json.loads(request.body)
+        if 'date' in data:
+            try :
+                date = datetime.now().strptime(data['date'], '%Y-%m-%d')
+            except AttributeError:
+                date = datetime.now().strftime('%Y-%m-%d')
+        else:
+            date = datetime.now().strftime('%Y-%m-%d')
+
+        # get all records with the date
+        records_list = UserDayRecord.objects.filter(date=date)
+
+        # if there is no record, create one
+        if len(records_list) == 0:
+            record = UserDayRecord.objects.create(user=request.user, name=request.query_params.get('name'), date=date)
+        else:
+            # if there is one, use the record as the parent for this meal record data
+            record = records_list[0]
+        
+        return record
+
+    def __foodHelper(self, request):
+        for meal_content in request.data['meal_content']:
+            if not isinstance(meal_content['food_data'], int):
+                # if food data was sent instead of id, create it first
+                food_data_json = meal_content.pop('food_data')
+                user = None
+                if 'owner' in food_data_json:
+                    owner = food_data_json.pop('owner')
+                    if isinstance(owner, int):
+                        user_list = UserAccount.objects.filter(id=owner)
+                    elif isinstance(owner, str):
+                        user_list = UserAccount.objects.filter(username=owner)
+                    else:
+                        return False
+                    
+                    if len(user_list) == 1:
+                        user = user_list[0]
+                else:
+                    return False
+
+                food_data = FoodData.objects.create(owner=user, **food_data_json)
+                meal_content['food_data'] = food_data.id
 
 
 class UserDataPermission(BasePermission):
@@ -299,11 +372,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     # https://docs.djangoproject.com/en/4.0/topics/db/queries/
     def list(self, request):
         search_query = request.query_params.get('title', None)
-        print(search_query)
+        
         if search_query is None:
             serializer = self.serializer_class(self.queryset, many=True)
         else:
             serializer = self.serializer_class(self.queryset.filter(title__contains=search_query), many=True)
+        
+        for i, data in enumerate(serializer.data):
+            ingredients = data['ingredients']
+            for j, ingredient in enumerate(ingredients):
+                ingredient_food_id = ingredient['ingredient']
+                food_data = FoodData.objects.get(id=ingredient_food_id)
+                serializer.data[i]['ingredients'][j]['name'] = food_data.name
         return Response(serializer.data)
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -322,11 +402,13 @@ class FoodDataViewSet(viewsets.ModelViewSet):
     queryset = FoodData.objects.all()
     serializer_class = FoodDataSerializer
 
+class NutritionalViewSet(viewsets.ModelViewSet):
+    queryset = NutritionalData.objects.all()
+    serializer_class = NutritionalData
+
 class RecipeIngredientViewSet(viewsets.ModelViewSet):
     queryset = RecipeIngredient.objects.all()
     serializer_class = RecipeIngredientSerializer
-
-
 
 
 '''
