@@ -8,13 +8,12 @@ from rest_framework_simplejwt.views import (
 )
 
 # drf-nested-routers
-from rest_framework_nested import routers
 
 router = DefaultRouter()
-router.register('useraccounts', views.UserAccountViewSet, basename='useraccounts')
-router.register('userdata', views.UserDataViewSet, basename='useraccounts-userdata')
-router.register('userprofile', views.UserProfileViewSet, basename='userprofile')
-router.register('userrecords', views.UserRecordViewSet, basename='userrecords')
+#router.register('useraccounts', views.UserAccountViewSet, basename='useraccounts')
+#router.register('userdata', views.UserDataViewSet, basename='useraccounts-userdata')
+#router.register('userprofile', views.UserProfileViewSet, basename='userprofile')
+#router.register('userrecords', views.UserRecordViewSet, basename='userrecords')
 router.register('usermealrecords', views.UserMealRecordViewSet, basename='usermealrecords')
 router.register('recipetitles', views.RecipeTitleViewSet, basename='recipetitles')
 router.register('recipes', views.RecipeViewSet, basename='recipes')
@@ -25,17 +24,20 @@ router.register('fooddata', views.FoodDataViewSet, basename='fooddata')
 router.register('recipeingredients', views.RecipeIngredientViewSet, basename='recipeingredients')
 
 
-
+user_record_urls = [
+    path('api/useraccounts/<str:username>/userdata/<str:name>/userrecords/', views.UserRecordViewSet.as_view({'get': 'list', 'post': 'create'}), name='userrecord'),
+    path('api/useraccounts/<str:username>/userdata/<str:name>/userrecords/<int:pk>', views.UserRecordViewSet.as_view({'get': 'list', 'post': 'create'}), name='userrecord'),
+]
 
 user_data_urls = [
     path('api/useraccounts/<str:username>/userdata/', views.UserDataViewSet.as_view({'get': 'list', 'post': 'create'}), name='userdata'),
-    path('api/useraccounts/<str:username>/userdata/<str:name>', views.UserDataViewSet.as_view({
+    path('api/useraccounts/<str:username>/userdata/<str:name>/', views.UserDataViewSet.as_view({
         'get': 'retrieve',
         'put': 'update',
         'delete': 'destroy'
         }), name='userdata'),
     path('api/useraccounts/<str:username>/userprofile/', views.UserProfileViewSet.as_view({'get': 'list'}))
-]
+] + user_record_urls
 
 user_urls = [
     path('api/useraccounts/', views.UserAccountViewSet.as_view({'get': 'list', 'post': 'create'}), name='useraccounts', ),

@@ -125,14 +125,12 @@ class UserRecordViewSet(viewsets.ModelViewSet):
     """
     requires login to view data and shows the logged in user's only
     """
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            name = request.query_params.get('name', None)
+            name = kwargs['name']
             from_date = request.query_params.get('from', None)
             nutrition_type = request.query_params.get('nutrition', None)
             on_date = request.query_params.get('date', None)
-
-            print('a', nutrition_type)
 
             # if date is specified, turn the data into array of data
             if from_date is not None:
@@ -378,7 +376,8 @@ class UserDataViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
-            serializer = UserDataSerializer(self.queryset.get(user=request.user))
+            print(kwargs['name'])
+            serializer = UserDataSerializer(self.queryset.get(user=request.user, name=kwargs['name']))
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
