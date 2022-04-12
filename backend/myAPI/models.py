@@ -74,7 +74,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 # sub accounts for users, if user wants to record data for family members etc
 class UserData(models.Model):
     # an account have multiple users, such as family members
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='people', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', related_name='people', on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
     age = models.IntegerField()
 
@@ -91,7 +91,7 @@ class UserData(models.Model):
         (OTHER, 'Other')
     ]
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    unique_together = ['user', 'name']
+    unique_together = [('user', 'name')]
 
 # the nutrition data of the particular sub user data
 class UserDayRecord(models.Model):

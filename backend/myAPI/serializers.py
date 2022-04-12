@@ -1,5 +1,6 @@
 import decimal
 import unicodedata
+from wsgiref import validate
 from rest_framework import serializers
 from .models import *
 import json
@@ -53,7 +54,7 @@ class UserAccountSerializer(serializers.ModelSerializer):
 class UserDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserData
-        fields = ['id', 'name', 'age', 'gender']
+        fields = '__all__'
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
@@ -194,12 +195,16 @@ class UserMealRecordSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
 
         meals_data = validated_data.pop('meal_content')
+        if 'time' in validated_data:
+            time = validated_data['time']
    
-        try:
-            datetime.strptime(validated_data['time'], '%Y-%m-%d %H:%M')
-            meal_record = UserMealRecord.objects.create(**validated_data)
-        except:
-            meal_record = UserMealRecord.objects.create(**validated_data, time=timezone.now().strftime('%Y-%m-%d %H:%M'))
+            try:
+                time.strftime('%Y-%m-%d %H:%M:%S')
+                meal_record = UserMealRecord.objects.create(**validated_data)
+            except KeyError:
+                meal_record = UserMealRecord.objects.create(**validated_data, time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'))
+        else:
+            meal_record = UserMealRecord.objects.create(**validated_data, time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         for meal_data in meals_data:
 
@@ -255,7 +260,10 @@ class UserMealRecordSerializer(serializers.ModelSerializer):
                     from_unit = nutrient_data.unit
                     if name in units:
                         target_unit = units[name]
-                        new_nutrition_data[name] = value * (meal_content.amount_in_grams / 100 ) * decimal.Decimal(_unit_converter(target_unit, from_unit))
+                        if name in new_nutrition_data:
+                            new_nutrition_data[name] += value * (meal_content.amount_in_grams / 100 ) * decimal.Decimal(_unit_converter(target_unit, from_unit))
+                        else:
+                            new_nutrition_data[name] = value * (meal_content.amount_in_grams / 100 ) * decimal.Decimal(_unit_converter(target_unit, from_unit))     
         print('ay')
         print('r', user_day_record)
 

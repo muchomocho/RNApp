@@ -1,4 +1,5 @@
 from cgitb import lookup
+from contextvars import Context
 from datetime import datetime, timedelta
 from email import message
 import json
@@ -63,6 +64,23 @@ class UserAccountViewSet(viewsets.ModelViewSet):
     queryset = UserAccount.objects.all()
     serializer_class = UserAccountSerializer
     lookup_field = 'username'
+
+    def retrieve(self, request, username):
+        queryset = UserAccount.objects.all()
+        userccount = get_object_or_404(queryset, username=username)
+        serializer = UserAccountSerializer(userccount)
+        return Response(serializer.data)
+    
+    def update(self, request, username):
+        print(username)
+        queryset = UserAccount.objects.all()
+        userccount = get_object_or_404(queryset, username=username)
+        request.data['username'] = username
+        serializer = UserAccountSerializer(userccount, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     """
     def list(self, request):
@@ -112,60 +130,16 @@ class UserRecordViewSet(viewsets.ModelViewSet):
             name = request.query_params.get('name', None)
             from_date = request.query_params.get('from', None)
             nutrition_type = request.query_params.get('nutrition', None)
+            on_date = request.query_params.get('date', None)
 
             print('a', nutrition_type)
 
             # if date is specified, turn the data into array of data
             if from_date is not None:
-                # https://stackoverflow.com/questions/16870663/how-do-i-validate-a-date-string-format-in-python
-                try:
-                    start_date = datetime.strptime(from_date, '%Y-%m-%d')
-                except ValueError:
-                    error = {"date format incorrect"}
-                    return Response(error, status=status.HTTP_400_BAD_REQUEST)
+                return self.__date_range_helper(from_date, on_date, name, request.user.username)
 
-                target_date = datetime.now()
-                current_date = start_date
-                date_container = []
-                while current_date <= target_date:
-                    date_container.append(current_date.strftime('%Y-%m-%d'))
-                    current_date = current_date + timedelta(days=1)
-                print(date_container)
-                
-                if name is None:
-                    serializer = UserDayRecordSerializer(self.queryset.filter(user=request.user.username, 
-                    date__range=[start_date, target_date]), many=True)
-                else:
-                    serializer = UserDayRecordSerializer(self.queryset.filter( 
-                    date__range=[start_date, target_date]), many=True)
-
-                # if empty after filter just return
-                print('ret')
-                if len(serializer.data) <= 0:
-                    return Response(serializer.data)
-
-                # the return data should be in the same format as usual return
-                # but rather than array of object turn it into object of arrays
-                print('ret')
-                data_json = serializer.data.copy()
-                return_json = data_json.pop(0)
-                print('ret', return_json)
-
-                # use the first entry and turn each value into array with that value only
-                for key, value in return_json.items():
-                    if key == 'name' or key == 'user':
-                            continue
-                    return_json[key] = [value]
-
-                # append the following data
-                for data in data_json:
-                    for key, value in data.items():
-                        if key == 'name' or key == 'user':
-                            continue
-                        return_json[key].append(value)
-
-                return Response(return_json)
-
+            if on_date is not None:
+                return self.__date_helper(on_date, name, request.user.username)
 
             if name is None:
                 serializer = UserDayRecordSerializer(self.queryset.filter(user=request.user.username), many=True)
@@ -175,6 +149,83 @@ class UserRecordViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+
+
+    def __date_range_helper(self, from_date, on_date, name, username):
+        # https://stackoverflow.com/questions/16870663/how-do-i-validate-a-date-string-format-in-python
+        try:
+            start_date = datetime.strptime(from_date, '%Y-%m-%d')
+        except ValueError:
+            error = {"date format incorrect"}
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        
+        if on_date is not None:
+        # https://stackoverflow.com/questions/16870663/how-do-i-validate-a-date-string-format-in-python
+            try:
+                target_date = datetime.strptime(on_date, '%Y-%m-%d')
+            except ValueError:
+                error = {"date format incorrect"}
+                return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            target_date = datetime.now()
+
+        current_date = start_date
+        date_container = []
+        while current_date <= target_date:
+            date_container.append(current_date.strftime('%Y-%m-%d'))
+            current_date = current_date + timedelta(days=1)
+        print(date_container)
+        
+        if name is None:
+            serializer = UserDayRecordSerializer(self.queryset.filter(user=username, 
+            date__range=[start_date, target_date]), many=True)
+        else:
+            serializer = UserDayRecordSerializer(self.queryset.filter( 
+            date__range=[start_date, target_date]), many=True)
+
+        # if empty after filter just return
+        if len(serializer.data) <= 0:
+            return Response(serializer.data)
+
+        # the return data should be in the same format as usual return
+        # but rather than array of object turn it into object of arrays
+        data_json = serializer.data.copy()
+        return_json = data_json.pop(0)
+
+        # use the first entry and turn each value into array with that value only
+        for key, value in return_json.items():
+            if key == 'name' or key == 'user':
+                    continue
+            return_json[key] = [value]
+
+        # append the following data
+        for data in data_json:
+            for key, value in data.items():
+                if key == 'name' or key == 'user':
+                    continue
+                return_json[key].append(value)
+
+        return Response(return_json)
+
+    def __date_helper(self, on_date, name, username):
+        # https://stackoverflow.com/questions/16870663/how-do-i-validate-a-date-string-format-in-python
+        try:
+            target_date = datetime.strptime(on_date, '%Y-%m-%d')
+        except ValueError:
+            error = {"date format incorrect"}
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        
+        if name is None:
+            serializer = UserDayRecordSerializer(self.queryset.filter(user=username, 
+            date=target_date), many=True)
+        else:
+            serializer = UserDayRecordSerializer(self.queryset.filter( 
+            date=target_date), many=True)
+
+        if len(serializer.data) > 0:
+            return Response(serializer.data[0])
+        return Response({})
+
 
     """
     def retrieve(self, request, *args, **kwargs):
@@ -203,11 +254,11 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         if request.user.is_authenticated and record is not None:
             serializer = self.serializer_class(self.queryset.filter(day_record=record), many=True)
             
-            for index_rec, meal_record in enumerate(serializer.data):
-                for index_cont, meal_content in enumerate(meal_record['meal_content']):
-                    food_data_id = meal_content.pop('food_data')
-                    food_data = FoodDataSerializer(FoodData.objects.get(id=food_data_id)).data
-                    serializer.data[index_rec]['meal_content'][index_cont]['food_data'] = food_data
+            # for index_rec, meal_record in enumerate(serializer.data):
+            #     for index_cont, meal_content in enumerate(meal_record['meal_content']):
+            #         food_data_id = meal_content.pop('food_data')
+            #         food_data = FoodDataSerializer(FoodData.objects.get(id=food_data_id)).data
+            #         serializer.data[index_rec]['meal_content'][index_cont]['food_data'] = food_data
 
             return Response(serializer.data)
         return Response([])
@@ -229,13 +280,17 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
     def __recordHelper(self, request):
         # check date format, if its not in the right format default it (today)
         data = json.loads(request.body)
-        if 'date' in data:
+        
+        if 'time' in data:
             try :
-                date = datetime.now().strptime(data['date'], '%Y-%m-%d')
+                time_object = datetime.strptime(data['time'], '%Y-%m-%d %H:%M:%S')
             except AttributeError:
-                date = datetime.now().strftime('%Y-%m-%d')
+                time_object = datetime.now()
         else:
-            date = datetime.now().strftime('%Y-%m-%d')
+            time_object = datetime.now()
+        
+        time = time_object.strftime('%Y-%m-%d %H:%M%S')
+        date = time_object.strftime('%Y-%m-%d')
 
         # get all records with the date
         records_list = UserDayRecord.objects.filter(date=date)
@@ -297,16 +352,33 @@ class UserDataViewSet(viewsets.ModelViewSet):
     queryset = UserData.objects.all()
     serializer_class = UserDataSerializer
 
-    def list(self, request):
-        if request.user.is_authenticated:
-            serializer = UserDataSerializer(self.queryset.filter(user=request.user.id), many=True)
+    def create(self, request, *args, **kwargs):
+ 
+        if request.user.is_authenticated and request.user.username == kwargs['username']:
+            request.data['user'] = request.user
+            serializer = UserDataSerializer(data=request.data, context={'request': request})
+            if len(UserDataSerializer(self.queryset.filter(user=request.user, name=request.data['name']), many=True).data) > 0:
+                message = {'sub user with the same name exists'}
+                return Response(message, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        message = {'requires log in'}
+        return Response(message, status=status.HTTP_401_UNAUTHORIZED)
+
+    def list(self, request, *args, **kwargs):
+        
+        if request.user.is_authenticated and request.user.username == kwargs['username']:
+            serializer = UserDataSerializer(self.queryset.filter(user=request.user), many=True)
+            print(serializer.data)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
     
     def retrieve(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            serializer = UserDataSerializer(self.queryset.get(user=request.user.id))
+        if request.user.is_authenticated and request.user.username == kwargs['username']:
+            serializer = UserDataSerializer(self.queryset.get(user=request.user))
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -343,7 +415,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             serializer = UserProfileSerializer(self.queryset.filter(username=request.user.username), many=True)
             return Response(serializer.data)
