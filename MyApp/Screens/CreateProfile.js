@@ -16,7 +16,8 @@ function CreateProfile({ navigation }) {
     // https://reactnative.dev/docs/network
     const createUserProfile = async (token) => {
         try {
-            const response = await fetch(Constant.ROOT_URL + 'api/userdata/', {
+            const username = await Authentication.getUsername();
+            const response = await fetch(Constant.ROOT_URL + 'api/useraccounts/' + username + '/userdata/', {
                 method: "POST",
                 headers: {
                     Accept: 'application/json',

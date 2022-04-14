@@ -139,10 +139,8 @@ class UserRecordViewSet(viewsets.ModelViewSet):
             if on_date is not None:
                 return self.__date_helper(on_date, name, request.user.username)
 
-            if name is None:
-                serializer = UserDayRecordSerializer(self.queryset.filter(user=request.user.username), many=True)
-            else:
-                serializer = UserDayRecordSerializer(self.queryset.filter(user=request.user.username, name=name), many=True)
+            
+            serializer = UserDayRecordSerializer(self.queryset.filter(user=request.user, name=name), many=True)
                 
             return Response(serializer.data)
         content = {'requires log in to see'}
@@ -174,12 +172,10 @@ class UserRecordViewSet(viewsets.ModelViewSet):
             current_date = current_date + timedelta(days=1)
         print(date_container)
         
-        if name is None:
-            serializer = UserDayRecordSerializer(self.queryset.filter(user=username, 
+        
+        serializer = UserDayRecordSerializer(self.queryset.filter(user=username, name=name, 
             date__range=[start_date, target_date]), many=True)
-        else:
-            serializer = UserDayRecordSerializer(self.queryset.filter( 
-            date__range=[start_date, target_date]), many=True)
+        
 
         # if empty after filter just return
         if len(serializer.data) <= 0:
