@@ -15,10 +15,16 @@ const Stack = createNativeStackNavigator();
 function AccountProfile({ navigation }) {
 
     const [data, setData] = useState([]);
+    const [isLoggedin, setIsLoggedin] = useState(false);
 
     const getUserProfile = async () => {
+        
         try {
-            const endpoint = 'api/userprofile/' + ((Constant.username.length > 0) ? (Constant.username + '/') : '');
+            const username = await Authentication.getUsername();
+            console.log(username)
+            if (username == '' || username == null || username == undefined) 
+                return false
+            const endpoint = 'api/useraccounts/' + username + '/userprofile/';
             const result = await APIRequest.httpRequest({
                 method: 'GET',
                 endpoint: endpoint,
@@ -32,7 +38,12 @@ function AccountProfile({ navigation }) {
             
             console.log('response json: ', result.json);
             setData(result.json);
-        } catch (error) {console.log(error);}
+            setIsLoggedin(true);
+            return true;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
     };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
@@ -43,7 +54,7 @@ function AccountProfile({ navigation }) {
             .then(result => { 
                 console.log('result', result)
                 if (result === false) {
-                    navigation.navigate('Sign in');
+                    setIsLoggedin(result)
                 }
              });
         });
@@ -51,6 +62,20 @@ function AccountProfile({ navigation }) {
         // Return the function to unsubscribe from the event so it gets removed on unmount
         return reload;
     }, [navigation]);
+
+    const useraccountTab = () => {
+        return(
+            <View style={[styles.account, styles.header]}>
+                <Text style={styles.accountText}>
+                    Username: {data.username}
+                </Text>
+                <Text style={styles.accountText}>
+                    email: {data.email}
+                </Text>
+            </View>
+        );
+    
+    };
 
     const renderData = (item) => {
         return(
@@ -74,42 +99,89 @@ function AccountProfile({ navigation }) {
         )
     }
 
-    // https://reactnative.dev/docs/flatlist
-    return(
-        <View >
+    const subuserTab = () => {
+        if (isLoggedin && data !== undefined) {
+            return (
             <FlatList
-            style={styles.container}
+                style={styles.container}
 
-            // top of list
-            ListHeaderComponent={
+                // top of list
+                ListHeaderComponent={
+                    useraccountTab()
+                }
+                
+                // main list content
+                data = {data.people}
+                renderItem = {({item}) => {
+                    return renderData(item)
+                }}
+                keyExtractor = {item => `${item.id}`}
+                
+                // bottom of list
+                ListFooterComponent={
+                    <View style={styles.footer}>
+                        <CustomButton
+                        buttonStyle={styles.button}
+                        text={'create new'}
+                        onPress={()=>{navigation.navigate('CreateProfile')}}
+                        />
+                    </View>
+                }
+            />
+            );
+        }
+    };
+
+    const deviceUserRenderData = (item) => {
+        return(
+            <TouchableOpacity 
+            style={styles.peopleTab}
+            >
+                <View style={styles.iconContainer}>
+                </View>
+                <View style={styles.peopleDetailContainer}>
+                    <Text style={styles.peopleTextName}>{item.name}</Text>
+                    <View style={styles.labelContainer}>
+                        <Text>Age</Text>
+                        <Text style={styles.peopleText}>{item.age}</Text>
+                    </View>
+                    <View style={styles.labelContainer}>
+                        <Text>Gender</Text>
+                        <Text style={styles.peopleText}>{item.gender}</Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
+        )
+    };
+
+    const deviceUserTab = () => {
+        console.log('render')
+        return(
+            <View>
+            <FlatList
+            ListHeaderComponentStyle={
                 <View style={[styles.account, styles.header]}>
                     <Text style={styles.accountText}>
-                        Username: {data.username}
+                        Record saved on the device
                     </Text>
-                    <Text style={styles.accountText}>
-                        emal: {data.email}
-                    </Text>
-                </View>
+                </View> 
             }
-            
-            // main list content
+
             data = {data.people}
-            renderItem = {({item}) => {
-                return renderData(item)
-            }}
-            keyExtractor = {item => `${item.id}`}
-            
-            // bottom of list
-            ListFooterComponent={
-                <View style={styles.footer}>
-                    <CustomButton
-                    buttonStyle={styles.button}
-                    text={'create new'}
-                    onPress={()=>{navigation.navigate('CreateProfile')}}
-                    />
-                </View>
-            }
+                renderItem = {({item}) => {
+                    return deviceUserRenderData(item)
+                }}
+                keyExtractor = {item => `${item.id}`}
             />
+            </View>
+        );
+    };
+
+    // https://reactnative.dev/docs/flatlist
+    return(
+        <View style={styles.container}>
+            { subuserTab() }
+            { deviceUserTab() } 
         </View>
     );
     

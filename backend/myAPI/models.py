@@ -147,8 +147,8 @@ class UserDayRecord(models.Model):
     sodium = models.DecimalField(default=0, max_digits=20, decimal_places=10)
 
 class FoodData(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', null=True, on_delete=models.SET_NULL)
-    owner_name = models.CharField(max_length=255, null=True)
+    uploader = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', null=True, on_delete=models.SET_NULL)
+    source_name = models.CharField(max_length=255, null=True)
     name = models.CharField(max_length=255)
     #meal = models.ForeignKey(UserMealRecordContent, related_name='food_data', on_delete=models.SET_NULL, null=True)
 

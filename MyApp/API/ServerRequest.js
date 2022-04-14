@@ -14,7 +14,7 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
         },
     };
     if (method !== 'GET' && method !== 'HEAD') {
-        console.log('no body');
+        console.log('body');
         request.body = JSON.stringify(body);
     }
     

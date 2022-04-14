@@ -233,7 +233,7 @@ class UserRecordViewSet(viewsets.ModelViewSet):
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
     """
-    def create(self, request):
+    def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -427,7 +427,7 @@ class RecipeTitleViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeTitleSerializer
 
     # https://docs.djangoproject.com/en/4.0/topics/db/queries/
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         search_query = request.query_params.get('title', None)
         print(search_query)
         if search_query is None:
@@ -440,8 +440,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = RecipeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     # https://docs.djangoproject.com/en/4.0/topics/db/queries/
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         search_query = request.query_params.get('title', None)
         
         if search_query is None:
@@ -449,12 +456,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         else:
             serializer = self.serializer_class(self.queryset.filter(title__contains=search_query), many=True)
         
-        for i, data in enumerate(serializer.data):
-            ingredients = data['ingredients']
-            for j, ingredient in enumerate(ingredients):
-                ingredient_food_id = ingredient['ingredient']
-                food_data = FoodData.objects.get(id=ingredient_food_id)
-                serializer.data[i]['ingredients'][j]['name'] = food_data.name
+        # for i, data in enumerate(serializer.data):
+        #     ingredients = data['ingredients']
+        #     for j, ingredient in enumerate(ingredients):
+        #         ingredient_food_id = ingredient['ingredient']
+        #         food_data = FoodData.objects.get(id=ingredient_food_id)
+        #         serializer.data[i]['ingredients'][j]['name'] = food_data.name
         return Response(serializer.data)
 
 class TagViewSet(viewsets.ModelViewSet):

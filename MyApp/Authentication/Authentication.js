@@ -19,18 +19,21 @@ import * as SecureStore from 'expo-secure-store';
 
             if (response.status == 200) {
               console.warn('token acquired!')
-              setAccessToken(json.access);
-              setRefreshToken(json.refresh);
-
-              Constant.username = username;
+              storeAccessToken(json.access);
+              storeRefreshToken(json.refresh);
+              storeUsername(username)
+              return true;
 
             } else if (response.status === 400) {
               console.warn('user already exists');
+              return false;
             } else {
               console.warn(json);
+              return false;
             }
         } catch (error) {
             console.warn(error);
+            return false;
         }
     };
     
@@ -55,7 +58,7 @@ import * as SecureStore from 'expo-secure-store';
 
             if (response.status == 200) {
               console.warn('token acquired!')
-              await setAccessToken(json.access);
+              await storeAccessToken(json.access);
               console.warn('access', json.access);
               return json.access;
             } else if (response.status === 400) {
@@ -72,7 +75,7 @@ import * as SecureStore from 'expo-secure-store';
     /* 
     https://reactnative.dev/docs/asyncstorage#setitem
     */
-    export const setAccessToken = async (accessToken) => {
+    export const storeAccessToken = async (accessToken) => {
         try {
           await SecureStore.setItemAsync(
               "access", accessToken
@@ -83,7 +86,7 @@ import * as SecureStore from 'expo-secure-store';
         }
     };
 
-    export const setRefreshToken = async (refreshToken) => {
+    export const storeRefreshToken = async (refreshToken) => {
         try {
             await SecureStore.setItemAsync(
                 "refresh", refreshToken
@@ -91,6 +94,17 @@ import * as SecureStore from 'expo-secure-store';
           } catch (error) {
             // Error saving data
             console.log('store refresh token failed: ' + error)
+          }
+    };
+
+    export const storeUsername = async (username) => {
+        try {
+            await SecureStore.setItemAsync(
+                "username", username
+            );
+          } catch (error) {
+            // Error saving data
+            console.log('store username failed: ' + error)
           }
     };
 
@@ -124,6 +138,20 @@ import * as SecureStore from 'expo-secure-store';
         return value
     };
 
+    export const getUsername = async () => {
+        var value = '';
+        try {
+            value = await SecureStore.getItemAsync('username');
+            if (value !== '') {
+                // We have data!!
+                console.log('from funtion get username', value);
+            }
+        } catch (error) {
+            // Error retrieving data
+            console.log('get access token failed: ' + error)
+        }
+        return value
+    };
 
     export const tokenRequest = async (requestFunction, onFail) => {
         try {

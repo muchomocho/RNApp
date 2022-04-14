@@ -12,7 +12,12 @@ function Signin ({ navigation }) {
     
     const onSignIn = () => {
         console.log('sign in attempt')
-        Authentication.fetchToken(username, password);
+
+        const isLoginSuccess = Authentication.fetchToken(username, password);
+        console.log(isLoginSuccess)
+        if (isLoginSuccess) 
+            navigation.navigate('Profile');
+
     }
 
     return (
