@@ -1,35 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Text, TextInput, View, StyleSheet, Pressable } from 'react-native';
 
-export default function CustomButton({ onPress, text, isToggle=false, isHoldToggle=false, buttonStyle, textStyle }) {
-
-    const [state, setState] = useState({active: false});
-
-    const toggle = () => {
-        if (isToggle
-            && (!isHoldToggle || (isHoldToggle && !state.active))) {
-            setState({ active: !state.active});
-            console.log('yo', state)
-        }
-    };
-    
-    const holdToggle = () => {
-        if ((!isHoldToggle || isHoldToggle && !state.active)) {
-
-        }
-    };
+export default function CustomButton({ onPress, text, buttonStyle, textStyle }) {
 
     return (
         <Pressable 
         onPress={() => {
             onPress();
-            toggle(); 
         }} 
         style={
             [
-                styles.container, 
-                buttonStyle, 
-                (state.active && isToggle) ? {backgroundColor: '#561ddbcc'} : {backgroundColor: '#561ddb'}
+                styles.container,
+                buttonStyle
             ]}
         >
             <Text style={[styles.button, textStyle]}>{text}</Text>
@@ -50,7 +32,7 @@ const styles = StyleSheet.create({
 
     container: {
         width: '100%',
-       //backgroundColor: '#561ddb',
+        backgroundColor: '#561ddb',
         alignItems: 'center',
         padding: 15,
         marginVertical: 10,

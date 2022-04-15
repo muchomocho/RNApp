@@ -24,10 +24,14 @@
     "react-native-paper": "^4.11.2",
     "react-native-safe-area-context": "3.3.2",
     "react-native-screens": "~3.10.1",
+    "react-native-sqlite-storage": "^6.0.1",
+    "react-native-svg": "12.1.1",
     "react-native-web": "0.17.1",
     "react-navigation": "^4.4.4",
-    "victory-native": "^36.3.1",
-    "react-native-svg": "12.1.1"
+    "react-redux": "^7.2.8",
+    "redux": "^4.1.2",
+    "redux-thunk": "^2.4.1",
+    "victory-native": "^36.3.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"

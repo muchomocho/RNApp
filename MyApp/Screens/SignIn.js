@@ -5,19 +5,30 @@ import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
 import * as Authentication from "../Authentication/Authentication";
 
+import { useSelector, useDispatch } from 'react-redux';
+import { setUsername } from '../redux/actions'
+
 function Signin ({ navigation }) {
 
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
+    const [username, setInputUsername] = useState('')
+    const [password, setInputPassword] = useState('')
+
+    const dispatch = useDispatch();
     
-    const onSignIn = () => {
+    const onSignIn = async () => {
         console.log('sign in attempt')
 
-        const isLoginSuccess = Authentication.fetchToken(username, password);
-        console.log(isLoginSuccess)
-        if (isLoginSuccess) 
-            navigation.navigate('Profile');
+        try {
+            const isLoginSuccess = await Authentication.fetchToken(username, password);
+            console.log('login',isLoginSuccess)
+            if (isLoginSuccess) {
+                console.log('nav')
+                dispatch(setUsername(username));
+                navigation.navigate('Profile');
+            }
+        } catch (error) {
 
+        }
     }
 
     return (
@@ -28,13 +39,13 @@ function Signin ({ navigation }) {
 
             <CustomInput 
             value = {username}
-            setValue={setUsername}
+            setValue={setInputUsername}
             placeholder={"Username"}
             />
 
             <CustomInput 
             value = {password}
-            setValue={setPassword}
+            setValue={setInputPassword}
             placeholder={"Password"}
             isSecure={true}
             />

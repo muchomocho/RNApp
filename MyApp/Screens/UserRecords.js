@@ -4,11 +4,21 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as APIRequest from '../API/ServerRequest';
 import { dietDataContainer } from "../Constant/Constant";
 import UserGraph from "../Components/Chart/UserGraph";
+import FoodDataSelection from "../Components/FoodData/FoodDataSelection";
+import CustomButton from "../Components/CustomButton";
+import * as Authentication from "../Authentication/Authentication"
+
+import { useSelector, useDispatch } from 'react-redux';
+import { setSubuserArray, setCurrentSubuser, setUser } from '../redux/actions'
+
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator(); 
 
 function UserRecord(props) {
     
+    const { user, curerentSubuser, subuserArray } = useSelector(state => state.userReducer);
+    const dispatch = useDispatch();
+
     const [data, setData] = useState([]);
 
     const [dateRange, setDateRange] = useState(-6);
@@ -69,12 +79,15 @@ function UserRecord(props) {
         try {
             const result = await APIRequest.httpRequest({
             method: 'GET',
-            endpoint: 'api/userrecords/?name=' 
-            + props.route.params.userdata.name 
-            + '&from=' + calculateDate(dateRange)
+            endpoint: 'api/useraccounts/'
+            + user
+            + '/userdata/'
+            + curerentSubuser.name
+            + '/userrecord/'
+            + '?from=' + calculateDate(dateRange) 
             ,isAuthRequired: true
             });
-            
+
             setData(result.json);
         
         } catch (error) {
@@ -199,6 +212,10 @@ function UserRecord(props) {
     return(
         <View style={styles.graphContainer}>
             { plot() }
+            <CustomButton
+            text={'Create Record'}
+            onPress={()=>{props.navigation.navigate('Create record')}}
+            />
         </View>
     );
     

@@ -5,20 +5,25 @@ import BottomTab from './Components/BottonTab/BottomTab';
 import CreateProfile from './Screens/CreateProfile';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import { Provider } from 'react-redux';
+import { Store } from './redux/store';
+
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator 
-      screenOptions={{
-        headerShown: false
-      }}>
-        <Stack.Screen name={'Tab'} component={BottomTab}/>
-        <Stack.Screen name={'CreateProfile'} component={CreateProfile}/>
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Provider store={Store}>
+      <NavigationContainer>
+        <Stack.Navigator 
+        screenOptions={{
+          headerShown: false
+        }}>
+          <Stack.Screen name={'Tab'} component={BottomTab}/>
+          <Stack.Screen name={'CreateProfile'} component={CreateProfile}/>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 }
 

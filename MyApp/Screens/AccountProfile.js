@@ -9,21 +9,26 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as APIRequest from '../API/ServerRequest';
 import { TouchableOpacity } from "react-native";
 
+import { useSelector, useDispatch } from 'react-redux';
+import { setSubuserArray, setCurrentSubuser, setUser, setLogout } from '../redux/actions'
+
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
 
 function AccountProfile({ navigation }) {
 
-    const [data, setData] = useState([]);
-    const [isLoggedin, setIsLoggedin] = useState(false);
+    const { user, curerentSubuser, subuserArray } = useSelector(state => state.userReducer);
+    const dispatch = useDispatch();
 
     const getUserProfile = async () => {
         
         try {
+            const refreshToken = await Authentication.getStoredRefreshToken();
             const username = await Authentication.getUsername();
-            console.log(username)
-            if (username == '' || username == null || username == undefined) 
-                return false
+
+            if (username == '' || username == null || username == undefined) {
+                return
+            }
             const endpoint = 'api/useraccounts/' + username + '/userprofile/';
             const result = await APIRequest.httpRequest({
                 method: 'GET',
@@ -32,13 +37,19 @@ function AccountProfile({ navigation }) {
             });
             console.log('status= ', result.response.status);
             if (result.response.status === 401) {
-                console.log('unauth')
+                Authentication.logOut();
                 return false
             }
             
             console.log('response json: ', result.json);
-            setData(result.json);
-            setIsLoggedin(true);
+            const load_user = {
+                id: result.json.id,
+                username: result.json.username,
+                email: result.json.email
+            };
+            dispatch(setUser(load_user));
+            dispatch(setSubuserArray(result.json.people));
+
             return true;
         } catch (error) {
             console.log(error);
@@ -50,13 +61,7 @@ function AccountProfile({ navigation }) {
     // function is called when screen is focused (switched onto)
     useEffect(() => {
         const reload = navigation.addListener('focus', () => {
-            getUserProfile()
-            .then(result => { 
-                console.log('result', result)
-                if (result === false) {
-                    setIsLoggedin(result)
-                }
-             });
+            getUserProfile();
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
@@ -64,14 +69,30 @@ function AccountProfile({ navigation }) {
     }, [navigation]);
 
     const useraccountTab = () => {
+
         return(
             <View style={[styles.account, styles.header]}>
-                <Text style={styles.accountText}>
-                    Username: {data.username}
-                </Text>
-                <Text style={styles.accountText}>
-                    email: {data.email}
-                </Text>
+                <View style={styles.accountChild}>
+                    <Text style={styles.accountText}>
+                        Username: {user.username}
+                    </Text>
+                    <Text style={styles.accountText}>
+                        email: {user.email}
+                    </Text>
+                </View>
+                <View style={styles.accountChild}>
+                    <CustomButton
+                        text={'logout'}
+                        buttonStyle={styles.logoutButton}
+                        onPress={async () => { 
+                            try {
+                                Authentication.logOut();
+                                dispatch(setLogout()); 
+                                navigation.navigate('Sign in') 
+                            } catch (error) {}
+                        }}
+                    />
+                </View>
             </View>
         );
     
@@ -81,7 +102,10 @@ function AccountProfile({ navigation }) {
         return(
             <TouchableOpacity 
             style={styles.peopleTab}
-            onPress={()=>{navigation.navigate('User record', {userdata: item})}}>
+            onPress={()=>{
+                dispatch(setCurrentSubuser(item))
+                navigation.navigate('User record', {userdata: item})
+                }}>
                 <View style={styles.iconContainer}>
                 </View>
                 <View style={styles.peopleDetailContainer}>
@@ -100,7 +124,8 @@ function AccountProfile({ navigation }) {
     }
 
     const subuserTab = () => {
-        if (isLoggedin && data !== undefined) {
+        console.log(user)
+        if (user.username !== '' && user.username !== null) {
             return (
             <FlatList
                 style={styles.container}
@@ -111,7 +136,7 @@ function AccountProfile({ navigation }) {
                 }
                 
                 // main list content
-                data = {data.people}
+                data = {subuserArray}
                 renderItem = {({item}) => {
                     return renderData(item)
                 }}
@@ -167,7 +192,7 @@ function AccountProfile({ navigation }) {
                 </View> 
             }
 
-            data = {data.people}
+            data = {subuserArray}
                 renderItem = {({item}) => {
                     return deviceUserRenderData(item)
                 }}
@@ -202,12 +227,28 @@ const styles = StyleSheet.create({
     account:{
         backgroundColor: '#561ddb',
         borderRadius: 5,
-        padding: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
         margin: 10,
+        flexDirection: 'row',
     },
     accountText:{
         color: '#fff'
     },
+
+    accountChild: {
+        justifyContent: 'center',
+        flex: 1
+    },
+
+    logoutButton: {
+        //backgroundColor: '#000',
+        borderColor: '#fff',
+        width: '50%',
+        borderWidth: 2,
+        alignSelf: 'flex-end'
+    },
+
     iconContainer: {
         flex: 1,
         backgroundColor: '#eee',
