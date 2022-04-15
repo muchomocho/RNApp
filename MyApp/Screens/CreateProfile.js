@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
 import * as Constant from '../Constant/Constant'
 import * as Authentication from "../Authentication/Authentication";
+import * as APIrequest from "../API/ServerRequest";
 import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
 
@@ -17,22 +18,22 @@ function CreateProfile({ navigation }) {
     const createUserProfile = async (token) => {
         try {
             const username = await Authentication.getUsername();
-            const response = await fetch(Constant.ROOT_URL + 'api/useraccounts/' + username + '/userdata/', {
+            const result = await APIrequest.httpRequest({
+                endpoint: Constant.ROOT_URL + 'api/useraccounts/' + username + '/userdata/',
                 method: "POST",
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + token
-                  },
-                body: JSON.stringify({
+                body: {
                     name: name,
                     age: age,
                     gender: gender,
-                }),
-            });
-            const json = await response.json();
-            console.log(json);
-            //setData(json);
+                }
+              });
+            if (result.response.status == 201) {
+              console.log('status', result.response.status)
+              navigation.navigate('Profile');
+            }
+            if (result.response.status == 400) {
+              // TODO could not create user
+            }
           } catch (error) {
             console.error(error);
           } 

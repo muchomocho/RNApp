@@ -52,7 +52,7 @@ export default function FoodDataSelection({ foodDataSetter }) {
             <CustomButton
             text={item.name}
             buttonStyle={styles.button}
-            onPress={onPress}
+            onPress={() => {onPress(foodDataJson[item.id])}}
             />
         );
     };
@@ -61,8 +61,8 @@ export default function FoodDataSelection({ foodDataSetter }) {
         setFoodList(getFoodList());
     };
 
-    const onPress = () => {
-        //setFoodList(getFoodList());
+    const onPress = (foodDataParam) => {
+        navigation.navigate('Confirm fooddata', { foodData: foodDataParam })
     };
 
     return (

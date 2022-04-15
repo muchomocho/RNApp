@@ -12,6 +12,7 @@ import AccountProfile from '../../Screens/AccountProfile'
 import RecipeDetail from '../../Screens/RecipeDetail';
 import UserRecord from '../../Screens/UserRecords';
 import CreateRecord from '../../Screens/CreateRecord';
+import ConfirmFoodData from '../../Screens/ConfirmFoodData';
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
@@ -90,6 +91,15 @@ const BottomTab = () => {
             <Tab.Screen
             name='Create record'
             component={CreateRecord}
+            options={{
+                tabBarItemStyle:{
+                    ...styles.hiddenItem
+                }}}
+            />
+
+            <Tab.Screen
+            name='Confirm fooddata'
+            component={ConfirmFoodData}
             options={{
                 tabBarItemStyle:{
                     ...styles.hiddenItem

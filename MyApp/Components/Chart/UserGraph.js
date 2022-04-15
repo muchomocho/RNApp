@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Dimensions } from 'react-native';
 import { VictoryBar, DataLabel, VictoryChart, VictoryTheme, VictoryLine, VictoryAxis, VictoryGroup, VictoryScatter, VictoryLabel } from "victory-native";
-import json from '../../assets/JSON/gov_diet_recommendation.json'
+import json from '../../assets/JSON/gov_diet_recommendation.json';
+import json_unit from '../../assets/JSON/gov_diet_recommendation_units.json';
 import CustomButton from "../CustomButton";
 import { dietDataContainer} from "../../Constant/Constant";
 
@@ -113,7 +114,8 @@ export default function UserGraph ({name, data, userData, dates}) {
 
     const populateButtons = () => {
 
-        const dietArray = Object.keys(dietDataContainer()).map((key) => key);
+        // const dietArray = Object.keys(dietDataContainer()).map((key) => key);
+        const dietArray = Object.keys(json_unit);
 
         const renderData = (item) => {
             var isToggle = false;
@@ -182,7 +184,7 @@ export default function UserGraph ({name, data, userData, dates}) {
     const title = () => {
         return (
             <View style={styles.titleContainer}>
-                <Text>{ focusData } in { dietDataContainer()[focusData].unit }</Text>
+                <Text>{ focusData } in { json_unit[focusData] }</Text>
             </View>
         );
     };

@@ -11,6 +11,7 @@ export default function SearchBar({value, setValue, onSearch}) {
             onChangeText={setValue} 
             placeholder={'search...'}
             style={[styles.input, styles.border]}
+            returnKeyType={'search'}
             />
             <Pressable 
             onPress={onSearch} 

@@ -1,4 +1,4 @@
-import { SET_USER, SET_USER_ID, SET_USER_USERNAME, SET_USER_EMAIL, SET_SUBUSERS, SET_CURRENT_SUBUSER, SET_LOGOUT } from './actions'
+import { SET_USER, SET_USER_ID, SET_USER_USERNAME, SET_USER_EMAIL, SET_SUBUSERS, SET_CURRENT_SUBUSER, SET_LOGOUT, ADD_RECORD_SELECTION, CLEAR_RECORD_SELECTION } from './actions'
 
 //https://redux.js.org/tutorials/fundamentals/part-3-state-actions-reducers
 
@@ -15,11 +15,13 @@ const initialState = {
         gender: ''
     },
 
-    subuserArray: []
+    subuserArray: [],
+
+    recordList: [],
 };
 
 function userReducer(state = initialState, action) {
-    console.log('paload',action.payload)
+    
     switch (action.type) {
         
         case SET_USER:
@@ -68,7 +70,9 @@ function userReducer(state = initialState, action) {
                 name: action.payload.name,
                 age: action.payload.age,
                 gender: action.payload.gender
-            });    
+            }); 
+            
+            console.log(state)
 
             return { ...state, };
 
@@ -94,6 +98,24 @@ function userReducer(state = initialState, action) {
                 },
         
             subuserArray: []
+        });
+
+        return { ...state }
+
+        case ADD_RECORD_SELECTION:
+
+            Object.assign(state, {
+                ...state,
+                recordList: [...recordList, action.payload]
+        });
+
+        return { ...state }
+
+        case CLEAR_RECORD_SELECTION:
+
+            Object.assign(state, {
+                ...state,
+                recordList: []
         });
 
         return { ...state }
