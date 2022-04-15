@@ -9,10 +9,9 @@ export default function UserGraph ({name, data, userData, dates}) {
 
     const windowWidth =  Dimensions.get('window').width
 
-    const [focusData, setFocusData] = useState('energy');
+    const [focusData, setFocusData] = useState('energy_kcal');
 
-    console.log(dates)
-    console.log(new Date().getDate())
+    console.log(data)
     //const [data, setData] = useState({});
 
     // useEffect(() => {
@@ -103,10 +102,11 @@ export default function UserGraph ({name, data, userData, dates}) {
         console.log(datePoint())
         return (
             <VictoryBar
-                style={{data: {fill: "green"}}}
-                size={10}
+                style={{data: {fill: "#0041b0"}}}
+                barWidth={windowWidth*0.04}
                 data={datePoint()}
                 labels={["today"]}
+                cornerRadius={styles.barCorner}
             />
         );
     };
@@ -125,8 +125,6 @@ export default function UserGraph ({name, data, userData, dates}) {
                 <CustomButton
                     text={item}
                     onPress={() => {setFocusData(item); isToggle=true; }}
-                    isToggle={isToggle}
-                    isHoldToggle={true}
                     buttonStyle={styles.button}
                 />
             )
@@ -150,7 +148,7 @@ export default function UserGraph ({name, data, userData, dates}) {
     const plot = () => {
 
         if (data !== undefined && Object.prototype.hasOwnProperty.call(data, focusData)) {
-
+            console.log('data',data)
             const formattedData = () => {
                 var returnArray = new Array();
 
@@ -172,7 +170,10 @@ export default function UserGraph ({name, data, userData, dates}) {
             return (
                 
                     <VictoryBar
+                        barWidth={windowWidth*0.04}
+                        style={{data: {fill: "#00b02f"}}}
                         data={formattedData()}
+                        cornerRadius={styles.barCorner}
                     />
             );
         }
@@ -248,5 +249,11 @@ const styles = StyleSheet.create({
     graph: {
        // padding: 50,
         width: '80%'
-    }
+    },
+
+    barCorner: {
+        top: 5,
+        bottom: 0 
+    },
+
 });
