@@ -254,16 +254,17 @@ class UserMealRecordSerializer(serializers.ModelSerializer):
         new_nutrition_data = {}
         for meal_record in meal_record_list:
             for meal_content in UserMealRecordContent.objects.filter(parent_record=meal_record):
-                for nutrient_data in NutritionalData.objects.filter(parent_food=FoodData.objects.get(id=meal_content.food_data.id)):
+                foodData = FoodData.objects.get(id=meal_content.food_data.id)
+                for nutrient_data in NutritionalData.objects.filter(parent_food=foodData):
                     name = nutrient_data.name
                     value = nutrient_data.value
                     from_unit = nutrient_data.unit
                     if name in units:
                         target_unit = units[name]
                         if name in new_nutrition_data:
-                            new_nutrition_data[name] += value * (meal_content.amount_in_grams / 100 ) * decimal.Decimal(_unit_converter(target_unit, from_unit))
+                            new_nutrition_data[name] += value * (meal_content.amount_in_grams / foodData['amount_in_grams'] ) * decimal.Decimal(_unit_converter(target_unit, from_unit))
                         else:
-                            new_nutrition_data[name] = value * (meal_content.amount_in_grams / 100 ) * decimal.Decimal(_unit_converter(target_unit, from_unit))     
+                            new_nutrition_data[name] = value * (meal_content.amount_in_grams / foodData['amount_in_grams'] ) * decimal.Decimal(_unit_converter(target_unit, from_unit))     
         print('ay')
         print('r', user_day_record)
 

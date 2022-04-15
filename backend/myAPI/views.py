@@ -476,6 +476,15 @@ class FoodDataViewSet(viewsets.ModelViewSet):
     queryset = FoodData.objects.all()
     serializer_class = FoodDataSerializer
 
+    def list(self, request, *args, **kwargs):
+        search_query = request.query_params.get('name', None)
+        from_terms = request.query_params.get('from', None)
+        to_terms = request.query_params.get('to', None)
+
+        FoodData = self.queryset.filter(title__contains=search_query)
+        serializer = RecipeSerializer(FoodData, many=True)
+        return Response(serializer.data)
+
 class NutritionalViewSet(viewsets.ModelViewSet):
     queryset = NutritionalData.objects.all()
     serializer_class = NutritionalData
