@@ -11,6 +11,7 @@ import SignUp from '../../Screens/SignUp';
 import AccountProfile from '../../Screens/AccountProfile'
 import RecipeDetail from '../../Screens/RecipeDetail';
 import UserRecord from '../../Screens/UserRecords';
+import CreateRecord from '../../Screens/CreateRecord';
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
@@ -45,6 +46,7 @@ const BottomTab = () => {
             tabBarActiveTintColor: '#123',
         }}
         >
+            <Tab.Screen name='Profile' component={AccountProfile}/>
             <Tab.Screen 
             name='Sign in' 
             component={SignIn} 
@@ -57,7 +59,6 @@ const BottomTab = () => {
             />
             <Tab.Screen name='Recipe' component={RecipeList} />
             <Tab.Screen name='Create' component={CreateRecipe} />
-            <Tab.Screen name='Profile' component={AccountProfile}/>
 
             { /* we want to show tabs on these pages but not their icons in the tabs, so they are included here but hidden by style. */ }
             <Tab.Screen 
@@ -80,6 +81,15 @@ const BottomTab = () => {
             <Tab.Screen
             name='User record'
             component={UserRecord}
+            options={{
+                tabBarItemStyle:{
+                    ...styles.hiddenItem
+                }}}
+            />
+
+            <Tab.Screen
+            name='Create record'
+            component={CreateRecord}
             options={{
                 tabBarItemStyle:{
                     ...styles.hiddenItem
