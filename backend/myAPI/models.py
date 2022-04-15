@@ -150,6 +150,7 @@ class FoodData(models.Model):
     uploader = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username', db_column='username', null=True, on_delete=models.SET_NULL)
     source_name = models.CharField(max_length=255, null=True)
     name = models.CharField(max_length=255)
+    amount_in_grams = models.DecimalField(default=0, max_digits=20, decimal_places=10)
     #meal = models.ForeignKey(UserMealRecordContent, related_name='food_data', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
