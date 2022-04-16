@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
 import CustomButton from "../Components/CustomButton";
 import CustomInput from "../Components/CustomInput";
-import * as Constant from "../Constant";
+import * as Constant from "../Constant/Constant";
+import * as Authentication from "../Authentication/Authentication"
 
 function CreateRecipe() {
 
@@ -13,13 +14,15 @@ function CreateRecipe() {
     const [ingredients, setIngredients] = useState([]);
 
     const createRecipe = async () => {
-        console.log('global username: ', Constant.username);
-
-        if (Constant.username.length == 0) {
-            console.warn('requires login');
-            return
-        }
+        
         try {
+            
+            const username = await Authentication.getUsername();
+            console.log('global username: ', username);
+            if (username.length == 0) {
+                console.warn('requires login');
+                return
+            }
             const response = await fetch(Constant.ROOT_URL + 'api/recipes/', {
                 method: "POST",
                 headers: {
@@ -27,7 +30,7 @@ function CreateRecipe() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    user: Constant.username,
+                    user: username,
                     title: title,
                     main_image_url: main_image_url,
                     steps: steps,
@@ -35,6 +38,7 @@ function CreateRecipe() {
                     ingredients: ingredients
                 })
             });
+
             const json = await response.json();
             console.log('response: ', json);
             console.log('response id: ', json.id);

@@ -16,7 +16,7 @@ const Stack = createNativeStackNavigator();
 
 function UserRecord(props) {
     
-    const { user, curerentSubuser, subuserArray } = useSelector(state => state.userReducer);
+    const { user, currentSubuser, subuserArray } = useSelector(state => state.userReducer);
     const dispatch = useDispatch();
 
     const [data, setData] = useState([]);
@@ -82,7 +82,7 @@ function UserRecord(props) {
             endpoint: 'api/useraccounts/'
             + user
             + '/userdata/'
-            + curerentSubuser.name
+            + currentSubuser.name
             + '/userrecord/'
             + '?from=' + calculateDate(dateRange) 
             ,isAuthRequired: true

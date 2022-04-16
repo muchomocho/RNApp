@@ -20,7 +20,9 @@ function CreateRecord(props) {
 
     return(
         <View style={styles.container}>
-            <FoodDataSelection/>
+            <FoodDataSelection
+            navigation={props.navigation}
+            />
         </View>
     );
     
