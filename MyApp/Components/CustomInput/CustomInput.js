@@ -6,6 +6,7 @@ export default function CustomInput({ value, setValue, placeholder, isSecure }) 
         return (
         <View style={styles.container}>
             <TextInput 
+            autoCapitalize='none'
             value={value} 
             onChangeText={setValue} 
             placeholder={placeholder}
