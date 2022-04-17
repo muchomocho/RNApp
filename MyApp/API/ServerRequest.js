@@ -30,9 +30,13 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
         returnObj.json = json;
 
         if (isAuthRequired && json.code === 'token_not_valid') {
-            console.log('refreshing');
+            //console.log('refreshing');
             const refreshedToken = await Authentication.refreshAccessToken();
-            console.log('refreshed', refreshedToken);
+            
+            if (refreshedToken == null) {
+                Authentication.logOut();
+            }
+            //console.log('refreshed', refreshedToken);
             request.headers.Authorization = ('Bearer ' + refreshedToken); 
 
             const response = await fetch(Constant.ROOT_URL + endpoint, request);
