@@ -12,6 +12,7 @@ export default function SearchBar({value, setValue, onSearch}) {
             placeholder={'search...'}
             style={[styles.input, styles.border]}
             returnKeyType={'search'}
+            onSubmitEditing={onSearch}
             />
             <Pressable 
             onPress={onSearch} 
