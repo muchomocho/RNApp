@@ -22,7 +22,7 @@ const Tab = createBottomTabNavigator();
 const BottomTab = () => {
     return (
         <Tab.Navigator screenOptions={{
-            headerShown: false,
+            //headerShown: false,
 
             tabBarHideOnKeyboard: true,
 
@@ -88,7 +88,7 @@ const BottomTab = () => {
                 }}}
             />
 
-            <Tab.Screen
+            {/* <Tab.Screen
             name='Create record'
             component={CreateRecord}
             options={{
@@ -104,7 +104,7 @@ const BottomTab = () => {
                 tabBarItemStyle:{
                     ...styles.hiddenItem
                 }}}
-            />
+            /> */}
         </Tab.Navigator>
     )
 }
