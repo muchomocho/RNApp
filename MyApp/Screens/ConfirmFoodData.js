@@ -3,15 +3,10 @@ import { ActivityIndicator, StyleSheet, Text, View, TextInput, Button, FlatList,
 import CustomButton from "../Components/CustomButton";
 import foodDataUnitJson from '..//assets/JSON/food_integrated_dataset_units.json';
 
-import { useSelector, useDispatch } from 'react-redux';
-import { addRecordSelection, clearRecord } from '../redux/actions'
 import CustomInput from "../Components/CustomInput";
+import FoodDataSpec from "../Components/FoodData/FoodDataSpec";
 
 function ConfirmFoodData (props) {
-
-    const { user, curerentSubuser, subuserArray, recordList } = useSelector(state => state.userReducer);
-    const dispatch = useDispatch();
-    const [amount, setAmount] = useState(0);
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     useEffect(() => {
@@ -23,78 +18,15 @@ function ConfirmFoodData (props) {
         return reload;
     }, [props]);
 
-    const addToRecord = () => {
-        dispatch(addRecordSelection(props.route.params.foodData));
-    }
-
-    const renderData = (item) => {
-        var unit =  foodDataUnitJson[item.key];
-        if (unit == 'microg') { unit = '\u00b5g'; }
-        return(
-            <View style={styles.infoContainer}>
-                <View >
-                    <Text style={styles.infoContainerTextLeft}>{ item.key }</Text>
-                </View>
-                <View >
-                    <Text style={styles.infoContainerTextRight}>{ item.value + unit}</Text>
-                </View>
-            </View>
-        )
-    }
-
-    const foodDataView = () => {
-        var objArray = [];
-        const foodData = props.route.params.foodData;
-        console.log(foodData)
-        for (var prop in foodData.value) {
-            objArray.push({key: prop, value: foodData.value[prop]})
-        }
-        return(
-
-            <FlatList
-            ListHeaderComponent={
-                <View style={[styles.nameContainer, styles.header]}>
-                    <Text style={styles.nameContainerText}>{ foodData.name }, </Text>
-                    <Text style={styles.nameContainerText}>{ foodData.amount_in_grams }</Text>
-                </View>
-            }
-
-            data = {objArray}
-            renderItem = {({item}) => {
-                return renderData(item)
-            }}
-            keyExtractor = {item => item.key}
-            
-            ListFooterComponent={
-                <View style={[{marginBottom: 70}, styles.amount]}>
-                    <View style={{alignContent: 'center'}}>
-                        <Text> amount of this you had: </Text>
-                        <TextInput 
-                            style={styles.amountInput}
-                            keyboardType='numeric'
-                            onChangeText={(input)=> {
-                                input.replace(/[^0-9]/g, '');
-                                setAmount(input)
-                            }}
-                            value={amount}
-                            maxLength={10}  //setting limit of input
-                            />
-                    </View>
-                </View>
-            }
-            
-            />
-        );
-    };
 
     return(
         <View style={styles.container}>
-            { foodDataView() }
-            <CustomButton
-                buttonStyle={styles.button}
-                onPress={addToRecord}
-                text={'add to list'}
+            <FoodDataSpec
+            navigation={props.navigation}
+            foodData={props.route.params.foodData}
+            isRecording={true}
             />
+            
         </View>
     );
     
