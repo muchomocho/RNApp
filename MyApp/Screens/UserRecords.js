@@ -80,7 +80,7 @@ function UserRecord(props) {
             const result = await APIRequest.httpRequest({
             method: 'GET',
             endpoint: 'api/useraccounts/'
-            + user
+            + user.username
             + '/userdata/'
             + currentSubuser.name
             + '/userrecord/'
@@ -89,6 +89,7 @@ function UserRecord(props) {
             });
 
             setData(result.json);
+            console.log('result',result.json)
         
         } catch (error) {
             console.log('userrecord', error)
