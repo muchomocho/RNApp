@@ -5,10 +5,9 @@ import foodDataUnitJson from '../../assets/JSON/food_integrated_dataset_units.js
 import CustomButton from '../CustomButton';
 import SearchBar from '../SearchBar';
 
-export default function FoodDataSelection({ foodDataSetter }) {
+export default function FoodDataSelection({navigation}) {
 
     const [searchValue, setSearchValue] = useState('');
-    const [searchPress, setSearchPress] = useState(false);
     const [foodList, setFoodList] = useState([]);
 
     const getFoodList = () => {
@@ -24,22 +23,6 @@ export default function FoodDataSelection({ foodDataSetter }) {
                 }
             }
         });
-        // for (var index in foodDataJson) {
-        //     if (Object.prototype.hasOwnProperty.call(foodDataJson[index], 'name')) {
-        //         if (searchPress && searchValue.length > 0) {
-        //             foodDataJson[prop].forEach((element, index, array) => {
-        //                 if (Object.prototype.hasOwnProperty.call(element, 'type') && (prop.includes(searchValue) || element.type.includes(searchValue))) {
-        //                     arr.push(String(prop+', '+ element.type));
-        //                 } else if (prop.includes(searchValue)) {
-        //                     arr.push(prop)
-        //                 }
-        //             });
-        //         }
-        //     }
-        // }
-        if (searchPress) {
-            //setSearchPress(false)
-        }
         return arr;
     };
 
