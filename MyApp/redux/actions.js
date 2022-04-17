@@ -6,6 +6,7 @@ export const SET_USER_USERNAME = 'SET_USER_USERNAME';
 export const SET_USER_EMAIL = 'SER_USER_EMAIL';
 export const SET_LOGOUT = 'SET_LOGOUT';
 export const ADD_RECORD_SELECTION = 'ADD_RECORD_SELECTION';
+export const DELETE_RECORD_SELECTION = 'FELETE_RECORD_SELECTION';
 export const CLEAR_RECORD_SELECTION = 'CLEAR_RECORD_SELECTION';
 
 // https://redux.js.org/tutorials/fundamentals/part-3-state-actions-reducers
@@ -56,6 +57,13 @@ export const addRecordSelection = foodData => dispatch => {
     dispatch({
         type: ADD_RECORD_SELECTION,
         payload: foodData,
+    });
+};
+
+export const deleteRecordSelection = foodDataID=> dispatch => {
+    dispatch({
+        type: DELETE_RECORD_SELECTION,
+        payload: foodDataID,
     });
 };
 

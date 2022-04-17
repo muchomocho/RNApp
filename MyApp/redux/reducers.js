@@ -7,6 +7,7 @@ import {
     SET_CURRENT_SUBUSER,
     SET_LOGOUT, 
     ADD_RECORD_SELECTION, 
+    DELETE_RECORD_SELECTION,
     CLEAR_RECORD_SELECTION 
 } from './actions'
 
@@ -112,9 +113,29 @@ function userReducer(state = initialState, action) {
 
         case ADD_RECORD_SELECTION:
 
+            for (var index in state.recordList) {
+                if (state.recordList[index].foodData.id == action.payload.foodData.id) {
+                    state.recordList[index].amount_in_grams += action.payload.amount_in_grams;
+                    for (var prop in state.recordList[index].foodData.value) {
+                        state.recordList[index].foodData.value[prop] += action.payload.foodData.value[prop];
+                    }
+                
+                Object.assign(state.recordList, [...state.recordList]);
+                return { ...state }
+                }
+            }
             Object.assign(state.recordList, [...state.recordList, action.payload]);
+            return { ...state }
 
-        return { ...state }
+        case DELETE_RECORD_SELECTION:
+            for (var index in state.recordList) {
+                if (state.recordList[index].foodData.id == action.payload) {
+                    state.recordList.splice(index, 1)
+                    Object.assign(state.recordList, [...state.recordList]);
+                    return { ...state }
+                }
+            }
+            return { ...state }
 
         case CLEAR_RECORD_SELECTION:
 
