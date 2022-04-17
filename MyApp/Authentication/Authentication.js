@@ -175,7 +175,8 @@ export const logOut = async () => {
         await SecureStore.deleteItemAsync('username');
         await SecureStore.deleteItemAsync('access');
         await SecureStore.deleteItemAsync('refresh');
-        useDispatch(setLogout());
+        const dispatch = useDispatch();
+        dispatch(setLogout());
     } catch (error) {
 
     }
