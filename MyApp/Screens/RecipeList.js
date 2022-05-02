@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Image } from 'react-native';
 import { TouchableOpacity } from "react-native";
 import SearchBar from "../Components/SearchBar";
 import * as ServerRequest from '../API/ServerRequest'
+import * as Constant from '../Constant/Constant';
 
 function RecipeList({ navigation }) {
 
@@ -18,6 +19,7 @@ function RecipeList({ navigation }) {
             });
             const json = response.json;
             setData(json);
+            console.log(json)
           } catch (error) {
             console.error(error);
           } 
@@ -40,12 +42,29 @@ function RecipeList({ navigation }) {
     }, [navigation]);
 
     const renderData = (item) => {
+        var image = null;
+        console.log(typeof(image))
+        var url = Constant.ROOT_URL + item.main_img
+        url = url.replace(/\/\//g, '/')
+        url = url.replace(':/', '://')
+        console.log('url', url)
+        console.log(typeof(item.main_img)=='string' && item.main_img != '')
+        if (typeof(item.main_img)=='string' && item.main_img != '') {
+            image = 
+                <Image
+                    resizeMode="contain"
+                    resizeMethod="scale"
+                    style={styles.image}
+                    source={{uri: url}}
+                />
+        }
+        console.log(typeof(image))
         return(
             <TouchableOpacity 
             style={styles.recipeContainer}
             onPress={() => {navigation.navigate('Recipe detail', {recipe: item});}}
             >
-                <Text style={styles.image}>{item.id}</Text>
+                { image }
                 <View style={styles.detail}>
                     <Text style={styles.detailTitle}>{item.title}</Text>
                     <Text style={styles.detailText}>created by {item.user}</Text>
@@ -65,7 +84,7 @@ function RecipeList({ navigation }) {
                     setValue={setSearchValue}
                     onSearch={()=>{onSearch(searchValue)}}
                     />
-                    { data.length == 0 && <Text> No results </Text> }
+                    {/* { data.length == 0 && <Text> No results </Text> } */}
                 
                 </View>
             }
@@ -125,10 +144,8 @@ const styles = StyleSheet.create({
     },
     image: {
         flexGrow: 1,
-
         backgroundColor: '#eee',
-        textAlign: 'center',
-        textAlignVertical: 'center'
+        
     },
 });
 

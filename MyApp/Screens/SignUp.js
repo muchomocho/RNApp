@@ -4,22 +4,43 @@ import { StyleSheet, Text, View, Button } from 'react-native';
 import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
 import * as Constant from "../Constant/Constant";
+import * as APIRequest from '../API/ServerRequest';
+import { useSelector, useDispatch } from 'react-redux';
 
-function SignUp ({ navigation }) {
-    
+function SignUp (props) {
+
+  const { user } = useSelector(state => state.user);
+  
     const [username, setUsername] = useState('')
     const [email, setEmail] = useState('');
     const [password1, setPassword1] = useState('')
     const [password2, setPassword2] = useState('')
 
+    const [usernameWarning, setUsernameWarning] = useState([])
+    const [emailWarning, setEmailWarning] = useState([])
+    const [passwordWarning, setPasswordWarning] = useState([])
+
     const [isUsernameValid, setIsUsernameValid] = useState(true)
     const [isPasswordValid, setIsPasswordValid] = useState(true)
     const [isEmailValid, setIsEmailValid] = useState(true)
-    const [isUserTaken, setIsUserTaken] = useState(true)
+
+    const reset = () => {
+      setUsername('')
+      setEmail('')
+      setPassword1('')
+      setPassword2('')
+      setUsernameWarning('')
+      setEmailWarning('')
+      setPasswordWarning('')
+      setIsUsernameValid(true)
+      setIsPasswordValid(true)
+      setIsEmailValid(true)
+    }
 
     const validate = (username, email, password1, password2) => {
       var isValid = true;
-      if (username.length === 0) {
+
+      if (!props.route.params.isupdate && username.length === 0) {
         setIsUsernameValid(false)
         isValid = false
       } else {
@@ -46,63 +67,73 @@ function SignUp ({ navigation }) {
     const createUser = async () => {
       if (validate(username, email, password1, password2)) {
         try {
-          console.log(Constant.ROOT_URL);
-            const response = await fetch(Constant.ROOT_URL+ 'api/useraccounts/', {
-                method: "POST",
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: username,
-                    email: email,
-                    password: password1
-                })
+          var result = null;
+          if (props.route.params.isupdate) {
+            result = await APIRequest.httpRequest({
+              method: 'PUT',
+              endpoint: 'api/useraccounts/' + user.username + '/',
+              body: {
+                email: email,
+                password: password1
+              }
             });
-            const json = await response.json();
-            console.log(json);
+          }
+          else {
+            result = await APIRequest.httpRequest({
+              method: 'POST',
+              endpoint: 'api/useraccounts/',
+              body: {
+                username: username,
+                email: email,
+                password: password1
+              }
+            });
+          }
 
-            if (response.status == 201) {
-              console.warn('created!')
-            } else if (response.status === 400) {
-              console.warn('user already exists')
+            if (result.response.status == 201) {
+              props.navigation.navigate('Profile')
+            } else if (result.response.status === 400) {
+              if (Object.prototype.hasOwnProperty.call(result.json, 'username') && result.json.username.length > 0)
+                setUsernameWarning(result.json.username);
+
+              if (Object.prototype.hasOwnProperty.call(result.json,'email') && result.json.email.length > 0)
+                setEmailWarning(result.json.email);
+
+              if (Object.prototype.hasOwnProperty.call(result.json,'password') && result.json.password.length > 0)
+                setPasswordWarning(result.json.password);
             } else {
-              console.warn(json)
+              console.warn(result.json)
             }
           } catch (error) {
-            console.warn(error);
+            console.warn(result.error);
           }
         }
       }
+
+
+    const warning = (warningArray) => {
+      if (warningArray == '') return
+      return (warningArray.map(element => 
+            <Text> {element} </Text>
+          ));
+    };
     
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     useEffect(() => {
-      const reload = navigation.addListener('blur', () => {
+      const reload = props.navigation.addListener('blur', () => {
         // The screen is focused
         // Call any action
+        reset();
       });
   
       // Return the function to unsubscribe from the event so it gets removed on unmount
       return reload;
-    }, [navigation]);
+    }, [props]);
 
-    return (
+    if (props.route.params.isupdate) {
+      return (
         <View style={styles.container}>
-
-          { 
-          // conditional rendering
-          !isUsernameValid && 
-          <Text style={styles.alert}>
-            Enter user id properly!
-          </Text>
-          }
-
-          <CustomInput 
-          value = {username}
-          setValue={setUsername}
-          placeholder={"Enter User id you want to set."}
-          />
 
           {
           !isEmailValid &&
@@ -110,6 +141,8 @@ function SignUp ({ navigation }) {
               Enter email properly!
           </Text>
           }
+
+          { warning(emailWarning) }
           
           <CustomInput 
           value = {email}
@@ -123,7 +156,71 @@ function SignUp ({ navigation }) {
             Enter password properly!
             </Text>
           }
+
+          { warning(passwordWarning) }
       
+          <CustomInput 
+          value = {password1}
+          setValue={setPassword1}
+          placeholder={"Enter Password"}
+          isSecure={true}
+          />
+
+          <CustomInput 
+          value = {password2}
+          setValue={setPassword2}
+          placeholder={"Enter password again"}
+          isSecure={true}
+          />
+
+          <CustomButton onPress={createUser} text={'submit'}/>
+        </View>
+      );
+    }
+
+    return (
+        <View style={styles.container}>
+
+          { 
+          // conditional rendering
+          !isUsernameValid && 
+          <Text style={styles.alert}>
+            Enter user id properly!
+          </Text>
+          }
+
+          { warning(usernameWarning) }
+
+          <CustomInput 
+          value = {username}
+          setValue={setUsername}
+          placeholder={"Enter User id you want to set."}
+          />
+
+          {
+          !isEmailValid &&
+          <Text style={styles.alert}>
+              Enter email properly!
+          </Text>
+          }
+
+          { warning(emailWarning) }
+          
+          <CustomInput 
+          value = {email}
+          setValue={setEmail}
+          placeholder={"Enter your email."}
+          />
+          
+          {
+            !isPasswordValid &&
+            <Text style={styles.alert}>
+            Enter password properly!
+            </Text>
+          }
+
+          { warning(passwordWarning) }
+
           <CustomInput 
           value = {password1}
           setValue={setPassword1}

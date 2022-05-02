@@ -5,12 +5,12 @@ import json from '../../assets/JSON/gov_diet_recommendation.json';
 import json_unit from '../../assets/JSON/gov_diet_recommendation_units.json';
 import CustomButton from "../CustomButton";
 import { useSelector, useDispatch } from 'react-redux';
-import { setSubuserArray, setCurrentSubuser, setUser } from '../../redux/actions'
+import { setSubuserArray, setCurrentSubuser, setUser } from '../../redux/userSlice'
 
 export default function UserGraph ({ data, dates }) {
 
     const windowWidth =  Dimensions.get('window').width
-    const { user, currentSubuser, subuserArray } = useSelector(state => state.userReducer);
+    const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
 
     const [focusData, setFocusData] = useState('energy_kcal');
 
@@ -91,7 +91,7 @@ export default function UserGraph ({ data, dates }) {
             && (dates !== undefined && dates.length > 0)) {
                 const line = parseFloat(json[ageMap(currentSubuser.age)][genderMap(currentSubuser.gender)][focusData]);
                 const lineData = dates.map(date => ({x: formatDate(date), y: line}));
-                console.log(lineData)
+                //console.log(lineData)
                 return (
                     <VictoryLine 
                         data={lineData}
@@ -116,7 +116,6 @@ export default function UserGraph ({ data, dates }) {
 
     const populateButtons = () => {
 
-        // const dietArray = Object.keys(dietDataContainer()).map((key) => key);
         const dietArray = Object.keys(json_unit);
 
         const renderData = (item) => {
@@ -127,9 +126,9 @@ export default function UserGraph ({ data, dates }) {
 
             return(
                 <CustomButton
-                    text={item}
+                    text={item.replace('_', ' ')}
                     onPress={() => {setFocusData(item); isToggle=true; }}
-                    buttonStyle={styles.button}
+                    buttonStyle={[styles.button, (focusData === item ? {backgroundColor: '#561ddbcc'} : {})]}
                 />
             )
         };
@@ -150,7 +149,7 @@ export default function UserGraph ({ data, dates }) {
     }
 
     const plot = () => {
-
+        // console.log('data: ', data)
         const formattedData = () => {
              //console.log('data',data)
             var returnArray = new Array();
@@ -167,20 +166,17 @@ export default function UserGraph ({ data, dates }) {
                     returnArray.push({ x: formatDate(element), y: 0 })
                 }
             }));
-            // data[focusData].forEach((element, index, array) => {
-            //     returnArray.push({ x: data['date'][index], y: element })
-            // });
-            console.log('return', returnArray)
+ 
             return returnArray;
         };
+
         return (
-            
-                <VictoryBar
-                    barWidth={windowWidth*0.04}
-                    style={{data: {fill: "#00b02f"}}}
-                    data={formattedData()}
-                    cornerRadius={styles.barCorner}
-                />
+            <VictoryBar
+                barWidth={windowWidth*0.04}
+                style={{data: {fill: "#00b02f"}}}
+                data={formattedData()}
+                cornerRadius={styles.barCorner}
+            />
         );
         
     };
@@ -188,7 +184,7 @@ export default function UserGraph ({ data, dates }) {
     const title = () => {
         return (
             <View style={styles.titleContainer}>
-                <Text>{ focusData } in { json_unit[focusData] }</Text>
+                <Text>{ focusData.replace('_', ' ').replace(' kcal', '').replace(' kj', '') } in { json_unit[focusData] }</Text>
             </View>
         );
     };

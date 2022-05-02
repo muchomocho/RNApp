@@ -29,9 +29,9 @@ const BottomTab = () => {
             tabBarStyle: {
                 position: 'absolute',
                 backgroundColor: '#fff',
-                height: 85,
-                borderRadius: 10,
-                margin: 10,
+                height: 60,
+                // borderRadius: 10,
+                // margin: 10,
                 ...styles.bottomtab_shadow
             },
 
@@ -111,7 +111,7 @@ const BottomTab = () => {
 
 const styles = StyleSheet.create({
     bottomtab_shadow: {
-        elevation: 8,
+        elevation: 10,
         shadowColor: '#eee',
         shadowRadius: 10,
         shadowOpacity: 0.5,

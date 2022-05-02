@@ -1,12 +1,13 @@
 import React from 'react';
 import { TextInput, View, StyleSheet } from 'react-native';
 
-export default function CustomInput({ value, setValue, placeholder, isSecure }) {
+export default function CustomInput({ value, setValue, placeholder, isSecure, defaultValue}) {
 
-        return (
+    return (
         <View style={styles.container}>
             <TextInput 
             autoCapitalize='none'
+            defaultValue={defaultValue}
             value={value} 
             onChangeText={setValue} 
             placeholder={placeholder}

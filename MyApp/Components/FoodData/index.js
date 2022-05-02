@@ -1,3 +1,5 @@
 export { default as FoodDataSelection } from './FoodDataSelection'
 export { default as FoodDataSelectionList } from './FoodDataSelection'
 export { default as FoodDataSpec } from './FoodDataSelection'
+export { default as MealRecord } from './FoodDataSelection'
+export { default as ManualFoodDataInput } from './ManualFoodDataInput'

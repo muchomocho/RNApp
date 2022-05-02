@@ -8,21 +8,21 @@ import ConfirmFoodData from './Screens/ConfirmFoodData';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Provider } from 'react-redux';
-import { Store } from './redux/store';
+import { store } from './redux/store';
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <Provider store={Store}>
+    <Provider store={store}>
       <NavigationContainer>
         <Stack.Navigator 
         screenOptions={{
           headerShown: false
         }}>
           <Stack.Screen name={'Tab'} component={BottomTab}/>
-          <Stack.Screen name={'CreateProfile'} component={CreateProfile}/>
+          <Stack.Screen name={'Create profile'} component={CreateProfile}/>
           <Stack.Screen name={'Create record'} component={CreateRecord}/>
           <Stack.Screen name={'Confirm fooddata'} component={ConfirmFoodData}/>
         </Stack.Navigator>

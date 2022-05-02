@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Dimensions, Modal } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as APIRequest from '../API/ServerRequest';
-import { dietDataContainer } from "../Constant/Constant";
-import UserGraph from "../Components/Chart/UserGraph";
+import { StyleSheet, Text, View, Modal } from 'react-native';
 import FoodDataSelection from "../Components/FoodData/FoodDataSelection";
 import CustomButton from "../Components/CustomButton";
 import FoodDataSelectionList from "../Components/FoodData/FoodDataSelectionList";
+import { useSelector, useDispatch } from 'react-redux';
+import { ManualFoodDataInput } from "../Components/FoodData";
+import { clearAllNutritionData } from '../redux/foodDataSlice'
+
 
 function CreateRecord(props) {
 
-    const [isShowModal, setIsShowModal] = useState(false);
+    const [isShowListModal, setIsShowListModal] = useState(false);
+    const [isShowManualModal, setIsShowManualModal] = useState(false);
+    const { recordList } = useSelector(state => state.mealRecord);
+
+    const dispatch = useDispatch();
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     useEffect(() => {
@@ -22,27 +26,83 @@ function CreateRecord(props) {
         return reload;
     }, [props]);
 
+    const floatButton = () => {
+        
+        const indicator = () => {
+            if (recordList.length > 0) {
+                return (
+                    <View style={styles.listNumberIndicator}>
+                        <Text> { recordList.length } </Text>
+                    </View>
+                );
+            }
+            return
+        }
+
+        const onPressManual = () => { 
+            setIsShowManualModal(true);
+        };
+
+        const onPressList = () => {
+            setIsShowListModal(!isShowListModal);
+        };
+
+        return (
+            <View style={styles.buttonContainer}>
+                
+                <CustomButton
+                    buttonStyle={styles.button}
+                    textStyle={styles.buttonText}
+                    text="manual input"
+                    onPress={onPressManual}
+                />
+
+                <View>
+                    { indicator() }
+
+                    <CustomButton
+                        buttonStyle={styles.button}
+                        textStyle={styles.buttonText}
+                        text="list"
+                        onPress={onPressList}
+                    />
+                </View>
+            </View>
+        );
+    };
+
+
+    const switchShowManualModal = () => { setIsShowManualModal(!isShowManualModal); };
+    const switchShowListModal = () => { setIsShowListModal(!isShowListModal) };
+    const foodDataOnSubmit = () => { props.navigation.navigate('User record'); };
+
     return(
         <View style={styles.container}>
             <FoodDataSelection
-            navigation={props.navigation}
+                navigation={props.navigation}
             />
-            <CustomButton
-            buttonStyle={styles.button}
-            textStyle={styles.buttonText}
-            text={'list'}
-            onPress={()=>{setIsShowModal(!isShowModal)}}
-            />
+            { floatButton() }
             <Modal
-            animationType="slide"
-            visible={isShowModal}>
-            <CustomButton
-            buttonStyle={styles.closeButton}
-            textStyle={styles.closeButtontext}
-            text={'close'}
-            onPress={()=>{setIsShowModal(!isShowModal)}}
-            />
-            <FoodDataSelectionList/>
+                animationType="slide"
+                visible={isShowManualModal} >
+                <CustomButton
+                    buttonStyle={styles.closeButton}
+                    textStyle={styles.closeButtontext}
+                    text="close"
+                    onPress={switchShowManualModal}
+                />
+                <ManualFoodDataInput onSubmit={switchShowListModal} />
+            </Modal>
+            <Modal
+                animationType="slide"
+                visible={isShowListModal} >
+                <CustomButton
+                    buttonStyle={styles.closeButton}
+                    textStyle={styles.closeButtontext}
+                    text="close"
+                    onPress={switchShowListModal}
+                />
+            <FoodDataSelectionList onSubmit={foodDataOnSubmit} />
             </Modal>
         </View>
     );
@@ -56,15 +116,29 @@ const styles = StyleSheet.create({
         marginTop: 50,
         height: '100%'
     },
-    button: {
-        backgroundColor: '#fff',
+    buttonContainer: {
         position: 'absolute',
         bottom: 50,
         right: 20,
-        borderRadius: 45,
+    },
+    button: {
+        backgroundColor: '#fff',
         width: 70,
         height: 70,
-        elevation: 10
+        borderRadius: 45,
+        elevation: 10,
+    },
+    listNumberIndicator: {
+        backgroundColor: '#ffb87a',
+        position: 'absolute',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 20,
+        height: 20,
+        borderRadius: 100,
+        left: 2,
+        top: 2,
+        elevation: 11
     },
     buttonText: {
         color: '#000'

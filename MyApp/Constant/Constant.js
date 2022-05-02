@@ -5,13 +5,11 @@ export const LOCAL_NETWORK = 'http://192.168.0.32:8081/';
 
 export const ROOT_URL = LOCAL_NETWORK
 
-export var username = ''
-
 export const BIG_MONTH = [1, 3, 5, 7, 8, 10, 12]
 
 export const SMALL_MONTH = [4, 6, 9, 11]
 
-const energy = [765, 717, 1088, 1004, 1482, 1378, 1817, 1703, 2500, 2000, 2500, 2000, 2500, 2000, 2342, 1912, 2294, 1840]
+const energy_kcal = [765, 717, 1088, 1004, 1482, 1378, 1817, 1703, 2500, 2000, 2500, 2000, 2500, 2000, 2342, 1912, 2294, 1840]
 const protein = [14.5, 14.5, 14.5, 14.5, 19.7, 19.7, 28.3, 28.3, 42.1, 41.2, 55.2, 45.0, 55.5, 45.0, 53.3, 46.5, 53.3, 46.5]
 const fat = [0, 0, 0, 0, 58, 54, 71, 66, 97, 78, 97, 78, 97, 78, 91, 74, 89, 72]
 const saturated_fat = [0, 0, 0, 0, 18, 17, 22, 21, 31, 24, 31, 24, 31, 24, 29, 23, 28, 23]
@@ -44,7 +42,8 @@ const sodium = [0.8, 0.8, 0.8, 0.8, 1.2, 1.2, 2.0, 2.0, 2.4, 2.4, 2.4, 2.4, 2.4,
 
 export const dietDataContainer = () => {
     var obj = {
-        "energy": {},
+        "energy_kcal": {},
+        "energy_kj": {},
         "protein": {},
         "fat": {},
         "saturated_fat": {},
@@ -81,7 +80,8 @@ export const dietDataContainer = () => {
         "sodium": {},
     }
 
-    obj.energy.unit = 'kcal';
+    obj.energy_kcal.unit = 'kcal';
+    obj.energy_kj.unit = 'kcal';
 
     obj.protein.unit = 
     obj.fat.unit =

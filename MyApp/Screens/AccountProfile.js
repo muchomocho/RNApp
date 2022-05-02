@@ -10,62 +10,124 @@ import * as APIRequest from '../API/ServerRequest';
 import { TouchableOpacity } from "react-native";
 
 import { useSelector, useDispatch } from 'react-redux';
-import { setSubuserArray, setCurrentSubuser, setUser, setLogout } from '../redux/actions'
+import { setSubuserArray, setCurrentSubuser, setUser, setLogout } from '../redux/userSlice'
+import LoadingView from "../Components/LoadingView";
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
 
 function AccountProfile({ navigation }) {
 
-    const { user, curerentSubuser, subuserArray } = useSelector(state => state.userReducer);
+    const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
+    const [loggedIn, setLoggedIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const dispatch = useDispatch();
 
-    const getUserProfile = async () => {
-        
+    const deleteSubUser = async (subusername) => {
         try {
-            const refreshToken = await Authentication.getStoredRefreshToken();
+            const endpoint = 'api/useraccounts/' + username + '/userprofile/' + subusername + '/';
+            const result = await APIRequest.httpRequest({
+                method: 'DELETE',
+                endpoint: endpoint,
+                isAuthRequired: true
+            });
+        } catch (error) {
+            failAlert();
+        }
+    };
+
+    const failAlert = () => {
+        return Alert.alert(
+            "Error",
+            "Could not complete action",
+            [
+              { text: "OK", onPress: () => {} }
+            ]
+          );
+    };
+
+    const deleteSubUserAlert = (subusername) => {
+        return Alert.alert(
+            "Warning",
+            "Are you sure you wan to delete?",
+            [
+              { text: "OK", onPress: () => { deleteSubUser(subusername); getUserProfile(); } }
+            ]
+          );
+    };
+
+    const getUserProfile = async () => {
+        console.log('accountprogileuser', user);
+        try {
             const username = await Authentication.getUsername();
+            console.log(username);
 
             if (username == '' || username == null || username == undefined) {
+                setLoggedIn(false);
                 return
             }
+           
             const endpoint = 'api/useraccounts/' + username + '/userprofile/';
             const result = await APIRequest.httpRequest({
                 method: 'GET',
                 endpoint: endpoint,
                 isAuthRequired: true
             });
-            console.log('status= ', result.response.status);
+  
             if (result.response.status === 401) {
                 Authentication.logOut();
+                setLoggedIn(false);
+                setIsLoading(false);
                 return false
             }
             
-            console.log('response json: ', result.json);
             const load_user = {
                 id: result.json.id,
                 username: result.json.username,
                 email: result.json.email
             };
+
             dispatch(setUser(load_user));
+            
             dispatch(setSubuserArray(result.json.people));
+            console.log('sent')
+            setLoggedIn(true);
+            setIsLoading(false);
 
             return true;
         } catch (error) {
-            console.log(error);
+            setLoggedIn(false);
+            setIsLoading(false);
             return false;
         }
+        
+    };
+
+    const reloadHandler = async () => {
+        try {
+            await getUserProfile();
+            setIsLoading(false);
+        } catch (error) {
+            setIsLoading(false);
+        }
+    };
+        
+    const blurHandler = () => {
+        setIsLoading(true);
     };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
-    // function is called when screen is focused (switched onto)
+    // https://stackoverflow.com/questions/67102832/how-to-use-focus-and-blur-listener-in-single-useeffect-react-native
     useEffect(() => {
-        const reload = navigation.addListener('focus', () => {
-            getUserProfile();
-        });
+
+        navigation.addListener('focus', reloadHandler);
+        navigation.addListener('blur', blurHandler);
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
-        return reload;
+        return () => {
+            navigation.removeListener('focus', reloadHandler)
+            navigation.removeListener('blur', blurHandler)
+        }
     }, [navigation]);
 
     const useraccountTab = () => {
@@ -80,7 +142,15 @@ function AccountProfile({ navigation }) {
                         email: {user.email}
                     </Text>
                 </View>
+                
                 <View style={styles.accountChild}>
+                    <CustomButton
+                            text={'edit'}
+                            buttonStyle={styles.logoutButton}
+                            onPress={async () => { 
+                                    navigation.navigate('Sign up', { isupdate: true }) 
+                            }}
+                        />
                     <CustomButton
                         text={'logout'}
                         buttonStyle={styles.logoutButton}
@@ -104,7 +174,7 @@ function AccountProfile({ navigation }) {
             style={styles.peopleTab}
             onPress={()=>{
                 dispatch(setCurrentSubuser(item))
-                navigation.navigate('User record', {userdata: item})
+                navigation.navigate('User record', {userdata: item, onDevice: false})
                 }}>
                 <View style={styles.iconContainer}>
                 </View>
@@ -124,7 +194,6 @@ function AccountProfile({ navigation }) {
     }
 
     const subuserTab = () => {
-        console.log(user)
         if (user.username !== '' && user.username !== null) {
             return (
             <FlatList
@@ -148,7 +217,7 @@ function AccountProfile({ navigation }) {
                         <CustomButton
                         buttonStyle={styles.button}
                         text={'create new'}
-                        onPress={()=>{navigation.navigate('CreateProfile')}}
+                        onPress={()=>{navigation.navigate('Create profile')}}
                         />
                     </View>
                 }
@@ -157,56 +226,28 @@ function AccountProfile({ navigation }) {
         }
     };
 
-    const deviceUserRenderData = (item) => {
+
+    if (isLoading) {
         return(
-            <TouchableOpacity 
-            style={styles.peopleTab}
-            >
-                <View style={styles.iconContainer}>
-                </View>
-                <View style={styles.peopleDetailContainer}>
-                    <Text style={styles.peopleTextName}>{item.name}</Text>
-                    <View style={styles.labelContainer}>
-                        <Text>Age</Text>
-                        <Text style={styles.peopleText}>{item.age}</Text>
-                    </View>
-                    <View style={styles.labelContainer}>
-                        <Text>Gender</Text>
-                        <Text style={styles.peopleText}>{item.gender}</Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
+            <LoadingView/>
         )
-    };
-
-    const deviceUserTab = () => {
-        console.log('render')
-        return(
+    }
+    if (!isLoading && !loggedIn) {
+        return (
             <View>
-            <FlatList
-            ListHeaderComponentStyle={
-                <View style={[styles.account, styles.header]}>
-                    <Text style={styles.accountText}>
-                        Record saved on the device
-                    </Text>
-                </View> 
-            }
-
-            data = {subuserArray}
-                renderItem = {({item}) => {
-                    return deviceUserRenderData(item)
-                }}
-                keyExtractor = {item => `${item.id}`}
-            />
+                <View>
+                    <Text> You are not logged in. </Text>
+                </View>
+                <CustomButton
+                    text={'sign in'}
+                    onPress={()=>navigation.navigate('Sign in')}
+                />
             </View>
-        );
-    };
-
-    // https://reactnative.dev/docs/flatlist
+        )
+    }
     return(
         <View style={styles.container}>
             { subuserTab() }
-            { deviceUserTab() } 
         </View>
     );
     
@@ -218,7 +259,7 @@ const styles = StyleSheet.create({
         //alignContent: 'center'
     },
     header: {
-        marginTop: '15%'
+        // marginTop: '15%'
     },
     footer: {
         alignItems: 'center',
@@ -233,7 +274,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     accountText:{
-        color: '#fff'
+        color: '#fff',
+        margin: 10
     },
 
     accountChild: {

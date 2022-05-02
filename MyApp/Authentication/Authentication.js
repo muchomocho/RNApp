@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { setSubuserArray, setCurrentSubuser, setLogout } from '../redux/actions'
+import { store } from '../redux/store';
 
 export const fetchToken = async (username, password) => {
     try {
@@ -56,8 +57,8 @@ export const refreshAccessToken = async () => {
         });
     
         const json = await response.json();
-        console.log(json);
-        console.log(response.status);
+        // console.log(json);
+        // console.log(response.status);
 
         if (response.status == 200) {
             console.warn('token acquired!')
@@ -65,7 +66,8 @@ export const refreshAccessToken = async () => {
             console.warn('access', json.access);
             return json.access;
         } else if (response.status === 400) {
-            console.warn('invalid refresh token')
+            console.warn('invalid refresh token...')
+            await logOut();
         } else {
             console.warn(json)
         }
@@ -171,14 +173,20 @@ export const tokenRequest = async (requestFunction, onFail) => {
 };
 
 export const logOut = async () => {
+    function dispatchLogout() {
+        return {
+          type: 'SET_LOGOUT',
+          payload: null
+        }
+    }
     try {
         await SecureStore.deleteItemAsync('username');
         await SecureStore.deleteItemAsync('access');
         await SecureStore.deleteItemAsync('refresh');
-        const dispatch = useDispatch();
-        dispatch(setLogout());
+        //store.dispatch(dispatchLogout());
+        console.log('logged out')
     } catch (error) {
-
+        console.log('log out eror', error)
     }
 };
     /*

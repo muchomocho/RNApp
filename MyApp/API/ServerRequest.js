@@ -14,8 +14,8 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
         },
     };
     if (method !== 'GET' && method !== 'HEAD') {
-        console.log('body');
         request.body = JSON.stringify(body);
+        console.log('body', request.body);
     }
     
     try {
@@ -32,8 +32,8 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
         if (isAuthRequired && json.code === 'token_not_valid') {
             //console.log('refreshing');
             const refreshedToken = await Authentication.refreshAccessToken();
-            
-            if (refreshedToken == null) {
+            console.log('refresh', refreshedToken)
+            if (refreshedToken == null || refreshedToken == '') {
                 Authentication.logOut();
             }
             //console.log('refreshed', refreshedToken);

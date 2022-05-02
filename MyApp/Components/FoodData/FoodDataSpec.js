@@ -5,24 +5,21 @@ import foodDataUnitJson from '../../assets/JSON/food_integrated_dataset_units.js
 import CustomButton from '../CustomButton';
 import SearchBar from '../SearchBar';
 import { useSelector, useDispatch } from 'react-redux';
-import { addRecordSelection, clearRecord } from '../../redux/actions'
+import { addRecordSelection, clearRecord } from '../../redux/mealRecordSlice'
 
-export default function FoodDataSpec({navigation, foodData, isRecording=false, isUpdating=false}) {
-    const { user, curerentSubuser, subuserArray, recordList } = useSelector(state => state.userReducer);
+export default function FoodDataSpec({navigation, foodData, isRecording=false}) {
+    const { mealRecordContent } = useSelector(state => state.mealRecord);
     const dispatch = useDispatch();
     const [amount, setAmount] = useState(''+foodData.amount_in_grams);
     const [foregroundHeight, setForegroundHeight] = useState(0);
 
     const addToRecord = () => {
         var mealRecordContent = {};
-        mealRecordContent.foodData = foodData;
+        mealRecordContent.food_data = foodData;
         mealRecordContent.amount_in_grams = parseFloat(amount);
-        //console.log('content',mealRecordContent)
-        if (isUpdating) {
-            // update
-        } else {
-            dispatch(addRecordSelection(mealRecordContent));
-        }
+        
+        dispatch(addRecordSelection(mealRecordContent));
+        
         navigation.navigate('Create record')
     }
 
@@ -43,7 +40,6 @@ export default function FoodDataSpec({navigation, foodData, isRecording=false, i
 
     const foregroundElement = () => {
         if (isRecording) {
-            
             return (
                 <View style={styles.foreground} onLayout={(event) => {setForegroundHeight(event.nativeEvent.layout.height);}}>
                     <View style={[{alignContent: 'center'}, styles.amount]}>

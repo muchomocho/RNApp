@@ -14,7 +14,7 @@ export default function FoodDataSelection({navigation}) {
         var arr = new Array();
         foodDataJson.forEach((element, index, array) => {
             if (searchValue.length > 0) {
-                if (element['name'].includes(searchValue)) {
+                if (element['name'].toLowerCase().includes(searchValue.toLowerCase())) {
                     arr.push(
                         {
                             "id": element['id'],
@@ -35,7 +35,7 @@ export default function FoodDataSelection({navigation}) {
             <CustomButton
             text={item.name}
             buttonStyle={styles.button}
-            onPress={() => {onPress(foodDataJson[item.id])}}
+            onPress={() => {onPress(foodDataJson[item.id-1])}}
             />
         );
     };
@@ -45,7 +45,7 @@ export default function FoodDataSelection({navigation}) {
     };
 
     const onPress = (foodDataParam) => {
-        navigation.navigate('Confirm fooddata', { foodData: foodDataParam })
+        navigation.navigate('Confirm fooddata', { food_data: foodDataParam })
     };
 
     return (
