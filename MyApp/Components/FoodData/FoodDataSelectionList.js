@@ -11,7 +11,7 @@ import { httpRequest } from '../../API/ServerRequest';
 import CustomInput from '../CustomInput';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-export default function FoodDataSelectionList({onSubmit}) {
+export default function FoodDataSelectionList({onSubmit, navigation}) {
 
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
     const { mealRecord, recordList, isMealUpdate } = useSelector(state => state.mealRecord);
@@ -80,7 +80,8 @@ export default function FoodDataSelectionList({onSubmit}) {
             method: method,
             endpoint: endpoint,
             body: body,
-            isAuthRequired: true
+            isAuthRequired: true,
+            navigation: navigation
         })
 
         dispatch(clearRecord());

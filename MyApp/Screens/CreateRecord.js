@@ -91,7 +91,7 @@ function CreateRecord(props) {
                     text="close"
                     onPress={switchShowManualModal}
                 />
-                <ManualFoodDataInput onSubmit={switchShowListModal} />
+                <ManualFoodDataInput onSubmit={switchShowManualModal} navigation={props.navigation} />
             </Modal>
             <Modal
                 animationType="slide"
@@ -102,7 +102,7 @@ function CreateRecord(props) {
                     text="close"
                     onPress={switchShowListModal}
                 />
-            <FoodDataSelectionList onSubmit={foodDataOnSubmit} />
+            <FoodDataSelectionList onSubmit={foodDataOnSubmit} navigation={props.navigation} />
             </Modal>
         </View>
     );

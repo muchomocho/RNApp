@@ -3,7 +3,7 @@ import * as Constant from '../Constant/Constant';
 import * as Authentication from '../Authentication/Authentication'
 
 // https://reactnative.dev/docs/network
-export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuthRequired=false}) => {
+export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuthRequired=false, navigation=null}) => {
     var returnObj = {};
     var request = {
         method: method,
@@ -14,7 +14,10 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
         },
     };
     if (method !== 'GET' && method !== 'HEAD') {
-        request.body = JSON.stringify(body);
+        if (body instanceof FormData) {
+            request.body = body;
+        }
+        else { request.body = JSON.stringify(body);}
         console.log('body', request.body);
     }
     
@@ -32,9 +35,9 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
         if (isAuthRequired && json.code === 'token_not_valid') {
             //console.log('refreshing');
             const refreshedToken = await Authentication.refreshAccessToken();
-            console.log('refresh', refreshedToken)
-            if (refreshedToken == null || refreshedToken == '') {
-                Authentication.logOut();
+
+            if ((refreshedToken == null || refreshedToken == '')) {
+                Authentication.logOut(navigation);
             }
             //console.log('refreshed', refreshedToken);
             request.headers.Authorization = ('Bearer ' + refreshedToken); 

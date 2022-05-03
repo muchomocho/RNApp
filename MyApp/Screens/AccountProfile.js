@@ -29,13 +29,14 @@ function AccountProfile({ navigation }) {
             const result = await APIRequest.httpRequest({
                 method: 'DELETE',
                 endpoint: endpoint,
-                isAuthRequired: true
+                isAuthRequired: true,
+                navigation: navigation
             });
         } catch (error) {
             failAlert();
         }
     };
-
+    
     const failAlert = () => {
         return Alert.alert(
             "Error",
@@ -57,13 +58,13 @@ function AccountProfile({ navigation }) {
     };
 
     const getUserProfile = async () => {
-        console.log('accountprogileuser', user);
         try {
             const username = await Authentication.getUsername();
             console.log(username);
 
             if (username == '' || username == null || username == undefined) {
                 setLoggedIn(false);
+                dispatch(setLogout());
                 return
             }
            
@@ -71,11 +72,12 @@ function AccountProfile({ navigation }) {
             const result = await APIRequest.httpRequest({
                 method: 'GET',
                 endpoint: endpoint,
-                isAuthRequired: true
+                isAuthRequired: true,
+                navigation: navigation
             });
   
             if (result.response.status === 401) {
-                Authentication.logOut();
+                Authentication.logOut(navigation);
                 setLoggedIn(false);
                 setIsLoading(false);
                 return false
@@ -88,9 +90,8 @@ function AccountProfile({ navigation }) {
             };
 
             dispatch(setUser(load_user));
-            
             dispatch(setSubuserArray(result.json.people));
-            console.log('sent')
+
             setLoggedIn(true);
             setIsLoading(false);
 
@@ -156,7 +157,7 @@ function AccountProfile({ navigation }) {
                         buttonStyle={styles.logoutButton}
                         onPress={async () => { 
                             try {
-                                Authentication.logOut();
+                                Authentication.logOut(navigation);
                                 dispatch(setLogout()); 
                                 navigation.navigate('Sign in') 
                             } catch (error) {}
@@ -234,14 +235,17 @@ function AccountProfile({ navigation }) {
     }
     if (!isLoading && !loggedIn) {
         return (
-            <View>
-                <View>
-                    <Text> You are not logged in. </Text>
-                </View>
+            <View style={styles.notLoggedInContainer}>
+                <View style={styles.notLoggedIn}>
+                    <View style={{ alignItems: 'center' }}>
+                        <Text> You are not logged in. </Text>
+                        <Text> Sign in to see your records. </Text>
+                    </View>
                 <CustomButton
                     text={'sign in'}
                     onPress={()=>navigation.navigate('Sign in')}
                 />
+                </View>
             </View>
         )
     }
@@ -334,6 +338,20 @@ const styles = StyleSheet.create({
     },
     button: {
         width: '95%',
+    },
+    notLoggedInContainer: {
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    notLoggedIn: {
+        height: '50%',
+        width: '95%',
+        padding: 20,
+        justifyContent: 'space-evenly',
+        backgroundColor: '#fff',
+        borderRadius: 5,
+        elevation: 3
     }
 });
 

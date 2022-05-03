@@ -1,7 +1,7 @@
 import React from 'react';
 import * as Constant from '../Constant/Constant';
 import * as SecureStore from 'expo-secure-store';
-
+import { Alert } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSubuserArray, setCurrentSubuser, setLogout } from '../redux/actions'
 import { store } from '../redux/store';
@@ -104,13 +104,12 @@ export const storeRefreshToken = async (refreshToken) => {
 
 export const storeUsername = async (username) => {
     try {
-        await SecureStore.setItemAsync(
-            "username", username
-        );
+        await SecureStore.setItemAsync("username", username);
+        return true;
         } catch (error) {
-        // Error saving data
-        console.log('store username failed: ' + error)
+            return false;
         }
+        
 };
 
 export const getStoredRefreshToken = async () => {
@@ -162,9 +161,9 @@ export const tokenRequest = async (requestFunction, onFail) => {
     try {
         const result = await requestFunction();
         const json = await result.response.json;
-        console.log('json code',json.code);
+        
         if (json.code === 'token_not_valid') {
-
+            onFail();
         }
 
     } catch (error) {
@@ -172,21 +171,39 @@ export const tokenRequest = async (requestFunction, onFail) => {
     }
 };
 
-export const logOut = async () => {
-    function dispatchLogout() {
-        return {
-          type: 'SET_LOGOUT',
-          payload: null
-        }
-    }
+const logoutAlert = (navigation) => {
+    return (
+    Alert.alert(
+        "Warning",
+        `Your session has expired. You are now logged out.`,
+        [
+          { 
+              text: "OK", onPress: () => { 
+              if (navigation !== undefined && navigation !== null) {
+                  navigation.navigate('Profile')
+              }
+            }
+          }
+        ]
+      )
+    );
+};
+
+export const logOut = async (navigation) => {
+
     try {
         await SecureStore.deleteItemAsync('username');
         await SecureStore.deleteItemAsync('access');
         await SecureStore.deleteItemAsync('refresh');
-        //store.dispatch(dispatchLogout());
-        console.log('logged out')
+        
+        setTimeout(() => {
+            if (navigation !== undefined && navigation !== null) {
+                logoutAlert(navigation);
+            }
+        }, 500);
+        return true;
     } catch (error) {
-        console.log('log out eror', error)
+        return false;
     }
 };
     /*

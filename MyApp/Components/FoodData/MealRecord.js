@@ -28,8 +28,9 @@ export default function MealRecord({data, onDevice=false, parentSet, navigation}
             try {
                 const result = await httpRequest({
                     method: 'DELETE',
-                    endpoint: 'api/useraccounts/admin/userdata/' + currentSubuser.name + '/usermealrecord/' + id + '/',
-                    isAuthRequired: true
+                    endpoint: `api/useraccounts/${user.username}/userdata/${currentSubuser.name}/usermealrecord/${id}/`,
+                    isAuthRequired: true,
+                    navigation: navigation
                 });
 
                 setShowDeleteWarning(false);
@@ -44,7 +45,6 @@ export default function MealRecord({data, onDevice=false, parentSet, navigation}
                     setShowFail('server failed to process');
                 }
             } catch (error) {
-                console.log(error)
                 setShowFail('network error');
             }
         };

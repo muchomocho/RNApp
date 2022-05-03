@@ -15,7 +15,8 @@ function RecipeDetail(props) {
             try {
                 const result = await ServerRequest.httpRequest({
                 method: 'GET',
-                endpoint: 'api/recipes/' + props.route.params.recipe.id + '/'
+                endpoint: 'api/recipes/' + props.route.params.recipe.id + '/',
+                navigation: props.navigation
             });
             setData(result.json);
         } catch (error) {

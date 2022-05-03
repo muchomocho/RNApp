@@ -15,7 +15,8 @@ function RecipeList({ navigation }) {
         try {
             const response = await ServerRequest.httpRequest({
                 method: 'GET', 
-                endpoint: 'api/recipes/' + query
+                endpoint: 'api/recipes/' + query,
+                navigation: navigation
             });
             const json = response.json;
             setData(json);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Constant from '../Constant/Constant'
 import * as Authentication from "../Authentication/Authentication";
 import * as APIrequest from "../API/ServerRequest";
@@ -10,8 +11,10 @@ import CustomButton from "../Components/CustomButton";
 function CreateProfile({ navigation, isupdate }) {
 
     const [name, setName] = useState('');
-    const [age, setAge] = useState('');
+    const [dob, setDob] = useState(new Date());
     const [gender, setGender] = useState('');
+
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const [nameWarning, setNameWarning] = useState('');
     const [ageWarning, setAgeWarning] = useState('');
@@ -29,10 +32,11 @@ function CreateProfile({ navigation, isupdate }) {
                 method: "POST",
                 body: {
                     name: name,
-                    age: age,
+                    date_of_birth: `${dob.getFullYear()}-${dob.getMonth()+1}-${dob.getDate()}`,
                     gender: gender,
                 },
                 isAuthRequired: true,
+                navigation: navigation
               });
             if (result.response.status == 201) {
               navigation.navigate('Profile');
@@ -41,8 +45,8 @@ function CreateProfile({ navigation, isupdate }) {
               if (Object.prototype.hasOwnProperty.call(result.json, 'name') && result.json.name.length > 0)
                 setNameWarning(result.json.name);
 
-              if (Object.prototype.hasOwnProperty.call(result.json,'age') && result.json.age.length > 0)
-                setAgeWarning(result.json.age);
+              if (Object.prototype.hasOwnProperty.call(result.json,'dob') && result.json.dob.length > 0)
+                setAgeWarning(result.json.dob);
 
               if (Object.prototype.hasOwnProperty.call(result.json,'gender') && result.json.gender.length > 0)
                 setGenderWarning(result.json.gender);
@@ -53,12 +57,12 @@ function CreateProfile({ navigation, isupdate }) {
     };
 
     const onSubmit = () => {
-        if (validate(name, age, gender)) {
+        if (validate(name, dob, gender)) {
           createUserProfile();
         }
     }
 
-    const validate = (name, age, gender) => {
+    const validate = (name, dob, gender) => {
         var isValid = true;
         if (name.length === 0) {
           setIsNameValid(false)
@@ -77,6 +81,18 @@ function CreateProfile({ navigation, isupdate }) {
           ));
     };
 
+    const onDateConfirm = (event, date) => {
+      if (event.type == 'set') {
+          const dateObj = new Date(date)
+          setDob(dateObj);
+      }
+      setShowDatePicker(false);
+    };
+
+    const switchShowDatePicker = () => {
+      setShowDatePicker(!showDatePicker);
+    };
+
     return (
         <View style={styles.container}>
 
@@ -93,16 +109,21 @@ function CreateProfile({ navigation, isupdate }) {
           <CustomInput 
           value = {name}
           setValue={setName}
-          placeholder={"Enter your name"}
+          placeholder="Enter your name"
           />
           
           { warning(ageWarning) }
 
-          <CustomInput 
-          value = {age}
-          setValue={setAge}
-          placeholder={"Enter your age"}
+          <View>
+            <Text> { dob.getFullYear() } / { dob.getMonth()+1 } / { dob.getDate() } </Text>
+          </View>
+
+          <CustomButton
+          onPress={switchShowDatePicker}
+          text="Choose your birthday"
           />
+          
+          { showDatePicker && <DateTimePicker value={dob} onChange={onDateConfirm} mode="date" />}
 
           <Text> Enter your gender </Text>
 

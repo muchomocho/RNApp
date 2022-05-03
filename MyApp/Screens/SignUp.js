@@ -75,7 +75,8 @@ function SignUp (props) {
               body: {
                 email: email,
                 password: password1
-              }
+              },
+              navigation: props.navigation
             });
           }
           else {
@@ -86,7 +87,8 @@ function SignUp (props) {
                 username: username,
                 email: email,
                 password: password1
-              }
+              },
+              navigation: props.navigation
             });
           }
 

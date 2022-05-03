@@ -87,7 +87,7 @@ export default function UserGraph ({ data, dates }) {
     };
 
     const plotTarget = () => {
-        if (currentSubuser !== undefined && (currentSubuser.age !== '' && currentSubuser.age !== null) && (currentSubuser.gender !== '' && currentSubuser.gneder !== null)
+        if (currentSubuser !== undefined && (currentSubuser.age !== '' && currentSubuser.age !== null) && (currentSubuser.gender !== '' && currentSubuser.gender !== null && currentSubuser.gender !== 'O')
             && (dates !== undefined && dates.length > 0)) {
                 const line = parseFloat(json[ageMap(currentSubuser.age)][genderMap(currentSubuser.gender)][focusData]);
                 const lineData = dates.map(date => ({x: formatDate(date), y: line}));

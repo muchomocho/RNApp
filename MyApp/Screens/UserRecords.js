@@ -117,7 +117,8 @@ function UserRecord(props) {
                 + '/userrecord/'
                 + formatDate(date) + '/'
                 + 'from/' + calculateDate(dateRange) + '/'
-                ,isAuthRequired: true
+                ,isAuthRequired: true,
+                navigation: props.navigation
             });
             setData(result.json);
             setDataLoading(false);
@@ -137,8 +138,9 @@ function UserRecord(props) {
                 console.log(recordDate)
                 const result = await APIRequest.httpRequest({
                     method: 'GET',
-                    endpoint: 'api/useraccounts/admin/userdata/' + currentSubuser.name + '/usermealrecord/?date=' + dates[recordDate],
-                    isAuthRequired: true
+                    endpoint: `api/useraccounts/${user.username}/userdata/${currentSubuser.name}/usermealrecord/?date=${dates[recordDate]}`,
+                    isAuthRequired: true,
+                    navigation: props.navigation
                 });
                 if (result.response.status == 200) {
                     data.push({date: dates[recordDate], data: result.json})
