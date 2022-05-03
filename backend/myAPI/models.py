@@ -93,9 +93,9 @@ class UserData(models.Model):
                                   )
     name = models.CharField(max_length=30,
                             validators=[
-                                RegexValidator(regex='^[a-zA-Z0-9_\- ]+$', message='Name must consist of alphanumeric, underscore or hyphen',
+                                RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                                                code=None, inverse_match=None, flags=0), ])
-    age = models.IntegerField()
+    date_of_birth = models.DateField()
 
     # https://docs.djangoproject.com/en/4.0/ref/models/fields/
     # 'Generally, it’s best to define choices inside a model class,
@@ -114,20 +114,25 @@ class UserData(models.Model):
 
 class FoodData(models.Model):
     main_img = models.ImageField(upload_to='fooddata/', null=True)
+    # is this data only for the creator to use
     is_private = models.BooleanField(default=True)
+    # is this data hidden for use
+    is_hidden = models.BooleanField(default=False)
+    last_used = models.DateTimeField()
+
     uploader = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username',
                                  db_column='username', null=True, on_delete=models.SET_NULL, validators=[
-                                     RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]+$', message='Name must consist of alphanumeric, underscore or hyphen',
+                                     RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                                                     code=None, inverse_match=None, flags=0), ])
+    # additional information for source if applicable
     source_name = models.CharField(max_length=255, null=True, validators=[
-        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]+$', message='Name must consist of alphanumeric, underscore or hyphen',
+        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                        code=None, inverse_match=None, flags=0), ])
     name = models.CharField(max_length=255, validators=[
-        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]+$', message='Name must consist of alphanumeric, underscore or hyphen',
+        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                        code=None, inverse_match=None, flags=0), ])
     amount_in_grams = models.DecimalField(
         default=0, max_digits=20, decimal_places=10)
-    #meal = models.ForeignKey(UserMealRecordContent, related_name='food_data', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name
@@ -138,11 +143,14 @@ class Recipe(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username',
                              db_column='username', on_delete=models.CASCADE)
     title = models.CharField(max_length=100, validators=[
-        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]+$', message='Name must consist of alphanumeric, underscore or hyphen',
+        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                        code=None, inverse_match=None, flags=0), ])
     main_img = models.ImageField(upload_to='recipes/', null=True)
     date_created = models.DateTimeField(default=timezone.now)
+    # is the data only for the creator to use
     is_private = models.BooleanField(default=True)
+    # is the data "deleted" (no new record entries can be made)
+    is_hidden = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
@@ -171,7 +179,7 @@ class RecipeStep(models.Model):
 class Tag(models.Model):
     recipe = models.ManyToManyField(Recipe, related_name='tags')
     text = models.CharField(max_length=20, validators=[
-        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]+$', message='Name must consist of alphanumeric, underscore or hyphen',
+        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                        code=None, inverse_match=None, flags=0), ])
 
 
@@ -187,7 +195,6 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe, related_name='ingredients', on_delete=models.CASCADE)
     food_data = models.ForeignKey(FoodData, on_delete=models.CASCADE)
-    ingredient_name = models.CharField(max_length=255)
     ingredient_quantity = models.DecimalField(
         default=0, max_digits=15, decimal_places=5)
     ingredient_unit = models.CharField(max_length=10)

@@ -45,7 +45,7 @@ class UserAccountSerializer(serializers.ModelSerializer):
 class UserDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserData
-        fields = ['id', 'name', 'age', 'gender']
+        fields = ['id', 'name', 'date_of_birth', 'gender']
 
     def create(self, validated_data):
 
@@ -53,6 +53,11 @@ class UserDataSerializer(serializers.ModelSerializer):
         instance.save()
         self.context['request'].user.people.add(instance)
         return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['age'] = timezone.now().date() - instance.date_of_birth
+        return data
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -128,9 +133,11 @@ class UserMealRecordSerializer(serializers.ModelSerializer):
         for meal_data in meals_data:
 
             food_data = meal_data.pop('food_data')
-            instance = FoodData.objects.get(id=food_data.id)
+            food_instance = FoodData.objects.get(id=food_data.id)
             meal_content = UserMealRecordContent.objects.create(
-                parent_record=meal_record, food_data=instance, **meal_data)
+                parent_record=meal_record, food_data=food_instance, **meal_data)
+            food_instance.last_used = timezone.now()
+            food_instance.save()
 
             meal_record.meal_content.add(meal_content)
 
@@ -253,7 +260,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         steps_data = validated_data.pop('steps')
         image = validated_data.pop('main_img')
 
-        print('yo', str(instance.main_img))
         if os.path.exists(str(instance.main_img)):
             os.remove(str(instance.main_img))
         instance.main_img = image

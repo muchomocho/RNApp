@@ -429,15 +429,21 @@ class UserDataViewSet(viewsets.ModelViewSet):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
             serializer = UserDataSerializer(
                 self.queryset.filter(user=request.user), many=True)
+            subuser = self.queryset.get(
+                user=request.user, name=kwargs['name'])
+            serializer = UserDataSerializer(subuser)
+    
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
-            print(kwargs['name'])
-            serializer = UserDataSerializer(self.queryset.get(
-                user=request.user, name=kwargs['name']))
+            
+            subuser = self.queryset.get(
+                user=request.user, name=kwargs['name'])
+            serializer = UserDataSerializer(subuser)
+            
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -701,7 +707,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 class FoodDataViewSet(viewsets.ModelViewSet):
     queryset = FoodData.objects.all()
     serializer_class = FoodDataSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def retrieve(self, request, *args, **kwargs):
         queryset = FoodData.objects.all()
@@ -718,6 +724,10 @@ class FoodDataViewSet(viewsets.ModelViewSet):
             food_data = self.queryset
         serializer = FoodDataSerializer(food_data, many=True)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        print(request.data)
+        return super().create(request, *args, **kwargs)
 
 
 class NutritionalViewSet(viewsets.ModelViewSet):

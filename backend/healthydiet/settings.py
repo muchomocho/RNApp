@@ -28,12 +28,12 @@ SECRET_KEY = 'django-insecure-fdo+5i6ua$2e%2mkv9ivccf5e=i9k7wqqg(^(9wgdlmf_-t!&&
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '127.0.0.1', 
-    '192.168.0.32',  
+    '127.0.0.1',
+    '192.168.0.32',
     '192.168.0.33',
     '192.168.0.16',
     '0.0.0.0:8000'
-    ]
+]
 
 # python manage.py runserver 192.168.0.32:8081
 
@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions', #legacy not used? - used for admin
+    'django.contrib.sessions',  # legacy not used? - used for admin
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
@@ -153,8 +153,11 @@ AUTH_USER_MODEL = 'myAPI.UserAccount'
 
 SIMPLE_JWT = {
     'USER_ID_FIELD': 'username',
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=10),
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
 }
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/uploads/'
