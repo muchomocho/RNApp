@@ -42,9 +42,9 @@ class UserAccountSerializer(serializers.ModelSerializer):
         return instance
 
 
-class UserDataSerializer(serializers.ModelSerializer):
+class SubuserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UserData
+        model = Subuser
         fields = ['id', 'name', 'date_of_birth', 'gender']
 
     def create(self, validated_data):
@@ -61,7 +61,7 @@ class UserDataSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    people = UserDataSerializer(many=True)
+    people = SubuserSerializer(many=True)
 
     class Meta:
         model = UserAccount
@@ -74,6 +74,12 @@ class NutritionalDataSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'value', 'unit']
 
 
+class SimpleFoodDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FoodData
+        fields = ['id', 'uploader', 'name', 'main_img']
+
+
 class FoodDataSerializer(serializers.ModelSerializer):
 
     nutrient_data = NutritionalDataSerializer(many=True)
@@ -81,13 +87,22 @@ class FoodDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = FoodData
         fields = '__all__'
-        # fields = ['id', 'owner', 'owner_name']
 
     def create(self, validated_data):
         nutrient_data_list = validated_data.pop('nutrient_data')
         food_data = FoodData.objects.create(**validated_data)
 
+        # reference to balance units
+        dir = os.path.dirname(__file__)  # get current directory
+        file_path = os.path.join(
+            dir, 'Assets/gov_diet_recommendation_units.json')
+        with open(file_path) as json_file:
+            units = json.load(json_file)
+
         for nutrient_data in nutrient_data_list:
+            if nutrient_data['name'] in units.keys():
+                nutrient_data['value'] *= decimal.Decimal(helper.unit_converter(
+                    target_unit=units[nutrient_data['name']], from_unit=nutrient_data['unit']))
             NutritionalData.objects.create(
                 parent_food=food_data, **nutrient_data)
 

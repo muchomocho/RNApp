@@ -28,7 +28,7 @@ fooddata_urls = [
 # url for recipe
 # model : `~myAPI.Recipes`
 recipe_url_base = 'api/recipes/'
-recipe_url_detail = recipe_url_base + '<int:pk>/'
+recipe_url_detail = recipe_url_base + '<int:recipe_id>/'
 
 
 recipe_urls = [
@@ -89,6 +89,7 @@ recipeingredient_urls = [
     }), name='recipecomment-detail'),
 ]
 
+
 # append all urls for recipe
 recipe_urls += recipetag_urls + recipecomment_urls + recipeingredient_urls
 
@@ -108,28 +109,35 @@ useraccount_urls = [
 ]
 
 # url for subusers, single entity specified by username + name of subuser (name is unique per subuser per useraccount)
-# model : `~myAPI.UserData`
-userdata_url_base = useraccount_url_detail + 'userdata/'
-userdata_url_detail = userdata_url_base + '<str:name>/'
+# model : `~myAPI.subuser`
+subuser_url_base = useraccount_url_detail + 'subuser/'
+subuser_url_detail = subuser_url_base + '<str:name>/'
 
-userdata_urls = [
-    path(userdata_url_base, views.UserDataViewSet.as_view(
-        {'get': 'list', 'post': 'create'}), name='userdata'),
-    path(userdata_url_detail, views.UserDataViewSet.as_view({
+subuser_urls = [
+    path(subuser_url_base, views.SubuserViewSet.as_view(
+        {'get': 'list', 'post': 'create'}), name='subuser'),
+    path(subuser_url_detail, views.SubuserViewSet.as_view({
         'get': 'retrieve',
         'put': 'update',
         'delete': 'destroy'
-    }), name='userdata-detail'),
+    }), name='subuser-detail'),
     path(useraccount_url_detail + 'userprofile/',
          views.UserProfileViewSet.as_view({'get': 'retrieve'}), name='userprofile')
 ]
 
 # model : `~myAPI.UserMealRecord`
 # gets a formatted version of meal record nutrition data
-userrecord_url_base = userdata_url_detail + 'userrecord/'
+userrecord_url_base = subuser_url_detail + 'userrecord/'
 userrecord_url_detail = userrecord_url_base + '<str:date>/'
 userrecord_url_date_range = userrecord_url_detail + 'from/<str:from>/'
-recipe_url_recommendation = userdata_url_detail + 'reciperecommendation/'
+
+recipe_url_recommendation = subuser_url_detail + 'reciperecommendation/'
+
+recipe_url_personal = useraccount_url_detail + 'myrecipes/'
+recipe_url_personal_detail = recipe_url_personal + '<int:myrecipe_id>/'
+
+fooddata_url_personal = useraccount_url_detail + 'myfooddata/'
+fooddata_url_personal_detail = fooddata_url_personal + '<int:myfood_id>/'
 
 userrecord_urls = [
     path(userrecord_url_date_range, views.UserRecordViewSet.as_view(
@@ -138,11 +146,19 @@ userrecord_urls = [
         'get': 'retrieve',
     }), name='userrecord-detail'),
     path(recipe_url_recommendation, views.RecipeRecommendationViewSet.as_view(
-        {'get': 'list'}), name='recipe-recommendation')
+        {'get': 'list'}), name='recipe-recommendation'),
+    path(recipe_url_personal, views.PersonalRecipeViewSet.as_view(
+        {'get': 'list'}), name='recipe-personal'),
+    path(fooddata_url_personal, views.PersonalFoodDataViewSet.as_view(
+        {'get': 'list'}), name='food-personal'),
+    path(recipe_url_personal_detail, views.PersonalRecipeViewSet.as_view(
+        {'delete': 'destroy'}), name='recipe-personal-delete'),
+    path(fooddata_url_personal_detail, views.PersonalFoodDataViewSet.as_view(
+        {'delete': 'destroy'}), name='food-personal-delete')
 ]
 
 # model : `~myAPI.UserMealRecord`
-usermealrecord_url_base = userdata_url_detail + 'usermealrecord/'
+usermealrecord_url_base = subuser_url_detail + 'usermealrecord/'
 usermealrecord_url_detail = usermealrecord_url_base + '<int:usermealrecord_id>/'
 
 usermealrecord_urls = [
@@ -156,7 +172,7 @@ usermealrecord_urls = [
 ]
 
 # append the urls
-useraccount_urls += userdata_urls + userrecord_urls + usermealrecord_urls
+useraccount_urls += subuser_urls + userrecord_urls + usermealrecord_urls
 
 urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

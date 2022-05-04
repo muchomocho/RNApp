@@ -23,8 +23,8 @@ function ConfirmFoodData (props) {
         <View style={styles.container}>
             <FoodDataSpec
             navigation={props.navigation}
-            foodData={props.route.params.food_data}
-            isRecording={true}
+            foodData={props.route.params.food_id}
+            isRecording={props.route.params.isRecording}
             />
             
         </View>

@@ -22,27 +22,23 @@ export const fetchToken = async (username, password) => {
         const json = await response.json();
 
         if (response.status == 200) {
-            console.warn('token acquired!')
             storeAccessToken(json.access);
             storeRefreshToken(json.refresh);
             storeUsername(username)
             return true;
 
         } else if (response.status === 400) {
-            console.warn('user already exists');
             return false;
         } else {
-            console.warn(json);
             return false;
         }
     } catch (error) {
-        console.warn(error);
         return false;
     }
 };
 
 export const refreshAccessToken = async () => {
-    console.log('refreshing token...')
+    
     try {
         const refreshToken = await getStoredRefreshToken();
         const response = await fetch(Constant.ROOT_URL + 'api/token/refresh/', {
@@ -57,22 +53,17 @@ export const refreshAccessToken = async () => {
         });
     
         const json = await response.json();
-        // console.log(json);
-        // console.log(response.status);
 
         if (response.status == 200) {
-            console.warn('token acquired!')
             await storeAccessToken(json.access);
-            console.warn('access', json.access);
             return json.access;
         } else if (response.status === 400) {
-            console.warn('invalid refresh token...')
             await logOut();
         } else {
-            console.warn(json)
+            await logOut();
         }
     } catch (error) {
-        console.warn(error);
+        await logOut();
     }
     return '';
 };
@@ -171,34 +162,17 @@ export const tokenRequest = async (requestFunction, onFail) => {
     }
 };
 
-const logoutAlert = (navigation) => {
-    return (
-    Alert.alert(
-        "Warning",
-        `Your session has expired. You are now logged out.`,
-        [
-          { 
-              text: "OK", onPress: () => { 
-              if (navigation !== undefined && navigation !== null) {
-                  navigation.navigate('Profile')
-              }
-            }
-          }
-        ]
-      )
-    );
-};
-
 export const logOut = async (navigation) => {
 
     try {
         await SecureStore.deleteItemAsync('username');
         await SecureStore.deleteItemAsync('access');
         await SecureStore.deleteItemAsync('refresh');
-        
+        console.log('logoutal1')
         setTimeout(() => {
             if (navigation !== undefined && navigation !== null) {
-                logoutAlert(navigation);
+                console.log('logoutal2')
+                navigation.navigate('Profile', { logoutRedirect: true })
             }
         }, 500);
         return true;

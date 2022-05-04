@@ -11,6 +11,7 @@ import SignUp from '../../Screens/SignUp';
 import AccountProfile from '../../Screens/AccountProfile'
 import RecipeDetail from '../../Screens/RecipeDetail';
 import UserRecord from '../../Screens/UserRecords';
+import FoodDataList from '../../Screens/FoodDataList';
 import CreateRecord from '../../Screens/CreateRecord';
 import ConfirmFoodData from '../../Screens/ConfirmFoodData';
 
@@ -47,7 +48,15 @@ const BottomTab = () => {
             tabBarActiveTintColor: '#123',
         }}
         >
-            <Tab.Screen name='Profile' component={AccountProfile}/>
+            <Tab.Screen 
+            name='Profile' 
+            component={AccountProfile}
+            initialParams={
+                {
+                    logoutRedirect: false
+                }
+            }
+            />
             <Tab.Screen 
             name='Sign in' 
             component={SignIn} 
@@ -59,6 +68,7 @@ const BottomTab = () => {
               }}
             />
             <Tab.Screen name='Recipe' component={RecipeList} />
+            <Tab.Screen name='Fooddata' component={FoodDataList} />
             <Tab.Screen name='Create' component={CreateRecipe} />
 
             { /* we want to show tabs on these pages but not their icons in the tabs, so they are included here but hidden by style. */ }

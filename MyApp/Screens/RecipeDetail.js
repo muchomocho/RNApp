@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
 import * as ServerRequest from '../API/ServerRequest';
+import { useSelector, useDispatch } from 'react-redux';
+import CustomButton from "../Components/CustomButton";
+
 
 function RecipeDetail(props) {
+    const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
     const [data, setData] = useState([]);
 
     // https://reactnative.dev/docs/network
@@ -37,6 +41,14 @@ function RecipeDetail(props) {
         )
     }
 
+    const onEdit = () => {
+
+    };
+
+    const onDelete = () => {
+
+    };
+
     // https://reactnative.dev/docs/flatlist
     return(
         <View >
@@ -50,6 +62,21 @@ function RecipeDetail(props) {
                         id: {data.id + '\n'} 
                         title: {data.title}
                     </Text>
+                    {
+                        data.user == user.username &&
+                        (
+                            <View>
+                                <CustomButton
+                                text="edit"
+                                onPress={onEdit}
+                                />
+                                <CustomButton
+                                text="delete"
+                                onPress={onDelete}
+                                />
+                            </View>
+                        )
+                    }
                 </View>
             }
             

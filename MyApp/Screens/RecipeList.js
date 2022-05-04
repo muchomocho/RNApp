@@ -5,18 +5,28 @@ import SearchBar from "../Components/SearchBar";
 import * as ServerRequest from '../API/ServerRequest'
 import * as Constant from '../Constant/Constant';
 
+import { useSelector, useDispatch } from 'react-redux';
+import { setSubuserArray, setCurrentSubuser, setUser, setLogout } from '../redux/userSlice'
+import LoadingView from "../Components/LoadingView";
+import CustomButton from "../Components/CustomButton";
+
 function RecipeList({ navigation }) {
+    const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
 
     const [data, setData] = useState([]);
+    const [isMyRecipe, setMyRecipe] = useState(false);
     const [searchValue, setSearchValue] = useState('');
 
     // https://reactnative.dev/docs/network
     const getRecipe = async (query='') => {
         try {
+            const baseEndpoint = (isMyRecipe && user.username !== '') ? `api/useraccounts/${user.username}/myrecipes/` : 'api/recipes/'
+            const endpoint = query == '' ? baseEndpoint : `${baseEndpoint}${query}`
             const response = await ServerRequest.httpRequest({
                 method: 'GET', 
-                endpoint: 'api/recipes/' + query,
-                navigation: navigation
+                endpoint: endpoint,
+                navigation: navigation,
+                isAuthRequired: (isMyRecipe && user.username !== '')
             });
             const json = response.json;
             setData(json);
@@ -27,7 +37,7 @@ function RecipeList({ navigation }) {
     };
 
     const onSearch = (searchQuery) => {
-        getRecipe('?title='+searchQuery);
+        getRecipe(`?title=${searchQuery}`);
     };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
@@ -44,12 +54,11 @@ function RecipeList({ navigation }) {
 
     const renderData = (item) => {
         var image = null;
-        console.log(typeof(image))
+        
         var url = Constant.ROOT_URL + item.main_img
         url = url.replace(/\/\//g, '/')
         url = url.replace(':/', '://')
-        console.log('url', url)
-        console.log(typeof(item.main_img)=='string' && item.main_img != '')
+
         if (typeof(item.main_img)=='string' && item.main_img != '') {
             image = 
                 <Image
@@ -59,7 +68,7 @@ function RecipeList({ navigation }) {
                     source={{uri: url}}
                 />
         }
-        console.log(typeof(image))
+       
         return(
             <TouchableOpacity 
             style={styles.recipeContainer}
@@ -74,19 +83,33 @@ function RecipeList({ navigation }) {
         )
     }
 
+    const switchIsMyRecipe = () => {
+        setMyRecipe(!isMyRecipe);
+    };
+
     return(
         <View style={styles.container}>
             <FlatList
             
             ListHeaderComponent={
-                <View>
-                    <SearchBar
-                    value={searchValue}
-                    setValue={setSearchValue}
-                    onSearch={()=>{onSearch(searchValue)}}
-                    />
-                    {/* { data.length == 0 && <Text> No results </Text> } */}
-                
+                <View style={styles.headerContainer}>
+                    {
+                        user.username !== '' &&
+                        <View style={styles.switchMyButtonContainer}>
+                            <CustomButton
+                            buttonStyle={(isMyRecipe && user.username !== '') ? {} : { backgroundColor: '#bbb' }}
+                            text="my recipe"
+                            onPress={switchIsMyRecipe}
+                            />
+                        </View>
+                    }   
+                    <View style={styles.searchBarContainer}>
+                        <SearchBar
+                        value={searchValue}
+                        setValue={setSearchValue}
+                        onSearch={()=>{onSearch(searchValue)}}
+                        />
+                    </View>
                 </View>
             }
 
@@ -107,10 +130,21 @@ function RecipeList({ navigation }) {
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 50,
         marginBottom: 50
     },
-
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    switchMyButtonContainer: {
+        flex: 4,
+        paddingHorizontal: 10
+    },
+    searchBarContainer: {
+        flex: 6,
+        paddingHorizontal: 10
+    },
     recipeContainer: {
         flexDirection: 'row',
         height: 150,

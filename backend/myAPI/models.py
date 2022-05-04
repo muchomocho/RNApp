@@ -86,7 +86,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 # sub accounts for users, if user wants to record data for family members etc
 
 
-class UserData(models.Model):
+class Subuser(models.Model):
     # an account have multiple users, such as family members
     user = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                   related_name='people'
@@ -118,7 +118,8 @@ class FoodData(models.Model):
     is_private = models.BooleanField(default=True)
     # is this data hidden for use
     is_hidden = models.BooleanField(default=False)
-    last_used = models.DateTimeField()
+    date_created = models.DateTimeField(default=timezone.now)
+    last_used = models.DateTimeField(default=timezone.now)
 
     uploader = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username',
                                  db_column='username', null=True, on_delete=models.SET_NULL, validators=[
@@ -147,6 +148,7 @@ class Recipe(models.Model):
                        code=None, inverse_match=None, flags=0), ])
     main_img = models.ImageField(upload_to='recipes/', null=True)
     date_created = models.DateTimeField(default=timezone.now)
+    last_used = models.DateTimeField(default=timezone.now)
     # is the data only for the creator to use
     is_private = models.BooleanField(default=True)
     # is the data "deleted" (no new record entries can be made)
@@ -154,16 +156,6 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title
-
-    def get_nutrition_as_dict(self):
-        return_dict = {}
-        ingredient_list = self.ingredients.all()
-        for ingredient in ingredient_list:
-            food_data = FoodData.objects.get(id=ingredient.food_data)
-            nutrient_list = food_data.nutrient_data.all()
-            for nutrient in nutrient_list:
-                return_dict[nutrient.name] = ingredient.ingredient_quantity / \
-                    food_data.amount_in_grams
 
 
 class RecipeStep(models.Model):
@@ -208,7 +200,7 @@ The meal user has eaten. consists of multiple food data
 class UserMealRecord(models.Model):
     #day_record = models.ForeignKey(UserDayRecord, related_name='meal_record', on_delete=models.CASCADE)
     subuser = models.ForeignKey(
-        UserData, related_name='user_meal_record', on_delete=models.CASCADE)
+        Subuser, related_name='user_meal_record', on_delete=models.CASCADE)
     time = models.DateTimeField(default=datetime.strftime(
         timezone.now(), '%Y-%m-%d %H:%M:%S'))
     title = models.CharField(max_length=255, validators=[
@@ -216,7 +208,7 @@ class UserMealRecord(models.Model):
                        code=None, inverse_match=None, flags=0), ])
 
 
-class UserMealRecipeRecord(models.Model):
+class UserMealRecipeContent(models.Model):
     parent_record = models.ForeignKey(
         UserMealRecord, related_name='recipe_meal_content', on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)

@@ -33,7 +33,7 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
         if (recordList.length > 0) {
             const endpoint = 'api/useraccounts/'
                 + user.username
-                + '/userdata/'
+                + '/subuser/'
                 + currentSubuser.name
                 + '/usermealrecord/';
             

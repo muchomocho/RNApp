@@ -12,13 +12,14 @@ function Signin ({ navigation }) {
     
     const [username, setInputUsername] = useState('')
     const [password, setInputPassword] = useState('')
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isShowWarning, setIsShowwarning] = useState(false);
 
     const dispatch = useDispatch();
 
     const reset = () => {
         setInputPassword('');
         setInputUsername('');
+        setIsShowwarning(false);
     };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
@@ -42,15 +43,17 @@ function Signin ({ navigation }) {
                 navigation.navigate('Profile');
             }
             else {
+                setIsShowwarning(true);
                 setIsLoggedIn(false);
             }
         } catch (error) {
+            setIsShowwarning(true);
             setIsLoggedIn(false);
         }
     }
 
     const warningText = () => {
-        if (isLoggedIn) {
+        if (isShowWarning) {
             return (
                 <Text> username or password is incorrect </Text>
             );
@@ -62,7 +65,7 @@ function Signin ({ navigation }) {
             <Text>
                 Hello from Home!
             </Text>
-
+            
             {
                 warningText()
             }

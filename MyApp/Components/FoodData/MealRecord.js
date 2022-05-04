@@ -8,7 +8,7 @@ import SearchBar from '../SearchBar';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearRecord, setMealRecord, setIsMealUpdate } from '../../redux/mealRecordSlice'
 
-export default function MealRecord({data, onDevice=false, parentSet, navigation}) {
+export default function MealRecord({data, parentSet, navigation}) {
 
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
     const [showDeleteWarning, setShowDeleteWarning] = useState(false);
@@ -21,14 +21,10 @@ export default function MealRecord({data, onDevice=false, parentSet, navigation}
 
         const onDelete = async (id) => {
 
-            if (onDevice) {
-                // delete action for local storage / db
-                return;
-            }
             try {
                 const result = await httpRequest({
                     method: 'DELETE',
-                    endpoint: `api/useraccounts/${user.username}/userdata/${currentSubuser.name}/usermealrecord/${id}/`,
+                    endpoint: `api/useraccounts/${user.username}/subuser/${currentSubuser.name}/usermealrecord/${id}/`,
                     isAuthRequired: true,
                     navigation: navigation
                 });

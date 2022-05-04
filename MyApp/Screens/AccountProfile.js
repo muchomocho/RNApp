@@ -12,12 +12,13 @@ import { TouchableOpacity } from "react-native";
 import { useSelector, useDispatch } from 'react-redux';
 import { setSubuserArray, setCurrentSubuser, setUser, setLogout } from '../redux/userSlice'
 import LoadingView from "../Components/LoadingView";
+import LogoutAlert from "../Components/LogoutAlert/LogoutAlert";
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
 
-function AccountProfile({ navigation }) {
-
+function AccountProfile(props) {
+    
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
     const [loggedIn, setLoggedIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +31,7 @@ function AccountProfile({ navigation }) {
                 method: 'DELETE',
                 endpoint: endpoint,
                 isAuthRequired: true,
-                navigation: navigation
+                navigation: props.navigation
             });
         } catch (error) {
             failAlert();
@@ -73,11 +74,11 @@ function AccountProfile({ navigation }) {
                 method: 'GET',
                 endpoint: endpoint,
                 isAuthRequired: true,
-                navigation: navigation
+                navigation: props.navigation
             });
   
             if (result.response.status === 401) {
-                Authentication.logOut(navigation);
+                Authentication.logOut(props.navigation);
                 setLoggedIn(false);
                 setIsLoading(false);
                 return false
@@ -117,19 +118,19 @@ function AccountProfile({ navigation }) {
         setIsLoading(true);
     };
 
-    // https://reactnavigation.org/docs/function-after-focusing-screen/
+    // https://reactprops.navigation.org/docs/function-after-focusing-screen/
     // https://stackoverflow.com/questions/67102832/how-to-use-focus-and-blur-listener-in-single-useeffect-react-native
     useEffect(() => {
 
-        navigation.addListener('focus', reloadHandler);
-        navigation.addListener('blur', blurHandler);
+        props.navigation.addListener('focus', reloadHandler);
+        props.navigation.addListener('blur', blurHandler);
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
         return () => {
-            navigation.removeListener('focus', reloadHandler)
-            navigation.removeListener('blur', blurHandler)
+            props.navigation.removeListener('focus', reloadHandler)
+            props.navigation.removeListener('blur', blurHandler)
         }
-    }, [navigation]);
+    }, [props.navigation]);
 
     const useraccountTab = () => {
 
@@ -149,7 +150,7 @@ function AccountProfile({ navigation }) {
                             text={'edit'}
                             buttonStyle={styles.logoutButton}
                             onPress={async () => { 
-                                    navigation.navigate('Sign up', { isupdate: true }) 
+                                    props.navigation.navigate('Sign up', { isupdate: true }) 
                             }}
                         />
                     <CustomButton
@@ -157,9 +158,10 @@ function AccountProfile({ navigation }) {
                         buttonStyle={styles.logoutButton}
                         onPress={async () => { 
                             try {
-                                Authentication.logOut(navigation);
+                                Authentication.logOut(props.navigation);
                                 dispatch(setLogout()); 
-                                navigation.navigate('Sign in') 
+                                setLoggedIn(false);
+                                //props.navigation.navigate('Sign in') 
                             } catch (error) {}
                         }}
                     />
@@ -175,7 +177,7 @@ function AccountProfile({ navigation }) {
             style={styles.peopleTab}
             onPress={()=>{
                 dispatch(setCurrentSubuser(item))
-                navigation.navigate('User record', {userdata: item, onDevice: false})
+                props.navigation.navigate('User record')
                 }}>
                 <View style={styles.iconContainer}>
                 </View>
@@ -218,7 +220,7 @@ function AccountProfile({ navigation }) {
                         <CustomButton
                         buttonStyle={styles.button}
                         text={'create new'}
-                        onPress={()=>{navigation.navigate('Create profile')}}
+                        onPress={()=>{props.navigation.navigate('Create profile')}}
                         />
                     </View>
                 }
@@ -236,6 +238,10 @@ function AccountProfile({ navigation }) {
     if (!isLoading && !loggedIn) {
         return (
             <View style={styles.notLoggedInContainer}>
+                {
+                    props.route.params.logoutRedirect &&
+                    <LogoutAlert navigation={props.navigation}/>
+                }
                 <View style={styles.notLoggedIn}>
                     <View style={{ alignItems: 'center' }}>
                         <Text> You are not logged in. </Text>
@@ -243,7 +249,7 @@ function AccountProfile({ navigation }) {
                     </View>
                 <CustomButton
                     text={'sign in'}
-                    onPress={()=>navigation.navigate('Sign in')}
+                    onPress={()=>props.navigation.navigate('Sign in')}
                 />
                 </View>
             </View>
@@ -251,6 +257,10 @@ function AccountProfile({ navigation }) {
     }
     return(
         <View style={styles.container}>
+            {
+                props.route.params.logoutRedirect &&
+                <LogoutAlert navigation={props.navigation}/>
+            }
             { subuserTab() }
         </View>
     );

@@ -1,6 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
+    logoutAlert: false,
+
     user: {
         id: null,
         username: '',
@@ -24,6 +26,7 @@ export const userSlice = createSlice({
 
         return { 
             ...state, 
+            logoutAlert: true,
             user: {
                 ...state.user,
                 id: action.payload.id,
@@ -83,10 +86,13 @@ export const userSlice = createSlice({
             subuserArray: []
         }
     },
+    setLogoutAlertOff: (state) => {
+        state.logoutAlert = false;
+    }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { setUser, setUsername, setUserID, setUserEmail, setCurrentSubuser, setSubuserArray, setLogout } = userSlice.actions
+export const { setUser, setUsername, setUserID, setUserEmail, setCurrentSubuser, setSubuserArray, setLogout, setLogoutAlertOff } = userSlice.actions
 
 export default userSlice.reducer
