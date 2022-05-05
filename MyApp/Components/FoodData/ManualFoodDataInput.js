@@ -8,7 +8,7 @@ import { setFoodName, addNutrition, deleteNutritionByName, clearAllFoodData, upd
 import { addRecordSelection } from '../../redux/mealRecordSlice'
 import CustomInput from '../CustomInput';
 import * as ImagePicker from 'expo-image-picker';
-import {formatToFormdata} from '../../API/helper';
+import {amountFormatter, formatToFormdata} from '../../API/helper';
 import { httpRequest } from '../../API/ServerRequest';
 
 export default function ManualFoodDataInput({navigation, onSubmit}) {
@@ -50,17 +50,18 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
         var isNameValid = false;
         var isAmountValid = false;
         var isNutritionValid = false;
-        if (foodName.match(/^[a-zA-Z0-9][a-zA-Z0-9_\- ]+$/)) {
+        if (foodName.match(/^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$/)) {
             isNameValid = true;
         }
         if (!nutrient_data.some(element => 
-            element.name == '-' && !element.name.match(/^[a-zA-Z0-9][a-zA-Z0-9_\- ]+$/)||
-            element.value == '0' || element.value.length == 0 ||
+            element.name == '-' && !element.name.match(/^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$/) ||
+            element.value == '0' || element.value.length == 0 || !element.value.match(/^(\d+)(\.\d+[1-9])?$/) ||
             element.unit == '-'
         ) && nutrient_data.length > 0) {
             isNutritionValid = true;
         }
-        if (amount_in_grams !== '0') {
+        if (amount_in_grams.match(/^(\d+)(\.\d+[1-9])?$/)) {
+            console.warn('ahaha')
             isAmountValid = true;
         }
     
@@ -85,13 +86,13 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
                     isAuthRequired: true,
                     navigation: navigation
                 });
-                console.log(result.json)
+                console.log('res', result.json)
 
                 if (result.response.status == 201) {
                     obj.id = result.json.id;
                     var mealRecordContent = {};
                     mealRecordContent.food_data = obj;
-                    mealRecordContent.amount_in_grams = parseFloat(obj.amount_in_grams);
+                    mealRecordContent.amount_in_grams = parseFloat(obj.amount_in_grams).toFixed(5);
                     
                     dispatch(addRecordSelection(mealRecordContent));
                     dispatch(clearAllFoodData());
@@ -113,6 +114,9 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
 
     const renderPickerItems = (array) => {
         return array.map((element, index) => {
+            if (element == 'microg') {
+                return <Picker.Item key={index} label={'\u00b5g'} value={element} />
+            }
             return <Picker.Item key={index} label={element} value={element} />
         });
     };
@@ -180,10 +184,15 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
                 </View>
                 <View style={styles.item}>
                     <View style={styles.value}>
-                        <CustomInput 
-                            customStyle={[styles.picker, item.value == '0' ? styles.pickerEmpty : {}]}
+                        <TextInput 
+                            style={[styles.input, styles.picker, item.value == '0' ? styles.pickerEmpty : {}]}
+                            keyboardType='numeric'
+                            onChangeText={(input)=> {
+                                input.replace(/[^0-9]/g, '');
+                                updateValue(input)
+                            }}
                             value={item.value}
-                            setValue={updateValue}
+                            maxLength={4}  //setting limit of input
                         />
                     </View>
                     <View style={[styles.unit, styles.picker, item.unit == '-' ? styles.pickerEmpty : {}]}>
@@ -290,11 +299,16 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
                     <View style={styles.amountContainer}>
                         <Text> amount: </Text>
                         <View style={{flex: 1, paddingHorizontal: 10}}>
-                            <CustomInput
-                                value={amount_in_grams}
-                                setValue={onFoodAmountChange}
-                                placeholder="food amount"
-                            />
+                            <TextInput 
+                            style={[{flex: 1, paddingHorizontal: 10}, styles.input]}
+                            keyboardType='numeric'
+                            onChangeText={(input)=> {
+                                input.replace(/[^0-9]/g, '');
+                                onFoodAmountChange(input)
+                            }}
+                            value={amount_in_grams}
+                            maxLength={4}  //setting limit of input
+                        />
                         </View>
                         <Text > g </Text>
                     </View>
@@ -433,5 +447,14 @@ const styles = StyleSheet.create({
         width: null,
         height: 300,
         borderRadius: 10,
+    },
+    input: {
+        height: 50,
+        padding: 10,
+        marginVertical: 10,
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#888',
+        borderRadius: 5
     },
 });

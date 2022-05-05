@@ -13,6 +13,7 @@ import { setSubuserArray, setCurrentSubuser, setUser } from '../redux/userSlice'
 import { clearRecord, setIsMealUpdate } from '../redux/mealRecordSlice'
 import MealRecord from "../Components/FoodData/MealRecord";
 import LoadingView from "../Components/LoadingView";
+import { formatDate } from "../API/helper";
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator(); 
@@ -66,20 +67,6 @@ function UserRecord(props) {
         }
     }, [props, currentSubuser.id]);
 
-    // format the date in the format we want to use YYYY-MM-DD
-    const formatDate = (date) => {
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1; // jan = 0
-        const day = date.getDate();
-
-        const digitFormat = (someDate) => {
-            return ((''+someDate).length < 2 ? '0' + someDate : someDate)
-        };
-
-        return (
-            year + '-' + digitFormat(month) + '-' + digitFormat(day)
-        );
-    };
 
     // calculates the date from today with parameter +ve = future, -ve = past
     const calculateDate = (daysToShift) => {

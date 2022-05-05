@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import BottomTab from './Components/BottonTab/BottomTab';
 import CreateProfile from './Screens/CreateProfile';
 import CreateRecord from './Screens/CreateRecord';
-import ConfirmFoodData from './Screens/ConfirmFoodData';
+import CheckFoodData from './Screens/CheckFoodData';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Provider } from 'react-redux';
@@ -24,7 +24,7 @@ export default function App() {
           <Stack.Screen name={'Tab'} component={BottomTab}/>
           <Stack.Screen name={'Create profile'} component={CreateProfile}/>
           <Stack.Screen name={'Create record'} component={CreateRecord}/>
-          <Stack.Screen name={'Confirm fooddata'} component={ConfirmFoodData}/>
+          <Stack.Screen name={'Confirm fooddata'} component={CheckFoodData}/>
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

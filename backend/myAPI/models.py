@@ -122,7 +122,7 @@ class FoodData(models.Model):
     last_used = models.DateTimeField(default=timezone.now)
 
     uploader = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username',
-                                 db_column='username', null=True, on_delete=models.SET_NULL, validators=[
+                                 db_column='username', on_delete=models.CASCADE, validators=[
                                      RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                                                     code=None, inverse_match=None, flags=0), ])
     # additional information for source if applicable

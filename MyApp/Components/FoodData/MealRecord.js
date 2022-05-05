@@ -7,6 +7,7 @@ import CustomButton from '../CustomButton';
 import SearchBar from '../SearchBar';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearRecord, setMealRecord, setIsMealUpdate } from '../../redux/mealRecordSlice'
+import { amountFormatter } from '../../API/helper';
 
 export default function MealRecord({data, parentSet, navigation}) {
 
@@ -189,7 +190,7 @@ export default function MealRecord({data, parentSet, navigation}) {
                         <Text>{item.food_data.name}</Text>
                     </View>
                     <View>
-                        <Text>{item.amount_in_grams} g</Text>
+                        <Text>{amountFormatter(item.amount_in_grams)} g</Text>
                     </View>
                 </View>
             );

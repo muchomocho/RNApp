@@ -1,45 +1,43 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Image } from 'react-native';
 import { TouchableOpacity } from "react-native";
-import SearchBar from "../SearchBar";
+import SearchBar from "../../Components/SearchBar";
 import * as ServerRequest from '../../API/ServerRequest'
 import * as Constant from '../../Constant/Constant';
 
 import { useSelector, useDispatch } from 'react-redux';
-import CustomButton from "../CustomButton";
-import LoadingView from "../LoadingView";
+import { setSubuserArray, setCurrentSubuser, setUser, setLogout } from '../../redux/userSlice'
+import LoadingView from "../../Components/LoadingView";
+import CustomButton from "../../Components/CustomButton";
 
-function FoodDataSelection({navigation, isRecording=false}) {
-    
+function RecipeList({ navigation }) {
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
 
-    const dispatch = useDispatch();
-
     const [data, setData] = useState([]);
-    const [isLoading, setLoading] = useState(false);
-    const [isMyFood, setMyFood] = useState(false);
+    const [isMyRecipe, setMyRecipe] = useState(false);
     const [searchValue, setSearchValue] = useState('');
-    console.log(isMyFood)
+
     // https://reactnative.dev/docs/network
-    const getFood = async (query='') => {
+    const getRecipe = async (query='') => {
         try {
-            const endpoint = (isMyFood && user.username !== '') ? `api/useraccounts/${user.username}/myfooddata/` : 'api/fooddata/'
+            const baseEndpoint = (isMyRecipe && user.username !== '') ? `api/useraccounts/${user.username}/myrecipes/` : 'api/recipes/'
+            const endpoint = query == '' ? baseEndpoint : `${baseEndpoint}${query}`
             const response = await ServerRequest.httpRequest({
                 method: 'GET', 
-                endpoint: endpoint + query,
-                navigation: navigation
+                endpoint: endpoint,
+                navigation: navigation,
+                isAuthRequired: (isMyRecipe && user.username !== '')
             });
             const json = response.json;
             setData(json);
-            setLoading(false);
+            console.log(json)
           } catch (error) {
             console.error(error);
           } 
     };
 
     const onSearch = (searchQuery) => {
-        setLoading(true);
-        getFood('?name='+searchQuery);
+        getRecipe(`?title=${searchQuery}`);
     };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/
@@ -47,15 +45,12 @@ function FoodDataSelection({navigation, isRecording=false}) {
         const reload = navigation.addListener('focus', () => {
           // The screen is focused
           // Call any action
+          getRecipe();
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
         return reload;
     }, [navigation]);
-
-    const onPress = (id) => {
-        navigation.navigate('Confirm fooddata', { fooddataID: id, isRecording: isRecording })
-    };
 
     const renderData = (item) => {
         var image = null;
@@ -73,81 +68,65 @@ function FoodDataSelection({navigation, isRecording=false}) {
                     source={{uri: url}}
                 />
         }
+       
         return(
             <TouchableOpacity 
-            style={styles.foodContainer}
-            onPress={() => {onPress(item.id)}}
+            style={styles.recipeContainer}
+            onPress={() => {navigation.navigate('Recipe detail', {recipe: item});}}
             >
                 { image }
                 <View style={styles.detail}>
-                    <Text style={styles.detailTitle}>{item.name}</Text>
-                    <Text style={styles.detailText}>created by {item.uploader}</Text>
+                    <Text style={styles.detailTitle}>{item.title}</Text>
+                    <Text style={styles.detailText}>created by {item.user}</Text>
                 </View>
             </TouchableOpacity>
         )
     }
 
-    const switchIsMyFood = () => {
-        setMyFood(!isMyFood);
+    const switchIsMyRecipe = () => {
+        setMyRecipe(!isMyRecipe);
+        if (isMyRecipe) {
+            getRecipe();
+        }
     };
-
-    const header = () => {
-        return (
-            <View style={styles.headerContainer}>
-                {
-                    user.username !== '' &&
-                    <View style={styles.switchMyButtonContainer}>
-                        <CustomButton
-                        buttonStyle={(isMyFood && user.username !== '') ? {} : { backgroundColor: '#bbb' }}
-                        text="my food"
-                        onPress={switchIsMyFood}
-                        />
-                    </View>
-                }   
-                <View style={styles.searchBarContainer}>
-                    <SearchBar
-                    value={searchValue}
-                    setValue={setSearchValue}
-                    onSearch={()=>{onSearch(searchValue)}}
-                    />
-                </View>
-            </View>
-        );
-    }
-    
-    const content = (item) => {
-        if (isLoading) {
-            return (
-                <>
-                    { header() }
-                    <LoadingView />
-                </>
-            );
-        }   
-        return (
-            <FlatList
-                ListHeaderComponent={
-                    header()
-                }
-
-                data = {data}
-                renderItem = {({item}) => {
-                    return renderData(item);
-                }}
-                keyExtractor = {item => `${item.id}`}
-                
-                ListFooterComponent={
-                    <Text></Text>
-                }
-                ListFooterComponentStyle={{marginBottom: 100}}
-            />
-        );
-    }
-    
 
     return(
         <View style={styles.container}>
-            { content() }
+            <FlatList
+            
+            ListHeaderComponent={
+                <View style={styles.headerContainer}>
+                    {
+                        user.username !== '' &&
+                        <View style={styles.switchMyButtonContainer}>
+                            <CustomButton
+                            buttonStyle={(isMyRecipe && user.username !== '') ? {} : { backgroundColor: '#bbb' }}
+                            text="my recipe"
+                            onPress={switchIsMyRecipe}
+                            />
+                        </View>
+                    }   
+                    <View style={styles.searchBarContainer}>
+                        <SearchBar
+                        value={searchValue}
+                        setValue={setSearchValue}
+                        onSearch={()=>{onSearch(searchValue)}}
+                        />
+                    </View>
+                </View>
+            }
+
+            data = {data}
+            renderItem = {({item}) => {
+                return renderData(item)
+            }}
+            keyExtractor = {item => `${item.id}`}
+            
+            ListFooterComponent={
+                <Text></Text>
+            }
+            ListFooterComponentStyle={{marginBottom: 100}}
+            />
         </View>
     );
 };
@@ -169,7 +148,7 @@ const styles = StyleSheet.create({
         flex: 6,
         paddingHorizontal: 10
     },
-    foodContainer: {
+    recipeContainer: {
         flexDirection: 'row',
         height: 150,
         width: '95%',
@@ -208,4 +187,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default FoodDataSelection;
+export default RecipeList

@@ -10,6 +10,7 @@ import { addRecordSelection, deleteRecordSelection, clearRecord, setMealRecord, 
 import { httpRequest } from '../../API/ServerRequest';
 import CustomInput from '../CustomInput';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { amountFormatter } from '../../API/helper';
 
 export default function FoodDataSelectionList({onSubmit, navigation}) {
 
@@ -56,10 +57,9 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
             const recordListCopy = recordList.slice();
             recordListCopy.forEach(element => {
                 var obj = {};
-                obj.amount_in_grams = element.amount_in_grams;
+                obj.amount_in_grams = amountFormatter(String(parseFloat(element.amount_in_grams).toFixed(5)));
                 if (Object.prototype.hasOwnProperty.call(element.food_data, 'id')) {
                     obj.food_data = element.food_data.id;
-                    
                 }
                 else {
                     obj.food_data = element.food_data;
@@ -88,13 +88,17 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
         onSubmit();
     };
 
+    const validate = () => {
+        
+    };
+
     const renderItem = (item) => {
 
         return(
             <View style={styles.itemContainer}>
                 <View style={styles.item}>
                     <Text style={styles.itemTextLeft}>{item.food_data.name}</Text>
-                    <Text style={styles.itemTextRight}>{item.amount_in_grams} g</Text>
+                    <Text style={styles.itemTextRight}>{amountFormatter(item.amount_in_grams)} g</Text>
                     <CustomButton
                     buttonStyle={styles.itemButton}
                     textStyle={styles.itemButtonText}
@@ -174,7 +178,7 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
                         defaultValue={mealRecord.title != '' && mealRecord.title != null || mealRecord.title != undefined ? mealRecord.title : '' }
                         value={title}
                         setValue={setTitle}
-                        placeholder={'enter title here'}
+                        placeholder="no title"
                     />
                     
                     { timePicker() }

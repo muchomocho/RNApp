@@ -29,7 +29,7 @@ fooddata_urls = [
 # model : `~myAPI.Recipes`
 recipe_url_base = 'api/recipes/'
 recipe_url_detail = recipe_url_base + '<int:recipe_id>/'
-
+recipe_url_nutrients = recipe_url_base + '<int:recipe_id>/nutrients/'
 
 recipe_urls = [
     path(recipe_url_base, views.RecipeViewSet.as_view(
@@ -39,6 +39,8 @@ recipe_urls = [
         'put': 'update',
         'delete': 'destroy'
     }), name='recipe-detail'),
+    path(recipe_url_nutrients, views.RecipeNutrientViewSet.as_view(
+        {'get': 'retrieve'}), name='recipe-nutrient'),
 ]
 
 # url for recipe tags, extended from recipe url

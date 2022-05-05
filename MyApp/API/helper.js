@@ -14,11 +14,11 @@ export const formatToFormdata = (body) => {
             var newUnitOther = '';
             const converterKcalToKj = 4.184
             if (element.unit == 'kcal') {
-                var newValueOther = parseFloat(element.value) * converterKcalToKj;
+                var newValueOther = (parseFloat(element.value) * converterKcalToKj).toFixed(0);
                 newNameOther = `energy_kj`;
                 newUnitOther = 'kj';
             } else {
-                var newValueOther = parseFloat(element.value) / converterKcalToKj;
+                var newValueOther = (parseFloat(element.value) / converterKcalToKj).toFixed(0);
                 newNameOther = `energy_kcal`;
                 newUnitOther = 'kcal';
             }
@@ -80,3 +80,68 @@ export const formatToFormdata = (body) => {
 
     return formdata;
 }
+
+export const amountFormatter = (value) => {
+    var newValue = value.replace(/\.[0]+$/, '').replace(/(\.[0]*[1-9]+)([0]+)$/, '$1');
+    return newValue;
+};
+
+// function format gender as string from api json
+export const genderMap = (genderChar) => {
+    if (genderChar === 'M') {
+        return "male";
+    } 
+    if (genderChar === 'F') {
+        return "female";
+    }
+    else return "other";
+};
+
+// function to return recommended nutrition amount from age
+export const ageMap = (age) => {
+    if (age === 3 ) {
+        return 2;
+    }
+    if (age === 6) {
+        return 5;
+    }
+    if (age > 7 && age < 11) {
+        return 7;
+    }
+    if (age > 11 && age < 15) {
+        return 11;
+    }
+    if (age > 15 && age < 19) {
+        return 15;
+    }
+    if (age > 19 && age < 50) {
+        return 19;
+    }
+    if (age > 50 && age < 65) {
+        return 50;
+    }
+    if (age > 65 && age < 75) {
+        return 65;
+    }
+    if (age >= 75) {
+        return 75;
+    }
+    else return age;
+};
+
+// format the date in the format we want to use YYYY-MM-DD
+export const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // jan = 0
+    const day = date.getDate();
+
+    const digitFormat = (someDate) => {
+        return ((''+someDate).length < 2 ? '0' + someDate : someDate)
+    };
+
+    return (
+        year + '-' + digitFormat(month) + '-' + digitFormat(day)
+    );
+};
+
+export const lessThanNutrients = ['free_sugars', 'fat', 'saturated_fat', 'energy_kj', 'energy_kcal', 'salt']

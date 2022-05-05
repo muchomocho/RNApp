@@ -13,7 +13,7 @@ import RecipeDetail from '../../Screens/RecipeDetail';
 import UserRecord from '../../Screens/UserRecords';
 import FoodDataList from '../../Screens/FoodDataList';
 import CreateRecord from '../../Screens/CreateRecord';
-import ConfirmFoodData from '../../Screens/ConfirmFoodData';
+import CheckFoodData from '../../Screens/CheckFoodData';
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();

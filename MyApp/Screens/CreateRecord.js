@@ -80,6 +80,7 @@ function CreateRecord(props) {
         <View style={styles.container}>
             <FoodDataSelection
                 navigation={props.navigation}
+                isRecording
             />
             { floatButton() }
             <Modal
@@ -101,8 +102,8 @@ function CreateRecord(props) {
                     textStyle={styles.closeButtontext}
                     text="close"
                     onPress={switchShowListModal}
-                />
-            <FoodDataSelectionList onSubmit={foodDataOnSubmit} navigation={props.navigation} />
+            />
+                <FoodDataSelectionList onSubmit={foodDataOnSubmit} navigation={props.navigation} />
             </Modal>
         </View>
     );

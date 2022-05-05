@@ -6,6 +6,7 @@ import json_unit from '../../assets/JSON/gov_diet_recommendation_units.json';
 import CustomButton from "../CustomButton";
 import { useSelector, useDispatch } from 'react-redux';
 import { setSubuserArray, setCurrentSubuser, setUser } from '../../redux/userSlice'
+import { genderMap, ageMap } from "../../API/helper";
 
 export default function UserGraph ({ data, dates }) {
 
@@ -23,48 +24,6 @@ export default function UserGraph ({ data, dates }) {
     //     // Return the function to unsubscribe from the event so it gets removed on unmount
     // }, [data, userData]);
 
-    // function format gender as string from api json
-    const genderMap = (genderChar) => {
-        if (genderChar === 'M') {
-            return "male";
-        } 
-        if (genderChar === 'F') {
-            return "female";
-        }
-        else return "other";
-    };
-
-    // function to return recommended nutrition amount from age
-    const ageMap = (age) => {
-        if (age === 3 ) {
-            return 2;
-        }
-        if (age === 6) {
-            return 5;
-        }
-        if (age > 7 && age < 11) {
-            return 7;
-        }
-        if (age > 11 && age < 15) {
-            return 11;
-        }
-        if (age > 15 && age < 19) {
-            return 15;
-        }
-        if (age > 19 && age < 50) {
-            return 19;
-        }
-        if (age > 50 && age < 65) {
-            return 50;
-        }
-        if (age > 65 && age < 75) {
-            return 65;
-        }
-        if (age >= 75) {
-            return 75;
-        }
-        else return age;
-    };
 
     const formatDate = (dateStr) => {
         return dateStr.split('-')[2];

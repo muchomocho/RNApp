@@ -86,11 +86,23 @@ class FoodDataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FoodData
-        fields = '__all__'
+        fields = [
+            'id', 'main_img',
+            'is_private',
+            'is_hidden',
+            'date_created',
+            'last_used',
+            'source_name',
+            'name',
+            'amount_in_grams',
+            'nutrient_data', ]
 
     def create(self, validated_data):
+
         nutrient_data_list = validated_data.pop('nutrient_data')
-        food_data = FoodData.objects.create(**validated_data)
+        uploader = self.context['request'].user
+        food_data = FoodData.objects.create(
+            uploader=uploader, **validated_data)
 
         # reference to balance units
         dir = os.path.dirname(__file__)  # get current directory
@@ -180,9 +192,16 @@ class UserMealRecordSerializer(serializers.ModelSerializer):
 
 
 class RecipeTitleSerializer(serializers.ModelSerializer):
+    class SimpleTagSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Tag
+            fields = ['text']
+
+    tags = SimpleTagSerializer(many=True)
+
     class Meta:
         model = Recipe
-        fields = ['id', 'user', 'title', 'main_image_url']
+        fields = ['id', 'user', 'title', 'main_img', 'tags']
 
 
 class RecipeStepSerializer(serializers.ModelSerializer):
@@ -219,6 +238,8 @@ class RecipeSerializer(serializers.ModelSerializer):
             fields = ['text']
 
     class SimpleRecipeIngredientSerializer(serializers.ModelSerializer):
+        food_data = FoodDataSerializer()
+
         class Meta:
             model = RecipeIngredient
             fields = ['food_data', 'ingredient_quantity', 'ingredient_unit']

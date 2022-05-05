@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Image } from 'react-native';
-import { TouchableOpacity } from "react-native";
-import SearchBar from "../Components/SearchBar";
-import * as ServerRequest from '../API/ServerRequest'
-import * as Constant from '../Constant/Constant';
-
-import { useSelector, useDispatch } from 'react-redux';
-import CustomButton from "../Components/CustomButton";
 import { FoodDataSelection } from "../Components/FoodData";
+import CheckFoodData from "./CheckFoodData";
 
 function FoodDataList({ navigation }) {
     return <FoodDataSelection navigation={navigation} isRecording={false}/>

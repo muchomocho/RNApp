@@ -8,6 +8,7 @@ const initialState = {
     },
 
     recordList: [],
+    recipeRecordList: [],
 
     isMealUpdate: false,
 }
@@ -26,7 +27,8 @@ export const mealRecordSlice = createSlice({
                 time: action.payload.time
             },
 
-            recordList: [...action.payload.meal_content]
+            recordList: [...action.payload.meal_content],
+            recipeRecordList: [...action.payload.recipe_content]
         }
     },
 
@@ -42,13 +44,29 @@ export const mealRecordSlice = createSlice({
     },
 
     deleteRecordSelection: (state, action) => {
-        console.log('state', state, 'pl', action.payload)
         for (var index in state.recordList) {
-            console.log('index', index)
-            console.log('record at index', state.recordList[index])
-            console.log('food datat in record at index', state.recordList[index].food_data)
             if (state.recordList[index].food_data.id == action.payload) {
                 state.recordList.splice(index, 1)
+                return;
+            }
+        }
+    },
+
+    addRecipeRecordSelection: (state, action) => {
+
+        return { 
+            ...state, 
+            recipeRecordList: [
+                ...state.recipeRecordList, 
+                action.payload
+            ]
+        }
+    },
+
+    deleteRecipeRecordSelection: (state, action) => {
+        for (var index in state.recipeRecordList) {
+            if (state.recipeRecordList[index].recipe.id == action.payload) {
+                state.recipeRecordList.splice(index, 1)
                 return;
             }
         }
@@ -62,7 +80,8 @@ export const mealRecordSlice = createSlice({
                 title: '',
                 time: ''
             },
-            recordList: []
+            recordList: [],
+            recipeRecordList: []
         }
     },
 

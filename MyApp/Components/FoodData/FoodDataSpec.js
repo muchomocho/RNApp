@@ -1,22 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Text, TextInput, View, StyleSheet, Pressable, FlatList } from 'react-native';
-import foodDataJson from '../../assets/JSON/food_integrated_dataset.json'
-import foodDataUnitJson from '../../assets/JSON/food_integrated_dataset_units.json'
+import fooddataJson from '../../assets/JSON/food_integrated_dataset.json'
+import fooddataUnitJson from '../../assets/JSON/food_integrated_dataset_units.json'
 import CustomButton from '../CustomButton';
 import SearchBar from '../SearchBar';
 import { useSelector, useDispatch } from 'react-redux';
 import { addRecordSelection, clearRecord } from '../../redux/mealRecordSlice'
+import { httpRequest } from '../../API/ServerRequest';
+import { amountFormatter } from '../../API/helper';
 
-export default function FoodDataSpec({navigation, foodData, isRecording=false}) {
+export default function FoodDataSpec({navigation, fooddata, status, isRecording=false}) {
+    const { user } = useSelector(state => state.user);
     const { mealRecordContent } = useSelector(state => state.mealRecord);
     const dispatch = useDispatch();
-    const [amount, setAmount] = useState(''+foodData.amount_in_grams);
     const [foregroundHeight, setForegroundHeight] = useState(0);
+    
+    
+    const [amount, setAmount] = useState(amountFormatter(fooddata.amount_in_grams));
+    
+    const betterSetAmount = (amount) => {
+        setAmount(amountFormatter(amount));
+    };
 
     const addToRecord = () => {
         var mealRecordContent = {};
-        mealRecordContent.food_data = foodData;
-        mealRecordContent.amount_in_grams = parseFloat(amount);
+        mealRecordContent.food_data = fooddata;
+        mealRecordContent.amount_in_grams = parseFloat(amount).toFixed(10);
         
         dispatch(addRecordSelection(mealRecordContent));
         
@@ -24,14 +33,14 @@ export default function FoodDataSpec({navigation, foodData, isRecording=false}) 
     }
 
     const renderData = (item) => {
-        var unit =  foodDataUnitJson[item.key];
+        var unit =  fooddataUnitJson[item.key];
         if (unit == 'microg') { unit = '\u00b5g'; }
         return(
             <View style={styles.infoContainer}>
-                <View >
+                <View style={{maxWidth: '50%'}}>
                     <Text style={styles.infoContainerTextLeft}>{ item.key }</Text>
                 </View>
-                <View >
+                <View style={{maxWidth: '50%'}}>
                     <Text style={styles.infoContainerTextRight}>{ item.value + unit }</Text>
                 </View>
             </View>
@@ -52,8 +61,8 @@ export default function FoodDataSpec({navigation, foodData, isRecording=false}) 
                                 setAmount(input)
                             }}
                             value={amount}
-                            maxLength={10}  //setting limit of input
-                            />
+                            maxLength={4}  //setting limit of input
+                        />
                     </View>
                     <CustomButton
                         //buttonStyle={styles.button}
@@ -80,20 +89,24 @@ export default function FoodDataSpec({navigation, foodData, isRecording=false}) 
         );
     }
 
-    const foodDataView = () => {
-        var objArray = [];
+    
 
-        for (var prop in foodData.value) {
-            objArray.push({key: prop, value: foodData.value[prop] * amount / foodData.amount_in_grams})
-        }
+    const fooddataView = (fooddata) => {
+        var objArray = [];
+   
+        fooddata.nutrient_data.forEach((nutrient) => {
+            var value = String((nutrient.value * parseFloat(amount) / fooddata.amount_in_grams).toFixed(10))
+            value = amountFormatter(value);
+            objArray.push({key: nutrient.name, value: value })
+        });
     
         return(
             <View>
                 <FlatList
                 ListHeaderComponent={
                     <View style={[styles.nameContainer, styles.header]}>
-                        <Text style={[styles.nameContainerText, {marginTop: 10}]}>{ foodData.name }, </Text>
-                        <Text style={[styles.nameContainerText, {marginBottom: 10}]}>per { amount }g</Text>
+                        <Text style={[styles.nameContainerText, {marginTop: 10}]}>{ fooddata.name }, </Text>
+                        <Text style={[styles.nameContainerText, {marginBottom: 10}]}>per { amountFormatter(amount) }g</Text>
                     </View>
                 }
 
@@ -113,8 +126,29 @@ export default function FoodDataSpec({navigation, foodData, isRecording=false}) 
         );
     };
 
+    if (status == 401) {
+        return (
+        <View>
+            <Text>This data is private. Only owner can see.</Text>
+        </View>
+        );
+    }
+    if (status == 404) {
+        return (
+        <View>
+            <Text>This data is not available.</Text>
+        </View>
+        );
+    }
+    if (fooddata == null || fooddata == undefined) {
+        return (
+            <View>
+                <Text>could not load.</Text>
+            </View>
+        );
+    }
     return (
-        foodDataView()
+        fooddataView(fooddata)
     );
 }
 
@@ -128,7 +162,7 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 5,
         borderTopRightRadius: 5,
         height: 'auto',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     nameContainerText: {
         color: '#fff',
@@ -145,17 +179,21 @@ const styles = StyleSheet.create({
         borderBottomWidth: 0.5,
         justifyContent: 'space-between',
         paddingVertical: 10,
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
+        minHeight: 30,
+        height: 'auto',
+        width: '100%'
     },
     infoContainerTextLeft: {
-        height: 30,
-        textAlignVertical: 'center'
-        //flex: 2
+        height: 'auto',
+        minHeight: 30,
+        textAlignVertical: 'center',
+        flexWrap: 'wrap',
     },
     infoContainerTextRight: {
-        height: 30,
-        textAlignVertical: 'center'
-        //flex: 1
+        height: 'auto',
+        minHeight: 30,
+        textAlignVertical: 'center',
     },
     foreground:{
         left: 0,
