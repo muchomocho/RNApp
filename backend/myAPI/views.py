@@ -833,8 +833,7 @@ class FoodDataViewSet(viewsets.ModelViewSet):
         food_data = get_object_or_404(self.queryset, id=kwargs['id'])
         if food_data.is_hidden:
             return Response(status.HTTP_404_NOT_FOUND)
-        print(request.user.username, food_data.uploader)
-        print(request.user.username != food_data.uploader)
+
         if food_data.is_private and request.user != food_data.uploader:
             return Response(status.HTTP_401_UNAUTHORIZED)
         serializer = FoodDataSerializer(food_data)
@@ -890,6 +889,7 @@ class PersonalFoodDataViewSet(viewsets.ModelViewSet):
 
             food_data = self.queryset.filter(
                 uploader=kwargs['username'], is_hidden=False)
+
         serializer = SimpleFoodDataSerializer(
             food_data.order_by('last_used'), many=True)
         return Response(serializer.data)

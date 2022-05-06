@@ -11,9 +11,9 @@ import * as ImagePicker from 'expo-image-picker';
 import {amountFormatter, formatToFormdata} from '../../API/helper';
 import { httpRequest } from '../../API/ServerRequest';
 
-export default function ManualFoodDataInput({navigation, onSubmit}) {
+export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=false}) {
     
-    const { name: foodName, image, amount_in_grams, nutrient_data } = useSelector(state => state.fooddata.fooddata);
+    const { name: foodName, image, amount_in_grams, nutrient_data, id } = useSelector(state => state.fooddata.fooddata);
     const { user } = useSelector(state => state.user);
 
     const dispatch = useDispatch();
@@ -21,12 +21,13 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
     const [camerastatus, requestCameraPermission] = ImagePicker.useCameraPermissions();
     const [mediastatus, requestMediaPermission] = ImagePicker.useMediaLibraryPermissions();
 
+    console.log(1)
 
     const submitAlert = (isNameValid, isAmountValid, isNutritionValid) => {
         Alert.alert(
             "Warning",
             `Could not complete action:\
-            ${isNameValid ? '': 'food name. can only have alphanumeric characters and "_-"'}\
+            ${isNameValid ? '': 'food name. can only have alphanumeric characters and "_-,"'}\
             ${isAmountValid ? '' : 'food amount must be greater than 0'}\
             ${isNutritionValid ? '' : 'you must have at least one entry of nutrition. nutrition amount must be greater than 0, name or unit must not be empty'}\
             `,
@@ -50,7 +51,7 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
         var isNameValid = false;
         var isAmountValid = false;
         var isNutritionValid = false;
-        if (foodName.match(/^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$/)) {
+        if (foodName.match(/^[a-zA-Z0-9][a-zA-Z0-9_\-, ]*$/)) {
             isNameValid = true;
         }
         if (!nutrient_data.some(element => 
@@ -61,7 +62,6 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
             isNutritionValid = true;
         }
         if (amount_in_grams.match(/^(\d+)(\.\d+[1-9])?$/)) {
-            console.warn('ahaha')
             isAmountValid = true;
         }
     
@@ -70,33 +70,51 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
             var obj = { uploader: user.username, source: user.username, name: foodName, amount_in_grams, nutrient_data: nutrient_data };
 
             var formdata = formatToFormdata(obj)
-            if (image.uri !== '') {
+            if (image.uri !== '' && image.name !== '' && image.type !== '') {
                 formdata.append( 'main_img', {uri: image.uri, name: image.name, type: image.type} )
             }
             
             try {
-                const result = await httpRequest({
+                var request = {
                     headers: {
                         Accept: 'application/json',
-                        'Content-Type': 'multipart/form-data; boundary=---jnkasdlkjhsaniffha'
+                        'Content-Type': 'multipart/form-data; boundary=---randomawesomeboundaryforservertoknowboundary'
                     },
-                    method: 'POST',
-                    endpoint: 'api/fooddata/',
                     body: formdata,
                     isAuthRequired: true,
                     navigation: navigation
-                });
+                };
+
+                if (isUpdate) {
+                    request.method = 'PUT';
+                    request.endpoint = `api/foodata/${id}`;
+                }
+                else {
+                    request.method = 'POST';
+                    request.endpoint = `api/foodata/`;
+                }
+
+                const result = await httpRequest({
+                        request
+                    });
                 console.log('res', result.json)
 
                 if (result.response.status == 201) {
-                    obj.id = result.json.id;
-                    var mealRecordContent = {};
-                    mealRecordContent.food_data = obj;
-                    mealRecordContent.amount_in_grams = parseFloat(obj.amount_in_grams).toFixed(5);
-                    
-                    dispatch(addRecordSelection(mealRecordContent));
-                    dispatch(clearAllFoodData());
-                    onSubmit();
+                    if (isUpdate) {
+                        dispatch(clearAllFoodData());
+                        onSubmit();
+                        navigation.navigate('Fooddata');
+                    }
+                    else {
+                        obj.id = result.json.id;
+                        var mealRecordContent = {};
+                        mealRecordContent.food_data = obj;
+                        mealRecordContent.amount_in_grams = parseFloat(obj.amount_in_grams).toFixed(5);
+                        
+                        dispatch(addRecordSelection(mealRecordContent));
+                        dispatch(clearAllFoodData());
+                        onSubmit();
+                    }
                 }
                 else {
                     networkErrorAlert();
@@ -314,7 +332,7 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
                     </View>
                 
                     {
-                        image !== null && image.uri !== '' ?
+                        image !== null && image !== undefined && image.uri !== '' ?
                         (<View style={styles.imageContainer}>
                             <Image source={ image }
                             style={styles.image}
@@ -338,7 +356,7 @@ export default function ManualFoodDataInput({navigation, onSubmit}) {
             renderItem = {({item}) => {
                 return renderData(item)
             }}
-            keyExtractor = {item => item.name }
+            keyExtractor = {item => item.tempID }
 
             ListFooterComponent={
                 <View style={styles.buttonContainer}>

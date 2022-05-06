@@ -15,7 +15,7 @@ export default function SearchBar({value, setValue, onSearch}) {
             onSubmitEditing={onSearch}
             />
             <Pressable 
-            onPress={onSearch} 
+            onPress={() => { if (value.length > 0) { onSearch(); }}} 
             style={[styles.button, styles.border]}
             >
             </Pressable>

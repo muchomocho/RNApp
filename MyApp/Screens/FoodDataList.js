@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Image } from 'react-native';
 import { FoodDataSelection } from "../Components/FoodData";
+import SubuserBanner from "../Components/SubuserBanner";
 import CheckFoodData from "./CheckFoodData";
 
 function FoodDataList({ navigation }) {
-    return <FoodDataSelection navigation={navigation} isRecording={false}/>
+    return (
+        <View style={{height: '100%'}}>  
+            <SubuserBanner/>
+            <FoodDataSelection navigation={navigation} isRecording={false}/>
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({

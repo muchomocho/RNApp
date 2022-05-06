@@ -8,19 +8,46 @@ import { useSelector, useDispatch } from 'react-redux';
 import { addRecordSelection, clearRecord } from '../../redux/mealRecordSlice'
 import { httpRequest } from '../../API/ServerRequest';
 import { amountFormatter } from '../../API/helper';
+import { clearAllFoodData, setFoodAmount, setFoodName, setNutrition, setFoodID, setImage } from '../../redux/foodDataSlice';
+import * as Constant from '../../Constant/Constant';
 
-export default function FoodDataSpec({navigation, fooddata, status, isRecording=false}) {
+export default function FoodDataSpec({navigation, fooddata, status, isRecording=false, isEditing=false}) {
+
     const { user } = useSelector(state => state.user);
     const { mealRecordContent } = useSelector(state => state.mealRecord);
     const dispatch = useDispatch();
     const [foregroundHeight, setForegroundHeight] = useState(0);
-    
-    
     const [amount, setAmount] = useState(amountFormatter(fooddata.amount_in_grams));
-    
-    const betterSetAmount = (amount) => {
-        setAmount(amountFormatter(amount));
+
+
+    const onDelete = async () => {
+        try {
+            const endpoint = `api/useraccount/${user.username}/myfood/${fooddata.id}`
+            const response = await ServerRequest.httpRequest({
+                method: 'DELETE', 
+                endpoint: endpoint,
+                navigation: navigation,
+                isAuthRequired: isLoggedin
+            });
+            const json = response.json;
+            setData(json);
+            setLoading(false);
+        } catch (error) {
+            console.error(error);
+        } 
     };
+
+    const onEdit = () => {
+        
+        dispatch(clearAllFoodData());
+        dispatch(setFoodID(fooddata.id));
+        dispatch(setFoodAmount(String(parseFloat(fooddata.amount_in_grams))));
+        dispatch(setFoodName(fooddata.name));
+        dispatch(setNutrition(fooddata.nutrient_data));
+        dispatch(setImage({ uri: `${Constant.ROOT_URL}${fooddata.main_img.substring(1)}`, type: '',  name: ''}))
+        
+        navigation.navigate('Create record', { isShowManualModal: true, isEditingFood: true })
+    }
 
     const addToRecord = () => {
         var mealRecordContent = {};
@@ -50,6 +77,7 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
     const foregroundElement = () => {
         if (isRecording) {
             return (
+                // https://stackoverflow.com/questions/30203154/get-size-of-a-view-in-react-native
                 <View style={styles.foreground} onLayout={(event) => {setForegroundHeight(event.nativeEvent.layout.height);}}>
                     <View style={[{alignContent: 'center'}, styles.amount]}>
                         <Text> amount you had: </Text>
@@ -107,6 +135,16 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
                     <View style={[styles.nameContainer, styles.header]}>
                         <Text style={[styles.nameContainerText, {marginTop: 10}]}>{ fooddata.name }, </Text>
                         <Text style={[styles.nameContainerText, {marginBottom: 10}]}>per { amountFormatter(amount) }g</Text>
+                        <View>
+                            <CustomButton
+                                text="edit"
+                                onPress={onEdit}
+                            />
+                            <CustomButton
+                                text="delete"
+                                onPress={onDelete}
+                            />
+                        </View>
                     </View>
                 }
 

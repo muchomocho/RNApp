@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Image } from 'react-native';
-import { TouchableOpacity } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { TouchableRipple } from "react-native-paper";
 import SearchBar from "../SearchBar";
 import * as ServerRequest from '../../API/ServerRequest'
 import * as Constant from '../../Constant/Constant';
@@ -8,6 +9,7 @@ import * as Constant from '../../Constant/Constant';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomButton from "../CustomButton";
 import LoadingView from "../LoadingView";
+import TabSwitch from "../TabSwitch";
 
 function FoodDataSelection({navigation, isRecording=false}) {
     
@@ -15,19 +17,23 @@ function FoodDataSelection({navigation, isRecording=false}) {
 
     const dispatch = useDispatch();
 
+    const headerHeight = useHeaderHeight();
+
     const [data, setData] = useState([]);
     const [isLoading, setLoading] = useState(false);
     const [isMyFood, setMyFood] = useState(false);
     const [searchValue, setSearchValue] = useState('');
-    console.log(isMyFood)
+
     // https://reactnative.dev/docs/network
-    const getFood = async (query='') => {
+    const getFood = async (query='', myfood=false) => {
         try {
-            const endpoint = (isMyFood && user.username !== '') ? `api/useraccounts/${user.username}/myfooddata/` : 'api/fooddata/'
+            const isLoggedin = (user != undefined && typeof(user.username) == 'string'  && user.username !== '');
+            const endpoint = ((myfood || isMyFood) && isLoggedin) ? `api/useraccounts/${user.username}/myfooddata/` : 'api/fooddata/';
             const response = await ServerRequest.httpRequest({
                 method: 'GET', 
                 endpoint: endpoint + query,
-                navigation: navigation
+                navigation: navigation,
+                isAuthRequired: isLoggedin
             });
             const json = response.json;
             setData(json);
@@ -36,6 +42,7 @@ function FoodDataSelection({navigation, isRecording=false}) {
             console.error(error);
           } 
     };
+    
 
     const onSearch = (searchQuery) => {
         setLoading(true);
@@ -81,29 +88,52 @@ function FoodDataSelection({navigation, isRecording=false}) {
                 { image }
                 <View style={styles.detail}>
                     <Text style={styles.detailTitle}>{item.name}</Text>
-                    <Text style={styles.detailText}>created by {item.uploader}</Text>
+                    {
+                        item.uploader != 'admin' &&
+                        <Text style={styles.detailText}>created by {item.uploader}</Text>
+                    }   
                 </View>
             </TouchableOpacity>
         )
     }
 
-    const switchIsMyFood = () => {
-        setMyFood(!isMyFood);
+    const onMyFood = () => {
+        if (!isLoading) {
+            setMyFood(true);
+            getFood('', true);
+            setLoading(true);
+        }
+    };
+
+    const onAllFood = () => {
+        if (!isLoading) {
+            setMyFood(false);
+            setData([]);
+        }
     };
 
     const header = () => {
         return (
             <View style={styles.headerContainer}>
-                {
-                    user.username !== '' &&
+                <View style={styles.tabContainer} >
                     <View style={styles.switchMyButtonContainer}>
-                        <CustomButton
-                        buttonStyle={(isMyFood && user.username !== '') ? {} : { backgroundColor: '#bbb' }}
-                        text="my food"
-                        onPress={switchIsMyFood}
-                        />
+                        <View  style={[styles.title, !isMyFood ? styles.focused : null]}>
+                            <TouchableRipple style={styles.tab} onPress={onAllFood}> 
+                                <Text > All food </Text> 
+                            </TouchableRipple>
+                        </View>
                     </View>
-                }   
+                    {
+                        user.username !== '' &&
+                        <View style={styles.switchMyButtonContainer}>
+                            <View  style={[styles.title, isMyFood ? styles.focused : null]}>
+                                <TouchableRipple style={styles.tab} onPress={onMyFood}> 
+                                    <Text > My food </Text> 
+                                </TouchableRipple>
+                            </View>
+                        </View>
+                    }   
+                </View>
                 <View style={styles.searchBarContainer}>
                     <SearchBar
                     value={searchValue}
@@ -115,13 +145,13 @@ function FoodDataSelection({navigation, isRecording=false}) {
         );
     }
     
-    const content = (item) => {
+    const content = () => {
         if (isLoading) {
             return (
-                <>
+                <View >
                     { header() }
-                    <LoadingView />
-                </>
+                   <LoadingView />
+                </View>
             );
         }   
         return (
@@ -143,7 +173,6 @@ function FoodDataSelection({navigation, isRecording=false}) {
             />
         );
     }
-    
 
     return(
         <View style={styles.container}>
@@ -154,24 +183,25 @@ function FoodDataSelection({navigation, isRecording=false}) {
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: 50
+        marginBottom: 50,
+        height: '100%'
     },
     headerContainer: {
-        flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
     },
     switchMyButtonContainer: {
-        flex: 4,
-        paddingHorizontal: 10
+        flex: 1,
+        minHeight: 50
     },
     searchBarContainer: {
-        flex: 6,
+        width: '100%',
+        marginTop: 10,
         paddingHorizontal: 10
     },
     foodContainer: {
         flexDirection: 'row',
-        height: 150,
+        height: 120,
         width: '95%',
         backgroundColor: '#fff',
         borderRadius: 5,
@@ -205,6 +235,29 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         backgroundColor: '#eee',
         
+    },
+    tabContainer: {
+        width: '100%',
+        flexDirection: 'row'
+    },
+    tab: {
+        minHeight: 50,
+        height: '100%',
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    title: {
+        flex: 1,
+        backgroundColor: '#000',
+        height: 50,
+        alignItems: 'center',
+        backgroundColor: '#fff'
+    },
+    focused: {
+        backgroundColor: '#eee',
+        borderBottomWidth: 3,
+        borderBottomColor: '#561ddb'
     },
 });
 

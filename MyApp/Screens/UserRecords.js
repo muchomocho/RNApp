@@ -14,6 +14,8 @@ import { clearRecord, setIsMealUpdate } from '../redux/mealRecordSlice'
 import MealRecord from "../Components/FoodData/MealRecord";
 import LoadingView from "../Components/LoadingView";
 import { formatDate } from "../API/helper";
+import TabSwitch from "../Components/TabSwitch";
+import SubuserBanner from "../Components/SubuserBanner";
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator(); 
@@ -148,7 +150,7 @@ function UserRecord(props) {
     const plot = () => {
         if (isDataLoading || data == undefined) {
             return (
-                <View style={{height: 300, margin: 10, elevation: 3, backgroundColor: '#fff'}}>
+                <View >
                     <LoadingView/>
                 </View> 
             )
@@ -167,7 +169,7 @@ function UserRecord(props) {
 
         if (isMealDataLoading || mealData == undefined) {
             return (
-                <View style={{height: 300, margin: 10, elevation: 3, backgroundColor: '#fff'}}>
+                <View style={{height: '100%', width: '100%', backgroundColor: '#fff'}}>
                     <LoadingView/>
                 </View> 
             );
@@ -181,25 +183,24 @@ function UserRecord(props) {
                     renderItem={
                         ({item}) => 
                             {
-                            return (
-                            <View style={{width: Dimensions.get('window').width * 0.9, paddingHorizontal: 10}}>
-                                <CustomButton
-                                text={item.date}
-                                buttonStyle={styles.button}
-                                onPress={()=>{}}
-                                />
-                                <MealRecord
-                                    data={item.data}
-                                    navigation={props.navigation}
-                                    onDevice={props.onDevice}
-                                    parentSet={reloadFromChild}
-                                />
-                            </View>)
+                                return (
+                                <View style={{height: '100%', width: Dimensions.get('window').width * 0.9, paddingHorizontal: 10}}>
+                                    <CustomButton
+                                    text={item.date}
+                                    buttonStyle={styles.button}
+                                    onPress={()=>{}}
+                                    />
+                                    <MealRecord
+                                        data={item.data}
+                                        navigation={props.navigation}
+                                        parentSet={reloadFromChild}
+                                    />
+                                </View>)
                             }
                     }
                     keyExtractor={item => item.date}
                 />
-
+                { createRecordButton() }
             </View>
         );
     };
@@ -225,40 +226,44 @@ function UserRecord(props) {
     };
 
     const components = [
-        { id: 1, component: plot() }, 
-        { id: 2, component: mealRecordList() }, 
-        { id: 3, component: createRecordButton() }
+        { id: 1, title: 'graph', component: plot() }, 
+        { id: 2, title: 'records', component: mealRecordList() }, 
+        //{ id: 3, title: 'button', component: createRecordButton() }
     ];
 
     
     return(
         
-        <FlatList
-        data={components}
-        renderItem={
-            ({item}) => 
-                item.component
-        }
-        keyExtractor={item => item.id}
-        ListFooterComponent={
-            <View style={styles.footer}>
+        // <FlatList
+        // data={components}
+        // renderItem={
+        //     ({item}) => 
+        //         item.component
+        // }
+        // keyExtractor={item => item.id}
+        // ListFooterComponent={
+        //     <View style={styles.footer}>
     
-            </View>
-        }
-        />
+        //     </View>
+        // }
+        // />
+        <>
+            <SubuserBanner/>
+            <TabSwitch titleComponentArray={components} />
+        </>
     );
     
 }
 
 const styles = StyleSheet.create({
     container: {
-        minHeight: 300,
-        height: 'auto',
-        width: '95%',
+        //minHeight: 300,
+        height: '100%',
+        //width: '95%',
         backgroundColor: '#fff',
         borderRadius: 5,
-        marginTop: '5%',
-        marginLeft: '2.5%',
+        //marginTop: '5%',
+        //marginLeft: '2.5%',
 
         elevation: 3,
         shadowColor: '#eee',
@@ -271,7 +276,7 @@ const styles = StyleSheet.create({
     },
     
     mealRecordContainer: {
-        height: 300,
+        height: 3000,
     },
     header: {
         marginTop: '15%'

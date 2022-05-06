@@ -28,18 +28,28 @@ export const mealRecordSlice = createSlice({
             },
 
             recordList: [...action.payload.meal_content],
-            recipeRecordList: [...action.payload.recipe_content]
+            //recipeRecordList: [...action.payload.recipe_content]
         }
     },
 
     addRecordSelection: (state, action) => {
+        var exists = false
+        state.recordList.forEach((element, index) => {
+            if (state.recordList[index].food_data.id == action.payload.food_data.id) {
+                const newValue = parseFloat(state.recordList[index].amount_in_grams) + parseFloat(action.payload.amount_in_grams);
+                state.recordList[index].amount_in_grams = String(newValue);
+                exists = true;
+            }
+        });
 
-        return { 
-            ...state, 
-            recordList: [
-                ...state.recordList, 
-                action.payload
-            ]
+        if (!exists) {
+            return { 
+                ...state, 
+                recordList: [
+                    ...state.recordList, 
+                    action.payload
+                ]
+            }
         }
     },
 
@@ -53,7 +63,7 @@ export const mealRecordSlice = createSlice({
     },
 
     addRecipeRecordSelection: (state, action) => {
-
+        
         return { 
             ...state, 
             recipeRecordList: [

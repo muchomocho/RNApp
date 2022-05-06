@@ -93,7 +93,7 @@ class Subuser(models.Model):
                                   )
     name = models.CharField(max_length=30,
                             validators=[
-                                RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
+                                RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\-, ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                                                code=None, inverse_match=None, flags=0), ])
     date_of_birth = models.DateField()
 
@@ -130,7 +130,7 @@ class FoodData(models.Model):
         RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                        code=None, inverse_match=None, flags=0), ])
     name = models.CharField(max_length=255, validators=[
-        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
+        RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\-, ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
                        code=None, inverse_match=None, flags=0), ])
     amount_in_grams = models.DecimalField(
         default=0, max_digits=20, decimal_places=10)

@@ -9,6 +9,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
+import Signin from './Screens/SignIn';
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
@@ -23,8 +24,27 @@ export default function App() {
         }}>
           <Stack.Screen name={'Tab'} component={BottomTab}/>
           <Stack.Screen name={'Create profile'} component={CreateProfile}/>
-          <Stack.Screen name={'Create record'} component={CreateRecord}/>
-          <Stack.Screen name={'Confirm fooddata'} component={CheckFoodData}/>
+          <Stack.Screen name={'Create record'} 
+          component={CreateRecord}
+          initialParams={{ 
+            isShowManualModal: false,
+            isEditingFood: false,
+          }}
+          />
+          <Stack.Screen 
+          name={'Confirm fooddata'} 
+          component={CheckFoodData}
+          />
+          <Stack.Screen 
+            name='Sign in' 
+            component={Signin} 
+            options={{
+                tabBarLabel: 'Sign in',
+                tabBarIcon: ({ color, size }) => (
+                  <MaterialCommunityIcons name="home" color={color} size={size} />
+                ),
+              }}
+            />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

@@ -6,13 +6,16 @@ import FoodDataSelectionList from "../Components/FoodData/FoodDataSelectionList"
 import { useSelector, useDispatch } from 'react-redux';
 import { ManualFoodDataInput } from "../Components/FoodData";
 import { clearAllNutritionData } from '../redux/foodDataSlice'
+import TabSwitch from "../Components/TabSwitch";
+import RecipeList from "../Components/Recipe/RecipeList";
 
 
 function CreateRecord(props) {
 
     const [isShowListModal, setIsShowListModal] = useState(false);
-    const [isShowManualModal, setIsShowManualModal] = useState(false);
+    const [isShowManualModal, setIsShowManualModal] = useState(props.route.params.isShowManualModal); // default false
     const { recordList } = useSelector(state => state.mealRecord);
+    const { name, amount_in_grams, id, nutrient_data, image } = useSelector(state => state.fooddata.fooddata);
 
     const dispatch = useDispatch();
 
@@ -28,11 +31,23 @@ function CreateRecord(props) {
 
     const floatButton = () => {
         
-        const indicator = () => {
+        const listIndicator = () => {
             if (recordList.length > 0) {
                 return (
                     <View style={styles.listNumberIndicator}>
                         <Text> { recordList.length } </Text>
+                    </View>
+                );
+            }
+            return
+        }
+
+        const manualIndicator = () => {
+            console.log(name, amount_in_grams, id, nutrient_data)
+            if (nutrient_data.length > 0 || name.length > 0 || amount_in_grams.length > 0 || id > -1 || image.uri.lenght > 0 ) {
+                return (
+                    <View style={styles.listNumberIndicator}>
+                        <Text> ! </Text>
                     </View>
                 );
             }
@@ -49,16 +64,18 @@ function CreateRecord(props) {
 
         return (
             <View style={styles.buttonContainer}>
-                
-                <CustomButton
-                    buttonStyle={styles.button}
-                    textStyle={styles.buttonText}
-                    text="manual input"
-                    onPress={onPressManual}
-                />
+                <View>
+                    { manualIndicator() }
+                    <CustomButton
+                        buttonStyle={styles.button}
+                        textStyle={styles.buttonText}
+                        text="manual input"
+                        onPress={onPressManual}
+                    />
+                </View>
 
                 <View>
-                    { indicator() }
+                    { listIndicator() }
 
                     <CustomButton
                         buttonStyle={styles.button}
@@ -76,12 +93,24 @@ function CreateRecord(props) {
     const switchShowListModal = () => { setIsShowListModal(!isShowListModal) };
     const foodDataOnSubmit = () => { props.navigation.navigate('User record'); };
 
-    return(
-        <View style={styles.container}>
+    const components = [
+        { 
+            title: 'Recipe', 
+            component: <RecipeList navigation={props.navigation} isRecording={true}/>
+        },
+        { 
+            title: 'Food', 
+            component: 
             <FoodDataSelection
                 navigation={props.navigation}
                 isRecording
-            />
+            /> 
+        }
+    ]
+
+    return(
+        <View style={styles.container}>
+            <TabSwitch titleComponentArray={components}/>
             { floatButton() }
             <Modal
                 animationType="slide"
@@ -92,7 +121,7 @@ function CreateRecord(props) {
                     text="close"
                     onPress={switchShowManualModal}
                 />
-                <ManualFoodDataInput onSubmit={switchShowManualModal} navigation={props.navigation} />
+                <ManualFoodDataInput onSubmit={switchShowManualModal} navigation={props.navigation} isUpdate={props.route.params.isEditingFood} />
             </Modal>
             <Modal
                 animationType="slide"
@@ -128,6 +157,7 @@ const styles = StyleSheet.create({
         height: 70,
         borderRadius: 45,
         elevation: 10,
+        zIndex: 10
     },
     listNumberIndicator: {
         backgroundColor: '#ffb87a',

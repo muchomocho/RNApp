@@ -6,7 +6,7 @@ import json_unit from '../../assets/JSON/gov_diet_recommendation_units.json';
 import CustomButton from "../CustomButton";
 import { useSelector, useDispatch } from 'react-redux';
 import { setSubuserArray, setCurrentSubuser, setUser } from '../../redux/userSlice'
-import { genderMap, ageMap } from "../../API/helper";
+import { genderMap, ageMap, lessThanNutrients } from "../../API/helper";
 
 export default function UserGraph ({ data, dates }) {
 
@@ -78,15 +78,11 @@ export default function UserGraph ({ data, dates }) {
         const dietArray = Object.keys(json_unit);
 
         const renderData = (item) => {
-            var isToggle = false;
-            if (item === focusData) {
-                isToggle = true;
-            }
 
             return(
                 <CustomButton
                     text={item.replace('_', ' ')}
-                    onPress={() => {setFocusData(item); isToggle=true; }}
+                    onPress={() => {setFocusData(item); }}
                     buttonStyle={[styles.button, (focusData === item ? {backgroundColor: '#561ddbcc'} : {})]}
                 />
             )
@@ -148,14 +144,28 @@ export default function UserGraph ({ data, dates }) {
         );
     };
 
+    const legend = () => {
+        return (
+            <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 10}}>
+                <View style={{width: 35, height: 5, backgroundColor: '#0f12ba' }}></View>
+                <Text> { lessThanNutrients.includes(focusData) ? `maximum` : `target`} amount you should have</Text>
+            </View>
+        );
+    };
+
     return (
         <View style={styles.container}>
-            <VictoryChart>
-                { plot() }
-                { plotTarget() }
-                { plotDot() }
-            </VictoryChart>
-            { title() }
+            <View style={styles.chart}>
+                <VictoryChart paddingLeft={5}>
+                    { plot() }
+                    { plotTarget() }
+                    { plotDot() }
+                </VictoryChart>
+            </View>
+            <View style={{marginVertical: 10, padding: 10, alignSelf: 'center', borderRadius: 10, elevation: 3, width: '90%'}}>
+                { legend() }
+                { title() }
+            </View>
             { populateButtons() }
         </View>
     );
@@ -165,23 +175,14 @@ export default function UserGraph ({ data, dates }) {
 const styles = StyleSheet.create({
     container: {
         minHeight: 300,
-        height: 'auto',
-        width: '95%',
+        height: '100%',
         backgroundColor: '#fff',
-        borderRadius: 5,
-        marginTop: '5%',
-        marginLeft: '2.5%',
 
-        elevation: 3,
-        shadowColor: '#eee',
-        shadowRadius: 0,
-        shadowOpacity: 0.2,
-        shadowOffset: {
-            width: 0,
-            height: 100
-        },
     },
-
+    chart: {
+        borderRadius: 10,
+        elevation: 3
+    },
     titleContainer: {
         alignItems: 'center',
         marginBottom: 10
@@ -204,7 +205,8 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         minWidth: 100,
         width: 'auto',
-        margin: 10
+        margin: 10,
+        elevation: 105,
     },
 
     graph: {

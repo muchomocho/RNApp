@@ -147,21 +147,21 @@ function AccountProfile(props) {
                 
                 <View style={styles.accountChild}>
                     <CustomButton
-                            text={'edit'}
+                            text="edit"
                             buttonStyle={styles.logoutButton}
                             onPress={async () => { 
                                     props.navigation.navigate('Sign up', { isupdate: true }) 
                             }}
                         />
                     <CustomButton
-                        text={'logout'}
+                        text="logout"
                         buttonStyle={styles.logoutButton}
                         onPress={async () => { 
                             try {
-                                Authentication.logOut(props.navigation);
                                 dispatch(setLogout()); 
+                                Authentication.logOut(props.navigation);
                                 setLoggedIn(false);
-                                //props.navigation.navigate('Sign in') 
+                                
                             } catch (error) {}
                         }}
                     />

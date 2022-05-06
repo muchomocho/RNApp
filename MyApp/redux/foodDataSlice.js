@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
     fooddata: {
+        id: -1,
         name: '',
         image: {
             uri: '',
@@ -17,6 +18,9 @@ export const foodDataSlice = createSlice({
   name: 'fooddata',
   initialState,
   reducers: {
+    setFoodID: (state, action) => {
+        state.fooddata.id = action.payload;
+    },
     
     setFoodName: (state, action) => {
         state.fooddata.name = action.payload;
@@ -33,14 +37,12 @@ export const foodDataSlice = createSlice({
             fooddata: {
                 ...state.fooddata,
                 image: {
+                    ...state.image,
                     ...action.payload
                 }
                 
             }
         }
-        state.fooddata.image.uri = action.payload.uri;
-        state.fooddata.image.name = action.payload.name;
-        state.fooddata.image.type = action.payload.type;
     },
 
     addEmpty: (state) => {
@@ -53,6 +55,27 @@ export const foodDataSlice = createSlice({
                     unit: '-'
                 }
             );
+        }
+    },
+
+    setNutrition: (state, action) => {
+        var newNutrition = action.payload.map(element => {
+            return { 
+                tempID: String(element.id),
+                name: String(element.name),
+                value: String(element.value),
+                unit: String(element.unit)
+             }
+        })
+
+        return {
+            ...state,
+            fooddata: {
+                ...state.fooddata,
+                nutrient_data: [
+                    ...newNutrition
+                ]
+            }
         }
     },
 
@@ -100,6 +123,7 @@ export const foodDataSlice = createSlice({
         return {
             ...state,
             fooddata: {
+                id : -1,
                 name: '',
                 image: {
                     uri: '',
@@ -115,6 +139,6 @@ export const foodDataSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { setFoodName, setFoodAmount, setImage, addNutrition, addEmpty, updateNutrition, deleteNutritionByName, clearAllFoodData } = foodDataSlice.actions
+export const { setFoodID, setFoodName, setFoodAmount, setImage, setNutrition, addNutrition, addEmpty, updateNutrition, deleteNutritionByName, clearAllFoodData } = foodDataSlice.actions
 
 export default foodDataSlice.reducer

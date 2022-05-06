@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, TextInput, Button, FlatList, Alert, Dimensions } from 'react-native';
 import CustomButton from "../Components/CustomButton";
 import foodDataUnitJson from '../assets/JSON/food_integrated_dataset_units.json';
+import { useSelector } from "react-redux";
 
 import CustomInput from "../Components/CustomInput";
 import FoodDataSpec from "../Components/FoodData/FoodDataSpec";
@@ -12,16 +13,18 @@ function CheckFoodData (props) {
 
     const [fooddata, setFooddata] = useState();
     const [status, setStatus] = useState(-1);
+    const {user} = useSelector(state => state.user);
 
     const getFullFoodData = async (id) => {
+        const isLoggedin = (user != undefined && typeof(user.username) == 'string' && user.username !== '');
         const result = await httpRequest({
             method: 'GET',
             endpoint: `api/fooddata/${id}`,
-            isAuthRequired: true,
+            isAuthRequired: isLoggedin,
             navigation: props.navigation
         });
 
-        
+        console.log(result.json)
         if (result.response.status == 200) {
             setFooddata(result.json);
         }

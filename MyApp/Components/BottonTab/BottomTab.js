@@ -3,9 +3,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useSelector } from 'react-redux';
 
 import SignIn from '../../Screens/SignIn'
-import RecipeList from '../../Screens/RecipeList';
+import RecipeListScreen from '../../Screens/RecipeListScreen';
 import CreateRecipe from '../../Screens/CreateRecipe';
 import SignUp from '../../Screens/SignUp';
 import AccountProfile from '../../Screens/AccountProfile'
@@ -19,6 +20,7 @@ import CheckFoodData from '../../Screens/CheckFoodData';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
 
 const BottomTab = () => {
     return (
@@ -31,8 +33,6 @@ const BottomTab = () => {
                 position: 'absolute',
                 backgroundColor: '#fff',
                 height: 60,
-                // borderRadius: 10,
-                // margin: 10,
                 ...styles.bottomtab_shadow
             },
 
@@ -57,7 +57,7 @@ const BottomTab = () => {
                 }
             }
             />
-            <Tab.Screen 
+            {/* <Tab.Screen 
             name='Sign in' 
             component={SignIn} 
             options={{
@@ -66,12 +66,27 @@ const BottomTab = () => {
                   <MaterialCommunityIcons name="home" color={color} size={size} />
                 ),
               }}
+            /> */}
+            <Tab.Screen name='Recipe' component={RecipeListScreen} />
+            <Tab.Screen name='Fooddata' component={FoodDataList} 
+            initialParams={
+                {
+                    isRecording: false
+                }
+            }
             />
-            <Tab.Screen name='Recipe' component={RecipeList} />
-            <Tab.Screen name='Fooddata' component={FoodDataList} />
-            <Tab.Screen name='Create' component={CreateRecipe} />
-
+            
             { /* we want to show tabs on these pages but not their icons in the tabs, so they are included here but hidden by style. */ }
+            <Tab.Screen 
+            name='Create' 
+            component={CreateRecipe} 
+            options={{
+                tabBarItemStyle: {
+                    ...styles.hiddenItem
+                }
+            }}
+            />
+
             <Tab.Screen 
             name='Sign up' 
             component={SignUp} 

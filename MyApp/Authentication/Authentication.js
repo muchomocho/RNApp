@@ -168,10 +168,9 @@ export const logOut = async (navigation) => {
         await SecureStore.deleteItemAsync('username');
         await SecureStore.deleteItemAsync('access');
         await SecureStore.deleteItemAsync('refresh');
-        console.log('logoutal1')
+
         setTimeout(() => {
             if (navigation !== undefined && navigation !== null) {
-                console.log('logoutal2')
                 navigation.navigate('Profile', { logoutRedirect: true })
             }
         }, 500);

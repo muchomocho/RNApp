@@ -153,7 +153,7 @@ export default function MealRecord({data, parentSet, navigation}) {
                     <CustomButton
                         buttonStyle={styles.mealContentHeaderButton}
                         textStyle={styles.mealContentHeaderButtonText}
-                        text={'edit'}
+                        text="edit"
                         onPress={() => {
                             dispatch(clearRecord());
                             dispatch(setMealRecord(singleData));
@@ -251,14 +251,12 @@ export default function MealRecord({data, parentSet, navigation}) {
 
 const styles = StyleSheet.create({
     container: {
-        minHeight: 100,
-        height: 'auto',
+        //minHeight: 100,
         width: '95%',
         backgroundColor: '#fff',
         borderRadius: 5,
         marginTop: '5%',
         alignSelf: 'center',
-        // marginLeft: '2.5%',
 
         elevation: 3,
         shadowColor: '#eee',
@@ -270,7 +268,7 @@ const styles = StyleSheet.create({
         },
     },
     mealContentListContainer: {
-        height: 300,
+        height: '80%',
     },
     mealContentHeader: {
         flexDirection: 'row'
