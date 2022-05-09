@@ -11,11 +11,10 @@ import { TouchableOpacity } from "react-native";
 
 import { useSelector, useDispatch } from 'react-redux';
 import { setSubuserArray, setCurrentSubuser, setUser, setLogout } from '../redux/userSlice'
+import { clearAllFoodData } from "../redux/foodDataSlice";
+import { clearRecord } from "../redux/mealRecordSlice";
 import LoadingView from "../Components/LoadingView";
 import LogoutAlert from "../Components/LogoutAlert/LogoutAlert";
-
-// https://reactnative.dev/docs/navigation
-const Stack = createNativeStackNavigator();
 
 function AccountProfile(props) {
     
@@ -58,14 +57,21 @@ function AccountProfile(props) {
           );
     };
 
+    const onLogout = () => {
+        setLoggedIn(false);
+        dispatch(setLogout());
+        console.log('asdadsa')
+        dispatch(clearAllFoodData());
+        dispatch(clearRecord());
+        Authentication.logOut();
+    };
+
     const getUserProfile = async () => {
         try {
             const username = await Authentication.getUsername();
-            console.log(username);
 
             if (username == '' || username == null || username == undefined) {
-                setLoggedIn(false);
-                dispatch(setLogout());
+                onLogout();
                 return
             }
            
@@ -158,9 +164,7 @@ function AccountProfile(props) {
                         buttonStyle={styles.logoutButton}
                         onPress={async () => { 
                             try {
-                                dispatch(setLogout()); 
-                                Authentication.logOut(props.navigation);
-                                setLoggedIn(false);
+                                onLogout()
                                 
                             } catch (error) {}
                         }}

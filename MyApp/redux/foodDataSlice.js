@@ -37,7 +37,7 @@ export const foodDataSlice = createSlice({
             fooddata: {
                 ...state.fooddata,
                 image: {
-                    ...state.image,
+                    ...state.fooddata.image,
                     ...action.payload
                 }
                 

@@ -1,4 +1,5 @@
 import decimal
+import datetime
 
 
 def unit_converter(target_unit, from_unit):
@@ -49,4 +50,13 @@ def age_map(age):
         return 65
     if age >= 75:
         return 75
+    return age
+
+
+def get_age_from_dob(dob_date):
+    date_now = datetime.datetime.now()
+    age = date_now.year - dob_date.year
+
+    if dob_date.month < date_now.month and dob_date.day < date_now.day:
+        age -= 1
     return age

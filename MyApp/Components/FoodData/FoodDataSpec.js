@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, TextInput, View, StyleSheet, Pressable, FlatList } from 'react-native';
+import { Text, TextInput, View, StyleSheet, Pressable, FlatList, Alert } from 'react-native';
 import fooddataJson from '../../assets/JSON/food_integrated_dataset.json'
 import fooddataUnitJson from '../../assets/JSON/food_integrated_dataset_units.json'
 import CustomButton from '../CustomButton';
@@ -7,8 +7,8 @@ import SearchBar from '../SearchBar';
 import { useSelector, useDispatch } from 'react-redux';
 import { addRecordSelection, clearRecord } from '../../redux/mealRecordSlice'
 import { httpRequest } from '../../API/ServerRequest';
-import { amountFormatter } from '../../API/helper';
-import { clearAllFoodData, setFoodAmount, setFoodName, setNutrition, setFoodID, setImage } from '../../redux/foodDataSlice';
+import { amountFormatter, clean } from '../../API/helper';
+import { clearAllFoodData, setFoodAmount, setFoodName, setNutrition, setFoodID, setImage, addNutrition } from '../../redux/foodDataSlice';
 import * as Constant from '../../Constant/Constant';
 
 export default function FoodDataSpec({navigation, fooddata, status, isRecording=false, isEditing=false}) {
@@ -21,20 +21,45 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
 
 
     const onDelete = async () => {
+        const deleteErrorAlert = () => {
+            Alert.alert(
+            "Error",
+            `Could not load image. If camera image is not loading, try from gallery.`,
+            [
+                { text: "OK", onPress: () => {} }
+            ]
+            );
+        };
+
         try {
-            const endpoint = `api/useraccount/${user.username}/myfood/${fooddata.id}`
-            const response = await ServerRequest.httpRequest({
+            const endpoint = `api/useraccounts/${user.username}/myfooddata/${fooddata.id}/`
+            const response = await httpRequest({
                 method: 'DELETE', 
                 endpoint: endpoint,
                 navigation: navigation,
-                isAuthRequired: isLoggedin
+                isAuthRequired: true
             });
-            const json = response.json;
-            setData(json);
-            setLoading(false);
+            console.log(response.json)
+            if (response.response.status == 200) {
+                navigation.navigate('Fooddata')
+            }
+            else {
+                deleteErrorAlert();
+            }
+
         } catch (error) {
-            console.error(error);
+            deleteErrorAlert();
         } 
+    };
+
+    const dispatchCleanNutrientData = () => {
+
+        var nutrient_data = fooddata.nutrient_data;
+        nutrient_data.forEach((element, index) => {
+            var value = element.value;
+            dispatch(addNutrition({ tempID: index, name: clean(element.name), unit: element.unit, value: String(element.value) }));
+        });
+        return;
     };
 
     const onEdit = () => {
@@ -43,8 +68,12 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
         dispatch(setFoodID(fooddata.id));
         dispatch(setFoodAmount(String(parseFloat(fooddata.amount_in_grams))));
         dispatch(setFoodName(fooddata.name));
-        dispatch(setNutrition(fooddata.nutrient_data));
-        dispatch(setImage({ uri: `${Constant.ROOT_URL}${fooddata.main_img.substring(1)}`, type: '',  name: ''}))
+
+        if (typeof(fooddata.main_img) == 'string') {
+            dispatch(setImage({ uri: `${Constant.ROOT_URL}${fooddata.main_img.substring(1)}`, type: '',  name: ''}))
+        }
+
+        dispatchCleanNutrientData()
         
         navigation.navigate('Create record', { isShowManualModal: true, isEditingFood: true })
     }
@@ -117,8 +146,6 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
         );
     }
 
-    
-
     const fooddataView = (fooddata) => {
         var objArray = [];
    
@@ -135,16 +162,19 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
                     <View style={[styles.nameContainer, styles.header]}>
                         <Text style={[styles.nameContainerText, {marginTop: 10}]}>{ fooddata.name }, </Text>
                         <Text style={[styles.nameContainerText, {marginBottom: 10}]}>per { amountFormatter(amount) }g</Text>
-                        <View>
-                            <CustomButton
-                                text="edit"
-                                onPress={onEdit}
-                            />
-                            <CustomButton
-                                text="delete"
-                                onPress={onDelete}
-                            />
-                        </View>
+                        {
+                            fooddata.uploader == user.username &&
+                            <View>
+                                <CustomButton
+                                    text="edit"
+                                    onPress={onEdit}
+                                />
+                                <CustomButton
+                                    text="delete"
+                                    onPress={onDelete}
+                                />
+                            </View>
+                        }
                     </View>
                 }
 

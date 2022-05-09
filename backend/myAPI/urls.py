@@ -1,6 +1,4 @@
 import cv2
-from skimage.feature import hog
-from sklearn.base import BaseEstimator, TransformerMixin
 from posixpath import basename
 from django.urls import path, include
 from . import views

@@ -14,6 +14,7 @@ import TabSwitch from "../TabSwitch";
 function FoodDataSelection({navigation, isRecording=false}) {
     
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
+    const { name: foodName, image, amount_in_grams, nutrient_data, id } = useSelector(state => state.fooddata.fooddata);
 
     const dispatch = useDispatch();
 
@@ -36,10 +37,16 @@ function FoodDataSelection({navigation, isRecording=false}) {
                 isAuthRequired: isLoggedin
             });
             const json = response.json;
-            setData(json);
-            setLoading(false);
+            if (response.response.status == 200) {
+                setData(json);
+                setLoading(false);
+            } else {
+                setData([]);
+                setLoading(false);
+            }
           } catch (error) {
-            console.error(error);
+            setData([]);
+            setLoading(false);
           } 
     };
     
@@ -55,7 +62,8 @@ function FoodDataSelection({navigation, isRecording=false}) {
           // The screen is focused
           // Call any action
         });
-    
+        setMyFood(false);
+        setData([]);
         // Return the function to unsubscribe from the event so it gets removed on unmount
         return reload;
     }, [navigation]);
@@ -73,19 +81,22 @@ function FoodDataSelection({navigation, isRecording=false}) {
 
         if (typeof(item.main_img)=='string' && item.main_img != '') {
             image = 
-                <Image
-                    resizeMode="contain"
-                    resizeMethod="scale"
-                    style={styles.image}
-                    source={{uri: url}}
-                />
+                <View style={styles.imageContainer} >
+                    <Image
+                        resizeMode="contain"
+                        resizeMethod="scale"
+                        style={styles.image}
+                        source={{uri: url}}
+                    />
+                </View>
         }
         return(
             <TouchableOpacity 
             style={styles.foodContainer}
             onPress={() => {onPress(item.id)}}
             >
-                { image }
+                    { image }
+                
                 <View style={styles.detail}>
                     <Text style={styles.detailTitle}>{item.name}</Text>
                     {
@@ -112,28 +123,34 @@ function FoodDataSelection({navigation, isRecording=false}) {
         }
     };
 
-    const header = () => {
+    const tabs = () => {
         return (
-            <View style={styles.headerContainer}>
-                <View style={styles.tabContainer} >
+            <View style={styles.tabContainer} >
+                <View style={styles.switchMyButtonContainer}>
+                    <View  style={[styles.title, !isMyFood ? styles.focused : null]}>
+                        <TouchableRipple style={styles.tab} onPress={onAllFood}> 
+                            <Text > All food </Text> 
+                        </TouchableRipple>
+                    </View>
+                </View>
+                {
+                    user.username !== '' &&
                     <View style={styles.switchMyButtonContainer}>
-                        <View  style={[styles.title, !isMyFood ? styles.focused : null]}>
-                            <TouchableRipple style={styles.tab} onPress={onAllFood}> 
-                                <Text > All food </Text> 
+                        <View  style={[styles.title, isMyFood ? styles.focused : null]}>
+                            <TouchableRipple style={styles.tab} onPress={onMyFood}> 
+                                <Text > My food </Text> 
                             </TouchableRipple>
                         </View>
                     </View>
-                    {
-                        user.username !== '' &&
-                        <View style={styles.switchMyButtonContainer}>
-                            <View  style={[styles.title, isMyFood ? styles.focused : null]}>
-                                <TouchableRipple style={styles.tab} onPress={onMyFood}> 
-                                    <Text > My food </Text> 
-                                </TouchableRipple>
-                            </View>
-                        </View>
-                    }   
-                </View>
+                }   
+            </View>
+        );
+    };
+
+    const header = () => {
+        return (
+            <View style={styles.headerContainer}>
+                { tabs() }
                 <View style={styles.searchBarContainer}>
                     <SearchBar
                     value={searchValue}
@@ -231,10 +248,14 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         overflow: 'hidden'
     },
+    imageContainer: {
+        flex: 1,
+    },
     image: {
-        flexGrow: 1,
-        backgroundColor: '#eee',
-        
+        flex:1,
+        width: null,
+        height: '100%',
+        borderRadius: 15,
     },
     tabContainer: {
         width: '100%',

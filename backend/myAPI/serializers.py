@@ -54,9 +54,10 @@ class SubuserSerializer(serializers.ModelSerializer):
         self.context['request'].user.people.add(instance)
         return instance
 
+    # custom extra information to give age to client
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['age'] = timezone.now().date() - instance.date_of_birth
+        data['age'] = helper.get_age_from_dob(instance.date_of_birth)
         return data
 
 
@@ -88,8 +89,8 @@ class FoodDataSerializer(serializers.ModelSerializer):
         model = FoodData
         fields = [
             'id', 'main_img',
+            'uploader',
             'is_private',
-            'is_hidden',
             'date_created',
             'last_used',
             'source_name',
@@ -100,9 +101,7 @@ class FoodDataSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
 
         nutrient_data_list = validated_data.pop('nutrient_data')
-        uploader = self.context['request'].user
-        food_data = FoodData.objects.create(
-            uploader=uploader, **validated_data)
+        food_data = FoodData.objects.create(**validated_data)
 
         # reference to balance units
         dir = os.path.dirname(__file__)  # get current directory
@@ -119,6 +118,33 @@ class FoodDataSerializer(serializers.ModelSerializer):
                 parent_food=food_data, **nutrient_data)
 
         return food_data
+
+    def update(self, instance, validated_data):
+
+        nutrient_data_list = validated_data.pop('nutrient_data')
+        instance.nutrient_data.all().delete()
+        instance.name = validated_data.pop('name')
+        instance.amount_in_grams = validated_data.pop('amount_in_grams')
+        instance.main_img.delete()
+        instance.is_private = validated_data.pop('is_private')
+        instance.main_img = validated_data.pop('main_img')
+
+        # reference to balance units
+        dir = os.path.dirname(__file__)  # get current directory
+        file_path = os.path.join(
+            dir, 'Assets/gov_diet_recommendation_units.json')
+        with open(file_path) as json_file:
+            units = json.load(json_file)
+
+        for nutrient_data in nutrient_data_list:
+            if nutrient_data['name'] in units.keys():
+                nutrient_data['value'] *= decimal.Decimal(helper.unit_converter(
+                    target_unit=units[nutrient_data['name']], from_unit=nutrient_data['unit']))
+            NutritionalData.objects.create(
+                parent_food=instance, **nutrient_data)
+
+        instance.save()
+        return instance
 
 
 class UserMealContentSerializer(serializers.ModelSerializer):
@@ -220,7 +246,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ['id', 'recipe', 'food_data',
-                  'ingredient_quantity', 'ingredient_unit']
+                  'amount', 'unit']
 
 
 """ 
@@ -242,7 +268,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         class Meta:
             model = RecipeIngredient
-            fields = ['food_data', 'ingredient_quantity', 'ingredient_unit']
+            fields = ['food_data', 'amount', 'unit']
 
     class SimpleStepSerializer(serializers.ModelSerializer):
         class Meta:

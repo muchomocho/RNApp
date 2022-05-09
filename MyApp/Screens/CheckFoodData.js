@@ -16,19 +16,24 @@ function CheckFoodData (props) {
     const {user} = useSelector(state => state.user);
 
     const getFullFoodData = async (id) => {
-        const isLoggedin = (user != undefined && typeof(user.username) == 'string' && user.username !== '');
-        const result = await httpRequest({
-            method: 'GET',
-            endpoint: `api/fooddata/${id}`,
-            isAuthRequired: isLoggedin,
-            navigation: props.navigation
-        });
+        try {
+            const isLoggedin = (user != undefined && typeof(user.username) == 'string' && user.username !== '');
+            const result = await httpRequest({
+                method: 'GET',
+                endpoint: `api/fooddata/${id}`,
+                isAuthRequired: isLoggedin,
+                navigation: props.navigation
+            });
 
-        console.log(result.json)
-        if (result.response.status == 200) {
-            setFooddata(result.json);
+            console.log(result.json)
+            if (result.response.status == 200) {
+                setFooddata(result.json);
+            }
+            setStatus(result.response.status);
         }
-        setStatus(result.response.status);
+        catch (error) {
+            console.log(error)
+        }
     };
 
     // https://reactnavigation.org/docs/function-after-focusing-screen/

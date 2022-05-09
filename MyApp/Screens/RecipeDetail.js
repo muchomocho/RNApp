@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Image } from 'react-native';
 import * as ServerRequest from '../API/ServerRequest';
+import * as Constant from '../Constant/Constant'
 import { useSelector, useDispatch } from 'react-redux';
 import CustomButton from "../Components/CustomButton";
 import { addRecipeRecordSelection } from '../redux/mealRecordSlice'
@@ -59,8 +60,6 @@ function RecipeDetail(props) {
     const getUserRecord = async () => {
 
         if (user.username == '' || currentSubuser.name == '') {
-                console.log(2, user.username, currentSubuser.name)
-
                 return;
             }
         try {
@@ -99,7 +98,7 @@ function RecipeDetail(props) {
 
     const renderData = (item) => {
         return(
-            <View style={styles.peopleTab}>
+            <View style={styles.stepsTab}>
                 <Text>{item.step_number}</Text>
                 <Text>{item.text}</Text>
             </View>
@@ -244,6 +243,10 @@ function RecipeDetail(props) {
     const onDelete = () => {
 
     };
+console.log(data.main_img)
+console.log(typeof(data.main_img))
+console.log((data != undefined && typeof(data.main_img) == 'string' && data.main_img.length > 0))
+if ((data != undefined && typeof(data.main_img) == 'string' && data.main_img.length > 0)) {console.log(`${Constant.ROOT_URL}${data.main_img.substring(1)}`)}
 
     // https://reactnative.dev/docs/flatlist
     return(
@@ -259,6 +262,17 @@ function RecipeDetail(props) {
                     <Text style={styles.accountText}>
                         created by: {data.user + '\n'} 
                     </Text>
+                    {
+                        
+                        (data != undefined && typeof(data.main_img) == 'string' && data.main_img.length > 0) ?
+                        (<View style={styles.imageContainer}>
+                            <Image source={{ uri : `${Constant.ROOT_URL}${data.main_img.substring(1)}` }}
+                            resizeMode="center"
+                            style={styles.image}
+                        
+                            />
+                        </View>) : null
+                    }
                    
                     {
                         data.user == user.username &&
@@ -307,9 +321,17 @@ const styles = StyleSheet.create({
         //alignContent: 'center'
     },
     header: {
-        marginTop: '15%',
+        height: 'auto'
+    },
+    stepsTab:{
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 20
     },
     account: {
+        height: 'auto',
         backgroundColor: '#561ddb',
         borderRadius: 5,
         paddingVertical: 10,
@@ -366,6 +388,15 @@ const styles = StyleSheet.create({
     titleText: {
         color: '#fff',
         fontSize: 20
+    },
+    imageContainer: {
+        justifyContent: 'center',
+        width: '100%',
+    },
+    image: {
+        width: null,
+        height: 300,
+        borderRadius: 15,
     },
 });
 

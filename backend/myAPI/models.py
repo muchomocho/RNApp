@@ -187,9 +187,9 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe, related_name='ingredients', on_delete=models.CASCADE)
     food_data = models.ForeignKey(FoodData, on_delete=models.CASCADE)
-    ingredient_quantity = models.DecimalField(
+    amount = models.DecimalField(
         default=0, max_digits=15, decimal_places=5)
-    ingredient_unit = models.CharField(max_length=10)
+    unit = models.CharField(max_length=10)
 
 
 """

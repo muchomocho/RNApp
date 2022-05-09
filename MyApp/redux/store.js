@@ -9,12 +9,14 @@ import { configureStore } from '@reduxjs/toolkit'
 import userReducer from './userSlice';
 import mealRecordReducer from './mealRecordSlice';
 import foodDataReducer from './foodDataSlice';
+import recipeReducer from './recipeSlice'
 
 export const store = configureStore({
   reducer: {
       user: userReducer,
       mealRecord: mealRecordReducer,
-      fooddata: foodDataReducer
+      fooddata: foodDataReducer,
+      recipe: recipeReducer
   },
 })
 

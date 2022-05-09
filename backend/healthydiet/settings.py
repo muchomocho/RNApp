@@ -153,8 +153,8 @@ AUTH_USER_MODEL = 'myAPI.UserAccount'
 
 SIMPLE_JWT = {
     'USER_ID_FIELD': 'username',
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
-    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=10),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=60),
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
 }

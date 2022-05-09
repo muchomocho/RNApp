@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import json
 import random
 from os import stat
+from urllib import request
 from .models import *
 from .serializers import *
 from django.http import Http404
@@ -37,7 +38,8 @@ def get_nutrient_keys():
 
 
 def userrecord_single(date_str, username, name):
-    user_id = get_object_or_404(UserAccount, username=username).id
+    user = get_object_or_404(UserAccount, username=username)
+    user_id = user.id
     date_obj = datetime.strptime(date_str, '%Y-%m-%d')
     subuser = get_object_or_404(Subuser, user=user_id, name=name)
     record_list = UserMealRecord.objects.filter(
@@ -71,7 +73,7 @@ def userrecord_single(date_str, username, name):
 
     for recipe in recipe_content_list:
         return_json = recipe_nutrient(
-            recipe_id=recipe.id, return_json=return_json)
+            recipe_id=recipe.id, return_json=return_json, user=user)
 
     return_json['date'] = date_str
     return return_json
@@ -130,10 +132,15 @@ def userrecord_date_range(from_date, on_date, name, username):
     return return_json
 
 
-def recipe_nutrient(recipe_id, return_json=None):
-    recipe = get_object_or_404(Recipe, id=recipe_id)
+def recipe_nutrient(recipe_id, return_json=None, user=None):
+    if user is None:
+        recipe = get_object_or_404(
+            Recipe, id=recipe_id, is_private=False, is_hidden=False)
+    else:
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+
     ingredients_list = RecipeIngredient.objects.filter(recipe=recipe)
-    print(len(ingredients_list))
+
     is_missing_value = False
 
     if return_json is None:
@@ -144,37 +151,34 @@ def recipe_nutrient(recipe_id, return_json=None):
     for ingredient in ingredients_list:
         food_data_list = FoodData.objects.filter(id=ingredient.food_data.id)
         if len(food_data_list) <= 0:
-            print(1)
             is_missing_value = True
             continue
         food_data = food_data_list[0]
-        print('id', food_data.id)
+
         nutrients_list = NutritionalData.objects.filter(
             parent_food=food_data)
 
-        if ingredient.ingredient_unit not in ['g', 'mg', 'microg']:
-            print(2)
+        if ingredient.unit not in ['g', 'mg', 'microg']:
             is_missing_value = True
             continue
         for key in return_json.keys():
             for nutrient in nutrients_list:
                 if nutrient.name == key:
                     if nutrient.name == 'energy_kj' and nutrient.unit.lower() != 'kj'.lower():
-                        print(nutrient.unit)
-                        print(3)
+
                         is_missing_value = True
                         continue
                     elif nutrient.name == 'energy_kcal' and nutrient.unit.lower() != 'kcal'.lower():
-                        print(4)
+
                         is_missing_value = True
                         continue
                     elif nutrient.name.lower() not in [name.lower() for name in ['energy_kj', 'energy_kcal']] and nutrient.unit.lower() not in [unit.lower() for unit in ['g', 'mg', 'microg']]:
-                        print(5)
+
                         is_missing_value = True
                         continue
 
                     return_json[key] += decimal.Decimal(nutrient.value) * \
-                        (ingredient.ingredient_quantity / food_data.amount_in_grams) * (helper.unit_converter(ingredient.ingredient_unit, 'g')) * \
+                        (ingredient.amount / food_data.amount_in_grams) * (helper.unit_converter(ingredient.unit, 'g')) * \
                         decimal.Decimal(helper.unit_converter(
                             units[key], nutrient.unit))
 
@@ -195,9 +199,6 @@ class UserAccountPermission(BasePermission):
     message = 'Editing is for owner only'
 
     def has_object_permission(self, request, view, obj):
-        print(obj.username)
-        print(request.user.username)
-
         """
          useraccount attributes can be seen with such as GET
         """
@@ -412,14 +413,13 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
 
         meal_record = get_object_or_404(
             self.queryset, id=kwargs['usermealrecord_id'])
-        print('hey', request.data)
+
         serializer = self.serializer_class(meal_record, data=request.data)
 
         # rest is taken care of by serializer
         if serializer.is_valid():
 
             serializer.save()
-            print(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -433,7 +433,7 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
 
     def __food_get_or_create(self, request, username):
         for meal_content in request.data['meal_content']:
-            print(meal_content['food_data'])
+
             if not isinstance(meal_content['food_data'], int):
                 if 'id' in meal_content['food_data'] and len(FoodData.objects.filter(id=meal_content['food_data']['id'])) > 0:
                     meal_content['food_data'] = meal_content['food_data']['id']
@@ -462,7 +462,6 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
 
 class SubuserPermission(BasePermission):
     message = 'editing is for owner only'
-    print('yo')
 
     def has_view_permission(self, request, obj):
         if obj is None:
@@ -482,7 +481,7 @@ class SubuserPermission(BasePermission):
         if authentication is passed through the user id of the db entry and the user id of the authentication token is compared
         obj.user returns the useraccount obj instance, therefore to match actual username string value it is obj.username.username
         """
-        print(obj.user.username == request.user.username)
+
         return obj.user.username == request.user.username
 
 
@@ -579,7 +578,7 @@ class RecipeTitleViewSet(viewsets.ModelViewSet):
     # https://docs.djangoproject.com/en/4.0/topics/db/queries/
     def list(self, request, *args, **kwargs):
         search_query = request.query_params.get('title', None)
-        print(search_query)
+
         if search_query is None:
             serializer = self.serializer_class(self.queryset, many=True)
         else:
@@ -594,7 +593,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def create(self, request, format=None, *args, **kwargs):
-        print(request.data)
+
         serializer = RecipeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -619,7 +618,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             query_together = Q()
             search_query_as_list = search_query.split(' ')
             for query in search_query_as_list:
-                print(query)
+
                 query_together |= Q(title__contains=query)
 
             recipe = self.queryset.filter(
@@ -629,7 +628,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe = self.queryset.filter(is_private=False, is_hidden=False)
 
         serializer = RecipeTitleSerializer(
-            recipe.order_by('last_used')[:30], many=True)
+            recipe.extra(select={'length': 'Length(title)'}).order_by('-last_used')[:30], many=True)
+
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -654,7 +654,7 @@ class RecipeNutrientViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        return Response(recipe_nutrient(recipe_id=kwargs['recipe_id']))
+        return Response(recipe_nutrient(recipe_id=kwargs['recipe_id'], user=request.user))
 
 
 class RecipeRecommendationViewSet(viewsets.ModelViewSet):
@@ -671,7 +671,8 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
         subuser_name = kwargs['name']
         subuser_obj = Subuser.objects.get(
             user=request.user, name=subuser_name)
-        age = str(helper.age_map(subuser_obj.age))
+        age = str(helper.age_map(
+            helper.get_age_from_dob(subuser_obj.date_of_birth)))
         gender = helper.genderMap(subuser_obj.gender)
 
         if not gender == 'O':
@@ -702,12 +703,12 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
 
             less_than = ['salt', 'free_sugars', 'fat', 'saturated_fat']
             sql_sub_inner = '''
-                    (SELECT recipe.id, ingredient.id, ingredient.food_data_id, ingredient.ingredient_quantity, ingredient.ingredient_unit, food_data.id, food_data.amount_in_grams, nutrition.id, nutrition.value, nutrition.unit, nutrition.name, 
-                    MAX(ingredient.ingredient_quantity / food_data.amount_in_grams * 
+                    (SELECT recipe.id, recipe.is_private, recipe.is_hidden, ingredient.id, ingredient.food_data_id, ingredient.amount, ingredient.unit, food_data.id, food_data.amount_in_grams, nutrition.id, nutrition.value, nutrition.unit, nutrition.name, 
+                    MAX(ingredient.amount / food_data.amount_in_grams * 
                     (CASE 
-                    WHEN ingredient.ingredient_unit = 'g' THEN 1
-                    WHEN ingredient.ingredient_unit = 'mg' THEN 1/1000
-                    WHEN ingredient.ingredient_unit = 'microg' THEN 1/1000000
+                    WHEN ingredient.unit = 'g' THEN 1
+                    WHEN ingredient.unit = 'mg' THEN 1/1000
+                    WHEN ingredient.unit = 'microg' THEN 1/1000000
                     ELSE 0
                     END
                     ) *
@@ -718,14 +719,20 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
                     LEFT JOIN myAPI_fooddata as food_data
                     ON ingredient.food_data_id = food_data.id
                     LEFT JOIN myAPI_nutritionaldata AS nutrition
+                    ON food_data.id = nutrition.parent_food_id
+                    LEFT JOIN myAPI_useraccount AS useraccount
+                    ON recipe.username = useraccount.username
                     WHERE 
-                    (nutrition.name = 'salt' AND nutrition.value <= {salt_value})  OR 
+                    recipe.is_hidden = 0 AND
+                    (recipe.is_private = 0 OR (recipe.is_private = 1 AND recipe.username = '{username}')) AND
+                    ((nutrition.name = 'salt' AND nutrition.value <= {salt_value})  OR 
                     (nutrition.name = 'free_sugars' AND nutrition.value <= {sugar_value}) OR
                     (nutrition.name = 'fat' AND nutrition.value <= {fat_value}) OR
                     (nutrition.name = 'energy_kj' AND nutrition.value <= {energy_kj_value}) OR
                     (nutrition.name = 'energy_kcal' AND nutrition.value <= {energy_kcal_value}) OR
-                    (nutrition.name = 'saturated_fat' AND nutrition.value <= {sat_fat_value})) 
+                    (nutrition.name = 'saturated_fat' AND nutrition.value <= {sat_fat_value})))
             '''.format(
+                username=kwargs['username'],
                 salt_value=gov_recommendation[age][gender]['salt'],
                 sugar_value=gov_recommendation[age][gender]['free_sugars'],
                 fat_value=gov_recommendation[age][gender]['fat'],
@@ -735,28 +742,13 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
             )
 
             recipe_recommended = []
-            for element in random.shuffle(sorted_percent[:5])[:3]:
-                print(element[0])
+            random.shuffle(sorted_percent[:5])
+            for element in sorted_percent[:3]:
+
                 recipe_max_id = Recipe.objects.raw(
                     '''
-                    SELECT recipe_outer.id FROM
-                    (SELECT recipe_inner.id, ingredient.id, ingredient.food_data_id, ingredient.ingredient_quantity, ingredient.ingredient_unit, food_data.id, food_data.amount_in_grams, nutrition.id, nutrition.value, nutrition.unit, nutrition.name, 
-                    MAX(ingredient.ingredient_quantity / food_data.amount_in_grams * 
-                    (CASE 
-                    WHEN ingredient.ingredient_unit = 'g' THEN 1
-                    WHEN ingredient.ingredient_unit = 'mg' THEN 1/1000
-                    WHEN ingredient.ingredient_unit = 'microg' THEN 1/1000000
-                    ELSE 0
-                    END
-                    ) *
-                    nutrition.value)
-                    FROM {sql_sub_inner} AS recipe_inner
-                    LEFT JOIN myAPI_recipeingredient AS ingredient
-                    ON recipe_inner.id = ingredient.recipe_id
-                    LEFT JOIN myAPI_fooddata as food_data
-                    ON ingredient.food_data_id = food_data.id
-                    LEFT JOIN myAPI_nutritionaldata AS nutrition
-                    WHERE nutrition.name = '{name}') AS recipe_outer
+                    SELECT recipe.id FROM
+                    {sql_sub_inner} AS recipe
                     '''.format(sql_sub_inner=sql_sub_inner, name=element[0]))
 
                 try:
@@ -795,7 +787,7 @@ class PersonalRecipeViewSet(viewsets.ModelViewSet):
                 recipe &= self.queryset.filter(query_together)
 
             serializer = RecipeTitleSerializer(
-                recipe.order_by('last_used')[:30], many=True)
+                recipe.extra(select={'length': 'Length(title)'}).order_by('-last_used')[:30], many=True)
             return Response(serializer.data)
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -844,6 +836,7 @@ class FoodDataViewSet(viewsets.ModelViewSet):
 
         # https://docs.djangoproject.com/en/4.0/ref/models/expressions/
         # https://stackoverflow.com/questions/4824759/django-query-using-contains-each-value-in-a-list
+        # https://stackoverflow.com/questions/12804801/django-how-to-sort-queryset-by-number-of-character-in-a-field
         if search_query is not None:
             query_together = Q()
             search_query_clean = search_query.split(' ')
@@ -856,14 +849,39 @@ class FoodDataViewSet(viewsets.ModelViewSet):
         else:
             food_data = self.queryset.filter(
                 is_private=False, is_hidden=False)
+
         serializer = SimpleFoodDataSerializer(
-            food_data.order_by('last_used'), many=True)
+            food_data.extra(select={'length': 'Length(name)'}).order_by('-last_used', 'length'), many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         if request.user.is_authenticated == False:
             return Response({'you need to log in to upload.'}, status.HTTP_401_UNAUTHORIZED)
-        return super().create(request, *args, **kwargs, context={'request': request})
+
+        if request.user.username != request.data['uploader']:
+            return Response({'uploader must be the username of the account uploading.'}, status.HTTP_401_UNAUTHORIZED)
+        serializer = FoodDataSerializer(
+            data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        if request.user.is_authenticated == False:
+            return Response({'you need to log in to upload.'}, status.HTTP_401_UNAUTHORIZED)
+        food_data = get_object_or_404(FoodData, id=kwargs['id'])
+        if food_data.is_hidden:
+            return Response({'not found.'}, status.HTTP_404_UNAUTHORIZED)
+        if food_data.uploader != request.user:
+            return Response({'you are not the owner.'}, status.HTTP_401_UNAUTHORIZED)
+
+        serializer = FoodDataSerializer(
+            food_data, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({'not found.'}, status.HTTP_404_UNAUTHORIZED)
 
 
 class PersonalFoodDataViewSet(viewsets.ModelViewSet):
@@ -891,13 +909,13 @@ class PersonalFoodDataViewSet(viewsets.ModelViewSet):
                 uploader=kwargs['username'], is_hidden=False)
 
         serializer = SimpleFoodDataSerializer(
-            food_data.order_by('last_used'), many=True)
+            food_data.extra(select={'length': 'Length(name)'}).order_by('-last_used', 'length'), many=True)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         # due to possibilty of data being used in the past data is not completely deleted, only disallows future usage and deletes image, but data is still referenced in records
         food_data = get_object_or_404(
-            self.queryset, owner=kwargs['username'], id=kwargs['myfood_id'])
+            self.queryset, uploader=kwargs['username'], id=kwargs['myfood_id'])
         food_data.main_img.delete()
         food_data.is_hidden = True
         food_data.save()

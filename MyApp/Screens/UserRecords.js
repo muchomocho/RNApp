@@ -16,6 +16,7 @@ import LoadingView from "../Components/LoadingView";
 import { formatDate } from "../API/helper";
 import TabSwitch from "../Components/TabSwitch";
 import SubuserBanner from "../Components/SubuserBanner";
+import RecipeList from "../Components/Recipe/RecipeList";
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator(); 
@@ -225,28 +226,18 @@ function UserRecord(props) {
         );
     };
 
+    const recipeRecommendation = () => {
+        return <RecipeList navigation={props.navigation} isRecommendation={true}/>
+    };
+
     const components = [
         { id: 1, title: 'graph', component: plot() }, 
         { id: 2, title: 'records', component: mealRecordList() }, 
-        //{ id: 3, title: 'button', component: createRecordButton() }
+        { id: 3, title: 'recommendation', component: recipeRecommendation() }
     ];
 
     
     return(
-        
-        // <FlatList
-        // data={components}
-        // renderItem={
-        //     ({item}) => 
-        //         item.component
-        // }
-        // keyExtractor={item => item.id}
-        // ListFooterComponent={
-        //     <View style={styles.footer}>
-    
-        //     </View>
-        // }
-        // />
         <>
             <SubuserBanner/>
             <TabSwitch titleComponentArray={components} />
@@ -265,7 +256,7 @@ const styles = StyleSheet.create({
         //marginTop: '5%',
         //marginLeft: '2.5%',
 
-        elevation: 3,
+        elevation: 1,
         shadowColor: '#eee',
         shadowRadius: 0,
         shadowOpacity: 0.2,

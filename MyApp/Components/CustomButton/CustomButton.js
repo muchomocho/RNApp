@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Text, TextInput, View, StyleSheet, Pressable, TouchableOpacity } from 'react-native';
 
+// derived from 
+// https://www.youtube.com/watch?v=ALnJLbjI7EY&t=1837s&ab_channel=notJust%E2%80%A4dev
+
 export default function CustomButton({ onPress, text, buttonStyle, textStyle }) {
 
     return (

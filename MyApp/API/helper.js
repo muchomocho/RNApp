@@ -1,13 +1,13 @@
 export const formatToFormdata = (body) => {
     var formdata = new FormData();
-    console.log(body)
+ 
     const extra = [];
     var arr = body.nutrient_data;
     var newBody = body;
     arr = arr.map((element, index) => {
-        console.log(element.name)
+
         if (element.name == 'energy') {
-            console.log('isenergy')
+  
             const newname = `${element.name}_${element.unit}`
             var newValueOther = 0;
             var newNameOther = '';
@@ -27,9 +27,7 @@ export const formatToFormdata = (body) => {
                 value: newValueOther,
                 unit: newUnitOther
             });
-            console.log({name: newname,
-                value: element.value,
-                unit: element.unit})
+
             return {
                 name: newname,
                 value: element.value,
@@ -44,20 +42,19 @@ export const formatToFormdata = (body) => {
     if (extra.length > 0) {
         arr = arr.concat(extra);
     }
-    console.log('ex', extra)
-    console.log('arr', arr)
+
     newBody.nutrient_data = arr;
 
     const formatArray = (formdata, arrayKey, value) => {
         if (typeof(value) !== 'object' || typeof(value) == null || typeof(value) == undefined) {
             if (typeof(value) == 'string' && value.match(/^\d+(\.\d{1,20})?$/)) {
-                console.log('match', value)
+             
                 return formdata.append(`${arrayKey}`, parseFloat(value));
             }
             return formdata.append(`${arrayKey}`, value);
         }
         for (var key in value) {
-            console.log('key', key)
+      
             if (Object.prototype.hasOwnProperty.call(value, key)) {
                 if (Array.isArray(value)) {
                     formatArray(formdata, `${arrayKey}[${key}]`, value[key]);
@@ -142,6 +139,24 @@ export const formatDate = (date) => {
     return (
         year + '-' + digitFormat(month) + '-' + digitFormat(day)
     );
+};
+
+export const unitConverter = (targetUnit, fromUnit) => {
+    const multiplier = (unit) => {
+        if (unit == 'g') return 1;
+        if (unit == 'mg') return 1000;
+        if (unit == 'microg') return 1000000;
+    };
+
+    if (target == from) {
+        return 1;
+    }
+    
+    return multiplier(targetUnit) / multiplier(fromUnit)
+};
+
+export const clean = (text) => {
+    return text.replace('_kcal', '').replace('_kj', '').replace('_', ' ').trim();
 };
 
 export const lessThanNutrients = ['free_sugars', 'fat', 'saturated_fat', 'energy_kj', 'energy_kcal', 'salt']

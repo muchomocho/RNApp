@@ -10,8 +10,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setSubuserArray, setCurrentSubuser, setUser, setLogout } from '../../redux/userSlice'
 import LoadingView from "../../Components/LoadingView";
 import CustomButton from "../../Components/CustomButton";
+import { clean } from '../../API/helper'
 
-function RecipeList({ navigation, isRecording=false }) {
+function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
 
     const [data, setData] = useState([]);
@@ -22,22 +23,38 @@ function RecipeList({ navigation, isRecording=false }) {
     // https://reactnative.dev/docs/network
     const getRecipe = async (query='', myrecipe=false) => {
         try {
-            const isLoggedin = (user != undefined && typeof(user.username) == 'string'  && user.username !== '');
-            const baseEndpoint = ((isMyRecipe || myrecipe) && isLoggedin) ? `api/useraccounts/${user.username}/myrecipes/` : 'api/recipes/'
-            const endpoint = query == '' ? baseEndpoint : `${baseEndpoint}${query}`
-            const response = await ServerRequest.httpRequest({
-                method: 'GET', 
-                endpoint: endpoint,
-                navigation: navigation,
-                isAuthRequired: isLoggedin
-            });
-            const json = response.json;
-            setData(json);
+                var endpoint = ''
+                var isLoggedin = false
+                if (isRecommendation) {
+                    endpoint = `api/useraccounts/${user.username}/subuser/${currentSubuser.name}/reciperecommendation/`;
+                    isLoggedin = true;
+                }
+                else {
+                    isLoggedin = (user != undefined && typeof(user.username) == 'string'  && user.username !== '');
+                    const baseEndpoint = ((isMyRecipe || myrecipe) && isLoggedin) ? `api/useraccounts/${user.username}/myrecipes/` : 'api/recipes/'
+                    endpoint = query == '' ? baseEndpoint : `${baseEndpoint}${query}`
+                }
+                setLoading(true);
+                const response = await ServerRequest.httpRequest({
+                    method: 'GET', 
+                    endpoint: endpoint,
+                    navigation: navigation,
+                    isAuthRequired: isLoggedin
+                });
+                setLoading(false);
+                if (response.response.status == 200) {
+                    setData(response.json);
+                    setLoading(false);
+                } else {
+                    setData([]);
+                    setLoading(false);
+                }
+        } catch (error) {
+            setData([]);
             setLoading(false);
-          } catch (error) {
-            console.error(error);
-          } 
+        } 
     };
+
 
     const onSearch = (searchQuery) => {
         setLoading(true);
@@ -49,7 +66,12 @@ function RecipeList({ navigation, isRecording=false }) {
         const reload = navigation.addListener('focus', () => {
           // The screen is focused
           // Call any action
-          getRecipe();
+          if (isRecommendation) {
+            setMyRecipe(true);
+            getRecipe();
+          } else {
+            setMyRecipe(false);
+          }
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
@@ -65,23 +87,29 @@ function RecipeList({ navigation, isRecording=false }) {
 
         if (typeof(item.main_img)=='string' && item.main_img != '') {
             image = 
-                <Image
-                    resizeMode="contain"
-                    resizeMethod="scale"
-                    style={styles.image}
-                    source={{uri: url}}
-                />
+                <View style={styles.imageContainer} >
+                    <Image
+                        resizeMode="center"
+                        resizeMethod="resize"
+                        style={styles.image}
+                        source={{uri: url}}
+                    />
+                </View>
         }
        
         return(
             <TouchableOpacity 
             style={styles.recipeContainer}
             onPress={() => {navigation.navigate('Recipe detail', {recipe: item});}}
-            >
+            >   
                 { image }
                 <View style={styles.detail}>
                     <Text style={styles.detailTitle}>{item.title}</Text>
                     <Text style={styles.detailText}>created by {item.user}</Text>
+                    { 
+                        isRecommendation &&
+                        <Text>High in: { clean(item.high_in) } </Text>
+                    }
                 </View>
             </TouchableOpacity>
         )
@@ -92,19 +120,12 @@ function RecipeList({ navigation, isRecording=false }) {
             <View style={styles.buttonContainer}>
                 <CustomButton
                 buttonStyle={styles.button}
+                textStyle={styles.buttonText}
                 text="+"
-                textStyle={{fontSize: 20}}
-                onPress={()=>{}}
+                onPress={()=>{ navigation.navigate('Create recipe') }}
                 />
             </View>
         );
-    };
-
-    const switchIsMyRecipe = () => {
-        setMyRecipe(!isMyRecipe);
-        if (isMyRecipe) {
-            getRecipe();
-        }
     };
 
     const onMyRecipe = () => {
@@ -122,28 +143,39 @@ function RecipeList({ navigation, isRecording=false }) {
         }
     };
 
-    const header = () => {
+    const tabs = () => {
         return (
-            <View style={styles.headerContainer}>
-                <View style={styles.tabContainer} >
+            <View style={styles.tabContainer} >
+                <View style={styles.switchMyButtonContainer}>
+                    <View  style={[styles.title, !isMyRecipe? styles.focused : null]}>
+                        <TouchableRipple style={styles.tab} onPress={onAllRecipe}> 
+                            <Text > All recipe </Text> 
+                        </TouchableRipple>
+                    </View>
+                </View>
+                {
+                    user.username !== '' &&
                     <View style={styles.switchMyButtonContainer}>
-                        <View  style={[styles.title, !isMyRecipe? styles.focused : null]}>
-                            <TouchableRipple style={styles.tab} onPress={onAllRecipe}> 
-                                <Text > All recipe </Text> 
+                        <View  style={[styles.title, isMyRecipe ? styles.focused : null]}>
+                            <TouchableRipple style={styles.tab} onPress={onMyRecipe}> 
+                                <Text > My recipe </Text> 
                             </TouchableRipple>
                         </View>
                     </View>
-                    {
-                        user.username !== '' &&
-                        <View style={styles.switchMyButtonContainer}>
-                            <View  style={[styles.title, isMyRecipe ? styles.focused : null]}>
-                                <TouchableRipple style={styles.tab} onPress={onMyRecipe}> 
-                                    <Text > My recipe </Text> 
-                                </TouchableRipple>
-                            </View>
-                        </View>
-                    }   
-                </View>
+                }   
+            </View>
+        );
+    };
+
+    const header = () => {
+        return (
+            <View style={styles.headerContainer}>
+                {
+                    !isRecommendation &&
+                    tabs()
+                }
+                {
+                    !isRecommendation &&
                 <View style={styles.searchBarContainer}>
                     <SearchBar
                     value={searchValue}
@@ -151,6 +183,7 @@ function RecipeList({ navigation, isRecording=false }) {
                     onSearch={()=>{onSearch(searchValue)}}
                     />
                 </View>
+                }
             </View>
         );
     };
@@ -175,7 +208,7 @@ function RecipeList({ navigation, isRecording=false }) {
             renderItem = {({item}) => {
                 return renderData(item)
             }}
-            keyExtractor = {item => `${item.id}`}
+            keyExtractor = {item => `${item.id}${item.title}${item.high_in}`}
             
             ListFooterComponent={
                 <Text></Text>
@@ -191,11 +224,12 @@ function RecipeList({ navigation, isRecording=false }) {
             { 
                 (
                     !isRecording &&
+                    !isRecommendation &&
                     user != undefined &&
-                    currentSubuser != undefined &&
+                    
                     typeof(user.username) == 'string' &&
-                    typeof(currentSubuser.name == 'string') &&
-                    user.username.length > 0 && currentSubuser.name.length > 0
+                    
+                    user.username.length > 0 
                 ) && createButton() 
             }
         </View>
@@ -254,10 +288,14 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         overflow: 'hidden'
     },
+    imageContainer: {
+        flex: 1,
+    },
     image: {
-        flexGrow: 1,
-        backgroundColor: '#eee',
-        
+        flex:1,
+        width: null,
+        height: '100%',
+        borderRadius: 15,
     },
     tabContainer: {
         width: '100%',
@@ -282,15 +320,24 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         position: 'absolute',
-        bottom: 60,
+        bottom: 90,
         right: 20,
     },
     button: {
-        backgroundColor: '#fff',
+   
         width: 70,
         height: 70,
         borderRadius: 45,
         elevation: 10,
+
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 30,
+        alignSelf: 'center',
+        height: '100%',
+        alignItems: 'center',
+        textAlignVertical: 'center'
     },
 });
 

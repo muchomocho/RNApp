@@ -7,9 +7,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setFoodName, addNutrition, deleteNutritionByName, clearAllFoodData, updateNutrition, addEmpty, setFoodAmount, setImage } from '../../redux/foodDataSlice'
 import { addRecordSelection } from '../../redux/mealRecordSlice'
 import CustomInput from '../CustomInput';
-import * as ImagePicker from 'expo-image-picker';
-import {amountFormatter, formatToFormdata} from '../../API/helper';
+import {amountFormatter, formatToFormdata, clean} from '../../API/helper';
 import { httpRequest } from '../../API/ServerRequest';
+import { Checkbox } from 'react-native-paper';
+import ImagePickerComponent from '../ImagePicker/ImagePickerComponent';
+
 
 export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=false}) {
     
@@ -18,10 +20,7 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
 
     const dispatch = useDispatch();
 
-    const [camerastatus, requestCameraPermission] = ImagePicker.useCameraPermissions();
-    const [mediastatus, requestMediaPermission] = ImagePicker.useMediaLibraryPermissions();
-
-    console.log(1)
+    const [isPrivate, setIsPrivate] = useState(true);
 
     const submitAlert = (isNameValid, isAmountValid, isNutritionValid) => {
         Alert.alert(
@@ -67,35 +66,37 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
     
         if (isNameValid && isAmountValid && isNutritionValid) {
             
-            var obj = { uploader: user.username, source: user.username, name: foodName, amount_in_grams, nutrient_data: nutrient_data };
+            var obj = { uploader: user.username, source: user.username, name: foodName, amount_in_grams, nutrient_data: nutrient_data, is_private: isPrivate };
 
             var formdata = formatToFormdata(obj)
             if (image.uri !== '' && image.name !== '' && image.type !== '') {
                 formdata.append( 'main_img', {uri: image.uri, name: image.name, type: image.type} )
             }
             
+            console.log(formdata)
             try {
-                var request = {
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'multipart/form-data; boundary=---randomawesomeboundaryforservertoknowboundary'
-                    },
-                    body: formdata,
-                    isAuthRequired: true,
-                    navigation: navigation
-                };
+                var method = '';
+                var endpoint = '';
 
                 if (isUpdate) {
-                    request.method = 'PUT';
-                    request.endpoint = `api/foodata/${id}`;
+                    method = 'PUT';
+                    endpoint = `api/fooddata/${id}/`;
                 }
                 else {
-                    request.method = 'POST';
-                    request.endpoint = `api/foodata/`;
+                    method = 'POST';
+                    endpoint = `api/fooddata/`;
                 }
-
+                
                 const result = await httpRequest({
-                        request
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'multipart/form-data; boundary=---randomawesomeboundaryforservertoknowboundary'
+                        },
+                        method: method,
+                        body: formdata,
+                        endpoint: endpoint,
+                        isAuthRequired: true,
+                        navigation: navigation
                     });
                 console.log('res', result.json)
 
@@ -137,11 +138,8 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
             }
             return <Picker.Item key={index} label={element} value={element} />
         });
-    };
-
-    const clean = (text) => {
-        return text.replace('_kcal', '').replace('_kj', '').replace('_', ' ').trim();
-    };
+    }
+    
 
     const renderNutritionNamePickerItems = (id) => {
         var names = Object.keys(unitJson)
@@ -231,6 +229,10 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
         dispatch(addEmpty());
     };
 
+    const onPressClear = () => {
+        dispatch(clearAllFoodData());
+    }
+
     const onFoodNameChange = (text) => {
         dispatch(setFoodName(text));
     };
@@ -239,68 +241,13 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
         dispatch(setFoodAmount(text));
     };
 
-    const pickImage = async () => {
-        try {
-            if (Platform.OS === 'ios') {
-                await requestMediaPermission();
-                if (mediastatus !== 'granted') {
-                    return
-                }
-            }
-            // No permissions request is necessary for launching the image library
-            let result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                //aspect: [4, 3],
-                quality: 1,
-            });
-        
-            if (!result.cancelled) {
-                var uri = result.uri;
-                var ext = uri.substr(result.uri.lastIndexOf('.') + 1);
-                if (ext == 'jpg') { ext = 'jpeg' }
-                dispatch(setImage({
-                    uri: result.uri,
-                    name: `${user.username}${new Date().getTime()}.${ext}`,
-                    type: `${result.type}/${ext}`,
-                }));
-            }
-        }
-        catch (error) {
-
-        }
-      };
-    const pickFromCamera = async () => {
-        try {
-            if (Platform.OS === 'ios') {
-                await requestCameraPermission();
-                if (camerastatus !== 'granted') {
-                    return
-                }
-            }
-            // No permissions request is necessary for launching the image library
-            let result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                //aspect: [4, 4],
-                quality: 1,
-            });
-        
-            if (!result.cancelled) {
-                var uri = result.uri;
-                var ext = uri.substr(result.uri.lastIndexOf('.') + 1);
-                if (ext == 'jpg') { ext = 'jpeg' }
-                dispatch(setImage({
-                    uri: result.uri,
-                    name: `${user.username}${new Date().getTime()}.${ext}`,
-                    type: `${result.type}/${ext}`,
-                }));
-            }
-        }
-        catch (error) {
-
-        }
-    };
+    const onImageSelect = (uri, type, ext) => {
+        dispatch(setImage({
+            uri: uri,
+            name: `${user.username}${new Date().getTime()}.${ext}`,
+            type: `${type}/${ext}`,
+        }));
+    }; 
     
     return(
     
@@ -341,14 +288,7 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
                         </View>) : null
                     }
 
-                    <CustomButton
-                        text="open photos"
-                        onPress={pickImage}
-                    />
-                    <CustomButton
-                        text="open camera"
-                        onPress={pickFromCamera}
-                    />
+                    <ImagePickerComponent onImageSelect={onImageSelect} />
                 </View>
             }
             style={styles.list}
@@ -363,9 +303,24 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
                 <CustomButton
                 style={styles.button}
                 onPress={onPressAddEmpty}
-                text={'+'}
+                text={'add nutritional data'}
                 />
 
+                <CustomButton
+                style={styles.button}
+                onPress={onPressClear}
+                text={'clear'}
+                />
+
+                <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+                    <Checkbox 
+                        status={isPrivate ? 'checked' : 'unchecked'}
+                        onPress={() => {
+                        setIsPrivate(!isPrivate);
+                        }}
+                    /> 
+                    <Text> Make this only for myself </Text>
+                </View>
                 <CustomButton 
                 onPress={onPress} 
                 text={'submit'}

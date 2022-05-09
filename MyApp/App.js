@@ -25,11 +25,11 @@ export default function App() {
           <Stack.Screen name={'Tab'} component={BottomTab}/>
           <Stack.Screen name={'Create profile'} component={CreateProfile}/>
           <Stack.Screen name={'Create record'} 
-          component={CreateRecord}
-          initialParams={{ 
-            isShowManualModal: false,
-            isEditingFood: false,
-          }}
+            component={CreateRecord}
+            initialParams={{ 
+              isShowManualModal: false,
+              isEditingFood: false,
+            }}
           />
           <Stack.Screen 
           name={'Confirm fooddata'} 

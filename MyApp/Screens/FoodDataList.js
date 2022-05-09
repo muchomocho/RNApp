@@ -3,12 +3,15 @@ import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Ima
 import { FoodDataSelection } from "../Components/FoodData";
 import SubuserBanner from "../Components/SubuserBanner";
 import CheckFoodData from "./CheckFoodData";
+import { FloatButton } from "../Components/FoodData";
 
 function FoodDataList({ navigation }) {
     return (
         <View style={{height: '100%'}}>  
             <SubuserBanner/>
             <FoodDataSelection navigation={navigation} isRecording={false}/>
+            <FloatButton navigation={navigation} showManualButton />
+
         </View>
     );
 };

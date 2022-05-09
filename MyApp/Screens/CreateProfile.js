@@ -28,7 +28,7 @@ function CreateProfile({ navigation, isupdate }) {
         try {
             const username = await Authentication.getUsername();
             const result = await APIrequest.httpRequest({
-                endpoint: 'api/useraccounts/' + username + '/userdata/',
+                endpoint: `api/useraccounts/${username}/subuser/`,
                 method: "POST",
                 body: {
                     name: name,

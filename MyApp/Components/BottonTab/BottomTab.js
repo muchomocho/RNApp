@@ -78,7 +78,7 @@ const BottomTab = () => {
             
             { /* we want to show tabs on these pages but not their icons in the tabs, so they are included here but hidden by style. */ }
             <Tab.Screen 
-            name='Create' 
+            name='Create recipe' 
             component={CreateRecipe} 
             options={{
                 tabBarItemStyle: {
@@ -113,23 +113,6 @@ const BottomTab = () => {
                 }}}
             />
 
-            {/* <Tab.Screen
-            name='Create record'
-            component={CreateRecord}
-            options={{
-                tabBarItemStyle:{
-                    ...styles.hiddenItem
-                }}}
-            />
-
-            <Tab.Screen
-            name='Confirm fooddata'
-            component={ConfirmFoodData}
-            options={{
-                tabBarItemStyle:{
-                    ...styles.hiddenItem
-                }}}
-            /> */}
         </Tab.Navigator>
     )
 }

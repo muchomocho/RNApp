@@ -7,7 +7,6 @@ function LogoutAlert({navigation}) {
 
     const { logoutAlert } = useSelector(state => state.user);
     const dispatch = useDispatch();
-    console.log('la', logoutAlert)
     
     if (logoutAlert) {
         dispatch(setLogoutAlertOff());
