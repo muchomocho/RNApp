@@ -2,48 +2,50 @@ export const formatToFormdata = (body) => {
     var formdata = new FormData();
  
     const extra = [];
-    var arr = body.nutrient_data;
-    var newBody = body;
-    arr = arr.map((element, index) => {
 
-        if (element.name == 'energy') {
-  
-            const newname = `${element.name}_${element.unit}`
-            var newValueOther = 0;
-            var newNameOther = '';
-            var newUnitOther = '';
-            const converterKcalToKj = 4.184
-            if (element.unit == 'kcal') {
-                var newValueOther = (parseFloat(element.value) * converterKcalToKj).toFixed(0);
-                newNameOther = `energy_kj`;
-                newUnitOther = 'kj';
-            } else {
-                var newValueOther = (parseFloat(element.value) / converterKcalToKj).toFixed(0);
-                newNameOther = `energy_kcal`;
-                newUnitOther = 'kcal';
+    if (Object.prototype.hasOwnProperty.call(body, 'nutrient_data')) {
+        var arr = body.nutrient_data;
+        arr = arr.map((element, index) => {
+
+            if (element.name == 'energy') {
+    
+                const newname = `${element.name}_${element.unit}`
+                var newValueOther = 0;
+                var newNameOther = '';
+                var newUnitOther = '';
+                const converterKcalToKj = 4.184
+                if (element.unit == 'kcal') {
+                    var newValueOther = (parseFloat(element.value) * converterKcalToKj).toFixed(0);
+                    newNameOther = `energy_kj`;
+                    newUnitOther = 'kj';
+                } else {
+                    var newValueOther = (parseFloat(element.value) / converterKcalToKj).toFixed(0);
+                    newNameOther = `energy_kcal`;
+                    newUnitOther = 'kcal';
+                }
+                extra.push({
+                    name: newNameOther,
+                    value: newValueOther,
+                    unit: newUnitOther
+                });
+
+                return {
+                    name: newname,
+                    value: element.value,
+                    unit: element.unit
+                }
             }
-            extra.push({
-                name: newNameOther,
-                value: newValueOther,
-                unit: newUnitOther
-            });
-
             return {
-                name: newname,
-                value: element.value,
-                unit: element.unit
+                ...element,
+                name: element.name.replace(' ', '_'),
             }
+        });
+        if (extra.length > 0) {
+            arr = arr.concat(extra);
         }
-        return {
-            ...element,
-            name: element.name.replace(' ', '_'),
-        }
-    });
-    if (extra.length > 0) {
-        arr = arr.concat(extra);
-    }
 
-    newBody.nutrient_data = arr;
+        body.nutrient_data = arr;
+    }
 
     const formatArray = (formdata, arrayKey, value) => {
         if (typeof(value) !== 'object' || typeof(value) == null || typeof(value) == undefined) {
@@ -69,9 +71,9 @@ export const formatToFormdata = (body) => {
     };
     
     
-    for (var key in newBody) {
-        if (Object.prototype.hasOwnProperty.call(newBody, key)) {
-            formatArray(formdata, key, newBody[key]);
+    for (var key in body) {
+        if (Object.prototype.hasOwnProperty.call(body, key)) {
+            formatArray(formdata, key, body[key]);
         }
     }
 

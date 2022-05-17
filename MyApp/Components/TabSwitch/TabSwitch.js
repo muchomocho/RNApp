@@ -81,9 +81,7 @@ export default function TabSwitch({titleComponentArray=[]}) {
 const styles = StyleSheet.create({
     container: {
         //backgroundColor: '#000',
-        height: '100%',
-        width: '100%',
-        alignSelf: 'center',
+        flex:1,
     },
     tabContainer: {
         width: '100%',
@@ -107,7 +105,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#561ddb'
     },
     componentContainer: {
-        height: '100%'
+        flex:1
     },
   });
 

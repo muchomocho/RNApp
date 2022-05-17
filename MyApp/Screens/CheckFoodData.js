@@ -56,6 +56,7 @@ function CheckFoodData (props) {
                 fooddata={fooddata}
                 status={status}
                 isRecording={props.route.params.isRecording}
+                isRecipe={props.route.params.isRecipe}
             />
         );
     }

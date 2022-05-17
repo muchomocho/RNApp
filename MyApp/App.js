@@ -32,8 +32,8 @@ export default function App() {
             }}
           />
           <Stack.Screen 
-          name={'Confirm fooddata'} 
-          component={CheckFoodData}
+            name={'Check fooddata'} 
+            component={CheckFoodData}
           />
           <Stack.Screen 
             name='Sign in' 

@@ -362,6 +362,8 @@ const styles = StyleSheet.create({
         flex: 5
     },
     picker: {
+        borderColor: '#000',
+        borderWidth: 1,
         margin: 10, 
         borderRadius: 10,
     },

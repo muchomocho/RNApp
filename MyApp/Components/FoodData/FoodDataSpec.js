@@ -9,9 +9,10 @@ import { addRecordSelection, clearRecord } from '../../redux/mealRecordSlice'
 import { httpRequest } from '../../API/ServerRequest';
 import { amountFormatter, clean } from '../../API/helper';
 import { clearAllFoodData, setFoodAmount, setFoodName, setNutrition, setFoodID, setImage, addNutrition } from '../../redux/foodDataSlice';
+import { addIngredient } from '../../redux/recipeSlice';
 import * as Constant from '../../Constant/Constant';
 
-export default function FoodDataSpec({navigation, fooddata, status, isRecording=false, isEditing=false}) {
+export default function FoodDataSpec({navigation, fooddata, status, isRecording=false, isRecipe=false}) {
 
     const { user } = useSelector(state => state.user);
     const { mealRecordContent } = useSelector(state => state.mealRecord);
@@ -39,7 +40,7 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
                 navigation: navigation,
                 isAuthRequired: true
             });
-            console.log(response.json)
+        
             if (response.response.status == 200) {
                 navigation.navigate('Fooddata')
             }
@@ -79,13 +80,19 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
     }
 
     const addToRecord = () => {
-        var mealRecordContent = {};
-        mealRecordContent.food_data = fooddata;
-        mealRecordContent.amount_in_grams = parseFloat(amount).toFixed(10);
+        var fooddataWrapper = {};
+        fooddataWrapper.food_data = fooddata;
+        fooddataWrapper.amount_in_grams = parseFloat(amount).toFixed(10);
+       
+        if (isRecipe) {
+            dispatch(addIngredient(fooddataWrapper));
+            navigation.navigate('Create recipe')
+        }
+        else {
+            dispatch(addRecordSelection(fooddataWrapper));
+            navigation.navigate('Create record')
+        }
         
-        dispatch(addRecordSelection(mealRecordContent));
-        
-        navigation.navigate('Create record')
     }
 
     const renderData = (item) => {
@@ -108,19 +115,25 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
             return (
                 // https://stackoverflow.com/questions/30203154/get-size-of-a-view-in-react-native
                 <View style={styles.foreground} onLayout={(event) => {setForegroundHeight(event.nativeEvent.layout.height);}}>
-                    <View style={[{alignContent: 'center'}, styles.amount]}>
-                        <Text> amount you had: </Text>
-                        <TextInput 
-                            style={styles.amountInput}
-                            keyboardType='numeric'
-                            onChangeText={(input)=> {
-                                input.replace(/[^0-9]/g, '');
-                                setAmount(input)
-                            }}
-                            value={amount}
-                            maxLength={4}  //setting limit of input
-                        />
-                    </View>
+                    { 
+                        !isRecipe &&
+                        <View style={[{alignContent: 'center'}, styles.amount]}>
+                            
+                                
+                            <Text> amount : </Text>
+                            <TextInput 
+                                style={styles.amountInput}
+                                keyboardType='numeric'
+                                onChangeText={(input)=> {
+                                    input.replace(/[^0-9]/g, '');
+                                    setAmount(input)
+                                }}
+                                value={amount}
+                                maxLength={4}  //setting limit of input
+                            />
+            
+                        </View>
+                    }
                     <CustomButton
                         //buttonStyle={styles.button}
                         onPress={addToRecord}

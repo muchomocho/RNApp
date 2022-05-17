@@ -251,10 +251,21 @@ function AccountProfile(props) {
                         <Text> You are not logged in. </Text>
                         <Text> Sign in to see your records. </Text>
                     </View>
-                <CustomButton
-                    text={'sign in'}
-                    onPress={()=>props.navigation.navigate('Sign in')}
-                />
+                <View>
+                    <CustomButton
+                        text={'sign in'}
+                        onPress={()=>props.navigation.navigate('Sign in')}
+                    />
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Text style={{flex: 2}}>Dont't have an account?</Text>
+                        <CustomButton
+                        modest
+                        buttonStyle={{flex: 1}}
+                        text={'sign up'}
+                        onPress={()=>props.navigation.navigate('Sign up', { isupdate: false })}   />
+                    </View>
+                </View>
+         
                 </View>
             </View>
         )

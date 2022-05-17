@@ -25,7 +25,7 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
         try {
                 var endpoint = ''
                 var isLoggedin = false
-                if (isRecommendation) {
+                if (isRecommendation && user != undefined && currentSubuser != undefined) {
                     endpoint = `api/useraccounts/${user.username}/subuser/${currentSubuser.name}/reciperecommendation/`;
                     isLoggedin = true;
                 }
@@ -240,7 +240,7 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
 const styles = StyleSheet.create({
     container: {
         marginBottom: 50,
-        height: '100%',
+        flex: 1
         //backgroundColor: '#000'
     },
     headerContainer: {

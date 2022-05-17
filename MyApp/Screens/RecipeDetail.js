@@ -11,6 +11,8 @@ import unitJson from '../assets/JSON/gov_diet_recommendation_units.json';
 import { genderMap, ageMap } from '../API/helper'
 import Svg from "react-native-svg";
 import { formatDate, lessThanNutrients } from '../API/helper';
+import { setRecipeID, setRecipeImage, setSteps, setTags, setTitle, setIngredient, addTag, addStep, addIngredient, updateIngredient, updateStep, deleteTag, deleteStep, deleteIngredient, clearAllRecipe } from '../redux/recipeSlice'
+
 
 const green = '#27ad15';
 const red = '#d93909';
@@ -25,6 +27,8 @@ function RecipeDetail(props) {
     const [isShowModal, setIsShowModal] = useState(false);
     const [isShowLegend, setIsShowLegend] = useState(false);
 
+    const dispatch = useDispatch();
+
     const getRecipeData = async () => {
         try {
             const result = await ServerRequest.httpRequest({
@@ -35,6 +39,7 @@ function RecipeDetail(props) {
             });
             if (result.response.status == 200) {
                 setData(result.json);
+
             }
         } catch (error) {
             console.log('recipedetail', error)
@@ -51,6 +56,7 @@ function RecipeDetail(props) {
             });
             if (result.response.status == 200) {
                 setNutrientData(result.json);
+                console.log('nuteitn',result.json)
             }
         } catch (error) {
             console.log('recipedetail', error)
@@ -123,7 +129,7 @@ function RecipeDetail(props) {
             </Modal>
         );
     }
-
+    console.log(data)
     const singleNutrientBox = (nutrient) => {
         if (nutrient.name == 'is_missing_value') {
             return;
@@ -237,16 +243,19 @@ function RecipeDetail(props) {
     };
 
     const onEdit = () => {
-
+        dispatch(setRecipeID(data.id));
+        dispatch(setRecipeImage({ uri: `${Constant.ROOT_URL}${data.main_img.substring(1)}`, type: '', name: '' }));
+        dispatch(setSteps(data.steps));
+        dispatch(setTags(data.tags));
+        dispatch(setTitle(data.title));
+        dispatch(setIngredient(data.ingredients));
+        props.navigation.navigate('Create recipe', {isUpdate: true})
     };
 
     const onDelete = () => {
 
     };
-console.log(data.main_img)
-console.log(typeof(data.main_img))
-console.log((data != undefined && typeof(data.main_img) == 'string' && data.main_img.length > 0))
-if ((data != undefined && typeof(data.main_img) == 'string' && data.main_img.length > 0)) {console.log(`${Constant.ROOT_URL}${data.main_img.substring(1)}`)}
+
 
     // https://reactnative.dev/docs/flatlist
     return(

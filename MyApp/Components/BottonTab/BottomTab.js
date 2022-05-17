@@ -85,6 +85,11 @@ const BottomTab = () => {
                     ...styles.hiddenItem
                 }
             }}
+            initialParams={
+                {
+                    isUpdate: false
+                }
+            }
             />
 
             <Tab.Screen 

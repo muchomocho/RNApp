@@ -11,7 +11,7 @@ import CustomButton from "../CustomButton";
 import LoadingView from "../LoadingView";
 import TabSwitch from "../TabSwitch";
 
-function FoodDataSelection({navigation, isRecording=false}) {
+function FoodDataSelection({navigation, isRecording=false, isRecipe=false}) {
     
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
     const { name: foodName, image, amount_in_grams, nutrient_data, id } = useSelector(state => state.fooddata.fooddata);
@@ -69,7 +69,7 @@ function FoodDataSelection({navigation, isRecording=false}) {
     }, [navigation]);
 
     const onPress = (id) => {
-        navigation.navigate('Confirm fooddata', { fooddataID: id, isRecording: isRecording })
+        navigation.navigate('Check fooddata', { fooddataID: id, isRecording: isRecording, isRecipe: isRecipe })
     };
 
     const renderData = (item) => {

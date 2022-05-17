@@ -114,6 +114,7 @@ class FoodDataSerializer(serializers.ModelSerializer):
             if nutrient_data['name'] in units.keys():
                 nutrient_data['value'] *= decimal.Decimal(helper.unit_converter(
                     target_unit=units[nutrient_data['name']], from_unit=nutrient_data['unit']))
+                nutrient_data['unit'] = units[nutrient_data['name']]
             NutritionalData.objects.create(
                 parent_food=food_data, **nutrient_data)
 
@@ -264,11 +265,22 @@ class RecipeSerializer(serializers.ModelSerializer):
             fields = ['text']
 
     class SimpleRecipeIngredientSerializer(serializers.ModelSerializer):
-        food_data = FoodDataSerializer()
+       # food_data = FoodDataSerializer()
 
         class Meta:
             model = RecipeIngredient
             fields = ['food_data', 'amount', 'unit']
+
+        def to_representation(self, instance):
+            data = super().to_representation(instance)
+            food_data = FoodDataSerializer(instance.food_data)
+            data.pop('food_data')
+            data['food_data'] = {
+                'id': food_data.data['id'],
+                'name': food_data.data['name'],
+                'is_private': food_data.data['is_private']}
+
+            return data
 
     class SimpleStepSerializer(serializers.ModelSerializer):
         class Meta:
@@ -284,7 +296,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ['id', 'user', 'title', 'main_img',
-                  'tags', 'ingredients', 'steps']
+                  'tags', 'ingredients', 'is_private', 'steps']
         #fields = '__all__'
 
     def create(self, validated_data):
@@ -320,11 +332,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags_data = validated_data.pop('tags')
         ingredients_data = validated_data.pop('ingredients')
         steps_data = validated_data.pop('steps')
-        image = validated_data.pop('main_img')
 
-        if os.path.exists(str(instance.main_img)):
-            os.remove(str(instance.main_img))
-        instance.main_img = image
+        if 'main_img' in validated_data:
+            image = validated_data.pop('main_img')
+            instance.main_img.delete()
+            instance.main_img = image
 
         instance.tags.all().delete()
         for tag_data in tags_data:

@@ -178,11 +178,12 @@ def recipe_nutrient(recipe_id, return_json=None, user=None):
                         continue
 
                     return_json[key] += decimal.Decimal(nutrient.value) * \
-                        (ingredient.amount / food_data.amount_in_grams) * (helper.unit_converter(ingredient.unit, 'g')) * \
+                        (ingredient.amount / food_data.amount_in_grams) * (helper.unit_converter('g', ingredient.unit)) * \
                         decimal.Decimal(helper.unit_converter(
                             units[key], nutrient.unit))
 
     return_json['is_missing_value'] = is_missing_value
+
     return return_json
 
 # Create your views here.
@@ -692,7 +693,7 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
 
             record_avg_percent = []
             for key, value in record.items():
-                if key == 'date' or key == 'salt' or key == 'free_sugars' or key == 'fat' or key == 'saturated_fat':
+                if key == 'date' or key == 'salt' or key == 'energy_kcal' or key == 'energy_kj' or key == 'free_sugars' or key == 'fat' or key == 'saturated_fat':
                     continue
                 record_avg = sum(value) / len(value)
                 record_avg_percent.append(
@@ -701,7 +702,8 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
             sorted_percent = sorted(
                 record_avg_percent, key=lambda percent: percent[1])
 
-            less_than = ['salt', 'free_sugars', 'fat', 'saturated_fat']
+            print(record_avg_percent)
+            print(sorted_percent)
             sql_sub_inner = '''
                     (SELECT recipe.id, recipe.is_private, recipe.is_hidden, ingredient.id, ingredient.food_data_id, ingredient.amount, ingredient.unit, food_data.id, food_data.amount_in_grams, nutrition.id, nutrition.value, nutrition.unit, nutrition.name, 
                     MAX(ingredient.amount / food_data.amount_in_grams * 
@@ -725,7 +727,7 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
                     WHERE 
                     recipe.is_hidden = 0 AND
                     (recipe.is_private = 0 OR (recipe.is_private = 1 AND recipe.username = '{username}')) AND
-                    ((nutrition.name = 'salt' AND nutrition.value <= {salt_value})  OR 
+                    ((nutrition.name = 'salt' AND nutrition.value <= {salt_value})  OR
                     (nutrition.name = 'free_sugars' AND nutrition.value <= {sugar_value}) OR
                     (nutrition.name = 'fat' AND nutrition.value <= {fat_value}) OR
                     (nutrition.name = 'energy_kj' AND nutrition.value <= {energy_kj_value}) OR

@@ -25,7 +25,7 @@ export const recipeSlice = createSlice({
     setTitle: (state, action) => {
         state.title = action.payload;
     },
-    setReicpeImage: (state, action) => {
+    setRecipeImage: (state, action) => {
 
         return {
             ...state, 
@@ -39,6 +39,7 @@ export const recipeSlice = createSlice({
     setSteps: (state, action) => {
         var newSteps = action.payload.map(element => {
             return { 
+                step_number: element.step_number,
                 text: element.text
              }
         });
@@ -51,12 +52,33 @@ export const recipeSlice = createSlice({
         }
     },
     setTags: (state, action) => {
-
+        var newTags = action.payload.map(element => {
+            return { 
+                text: element.text
+             }
+        });
         return {
             ...state,
-            steps: [
-                ...action.payload
+            tags: [
+                ...newTags
             ]
+        }
+    },
+    setIngredient: (state, action) => {
+        var newIngredients = action.payload.map(element => {
+            return {
+                food_data: {
+                    id: element.food_data.id,
+                },
+                name: element.food_data.name,
+                is_private: element.food_data.is_private,
+                amount: String(element.amount),
+                unit: element.unit,
+            }
+        })
+        return {
+            ...state,
+            ingredients: [...newIngredients]
         }
     },
     addStep: (state) => {
@@ -122,28 +144,57 @@ export const recipeSlice = createSlice({
     },
     addIngredient: (state, action) => {
         var exists = false
-        state.recordList.forEach((element, index) => {
-            if (state.ingredients[index].food_data.id == action.payload.food_data.id) {
-                const newValue = parseFloat(state.ingredients[index].amount) + parseFloat(action.payload.amount_in_grams);
-                state.recordList[index].amount_in_grams = String(newValue);
-                exists = true;
-            }
-        });
 
-        if (!exists) {
+        if (!state.ingredients.some((element) => element.food_data.id === action.payload.food_data.id)) {
+            
+            console.log({ 
+                ...state, 
+                ingredients: [
+                    ...state.ingredients, 
+                    {
+                        food_data: {
+                            id: action.payload.food_data.id,
+                        },
+                        name: action.payload.food_data.name,
+                        is_private: action.payload.food_data.is_private,
+                        amount: 0,
+                        unit: 'g',
+                    }
+
+                ]
+            })
             return { 
                 ...state, 
                 ingredients: [
-                    ...state.recordList, 
-                    action.payload
+                    ...state.ingredients, 
+                    {
+                        food_data: {
+                            id: action.payload.food_data.id,
+                        },
+                        name: action.payload.food_data.name,
+                        is_private: action.payload.food_data.is_private,
+                        amount: 0,
+                        unit: 'g',
+                    }
+
                 ]
             }
+
         }
     },
+    updateIngredient: (state, action) => {
+        const index = state.ingredients.findIndex((element) => element.food_data.id === action.payload.food_data.id)
+
+        if (index >= 0){
+            state.ingredients[index] = action.payload;
+        }
+
+    },
     deleteIngredient: (state, action) => {
-        for (var index in state.recordList) {
-            if (state.recordList[index].food_data.id == action.payload) {
-                state.recordList.splice(index, 1)
+        for (var index in state.ingredients) {
+            console.log('id', state.ingredients[index].food_data.id, 'id2', action.payload)
+            if (state.ingredients[index].food_data.id == action.payload) {
+                state.ingredients.splice(index, 1)
                 return;
             }
         }
@@ -167,6 +218,6 @@ export const recipeSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { setRecipeID, setRecipeImage, setSteps, setTags, setTitle, addTag, addStep, addIngredient, updateStep, deleteTag, deleteStep, deleteIngredient } = recipeSlice.actions
+export const { setRecipeID, setRecipeImage, setSteps, setTags, setTitle, setIngredient, updateIngredient, addTag, addStep, addIngredient, updateStep, deleteTag, deleteStep, deleteIngredient, clearAllRecipe } = recipeSlice.actions
 
 export default recipeSlice.reducer

@@ -201,8 +201,7 @@ class UserMealRecord(models.Model):
     #day_record = models.ForeignKey(UserDayRecord, related_name='meal_record', on_delete=models.CASCADE)
     subuser = models.ForeignKey(
         Subuser, related_name='user_meal_record', on_delete=models.CASCADE)
-    time = models.DateTimeField(default=datetime.strftime(
-        timezone.now(), '%Y-%m-%d %H:%M:%S'))
+    time = models.DateTimeField(default=timezone.now)
     title = models.CharField(max_length=255, validators=[
         RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]+$', message='Name must consist of alphanumeric, underscore or hyphen',
                        code=None, inverse_match=None, flags=0), ])
