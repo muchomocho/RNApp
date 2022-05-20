@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
         //backgroundColor: '#000',
         //alignContent: 'center'
         marginTop: 50,
-        height: '100%'
+        flex: 1
     },
     buttonContainer: {
         position: 'absolute',

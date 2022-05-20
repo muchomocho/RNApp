@@ -11,7 +11,6 @@ function FoodDataList({ navigation }) {
             <SubuserBanner/>
             <FoodDataSelection navigation={navigation} isRecording={false}/>
             <FloatButton navigation={navigation} showManualButton />
-
         </View>
     );
 };

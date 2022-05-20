@@ -103,7 +103,7 @@ function UserRecord(props) {
                 endpoint: 'api/useraccounts/'
                 + user.username
                 + '/subuser/'
-                + currentSubuser.name
+                + currentSubuser.id
                 + '/userrecord/'
                 + formatDate(date) + '/'
                 + 'from/' + calculateDate(dateRange) + '/'
@@ -128,7 +128,7 @@ function UserRecord(props) {
                 console.log(recordDate)
                 const result = await APIRequest.httpRequest({
                     method: 'GET',
-                    endpoint: `api/useraccounts/${user.username}/subuser/${currentSubuser.name}/usermealrecord/?date=${dates[recordDate]}`,
+                    endpoint: `api/useraccounts/${user.username}/subuser/${currentSubuser.id}/usermealrecord/?date=${dates[recordDate]}`,
                     isAuthRequired: true,
                     navigation: props.navigation
                 });
@@ -157,12 +157,12 @@ function UserRecord(props) {
             )
         }
         return(
-            <View>
+            <ScrollView>
                 <UserGraph
                     data={data}
                     dates={datesFrom(dateRange)}
                 />
-            </View>
+            </ScrollView>
         );
     };
 

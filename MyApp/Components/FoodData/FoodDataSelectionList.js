@@ -6,7 +6,7 @@ import CustomButton from '../CustomButton';
 import SearchBar from '../SearchBar';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { addRecordSelection, deleteRecordSelection, clearRecord, setMealRecord, setMealRecordTitle } from '../../redux/mealRecordSlice'
+import { addRecordSelection, deleteRecordSelection, clearRecord, setMealRecord, setMealRecordTitle, addRecipeRecordSelection, deleteRecipeRecordSelection } from '../../redux/mealRecordSlice'
 import { httpRequest } from '../../API/ServerRequest';
 import CustomInput from '../CustomInput';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -15,7 +15,7 @@ import { amountFormatter } from '../../API/helper';
 export default function FoodDataSelectionList({onSubmit, navigation}) {
 
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
-    const { mealRecord, recordList, isMealUpdate } = useSelector(state => state.mealRecord);
+    const { mealRecord, recordList, isMealUpdate, recipeRecordList } = useSelector(state => state.mealRecord);
     const dispatch = useDispatch();
 
     const [title, setTitle] = useState(mealRecord.title);
@@ -31,11 +31,11 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
     // date and time can be picked from an interactive popup.
 
     const onPress = () => {
-        if (recordList.length > 0) {
+        if (recordList.length > 0 || recipeRecordList.length > 0) {
             const endpoint = 'api/useraccounts/'
                 + user.username
                 + '/subuser/'
-                + currentSubuser.name
+                + currentSubuser.id
                 + '/usermealrecord/';
             
             if (isMealUpdate) {
@@ -50,7 +50,7 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
         }
     };
 
-    const sendData = (method, endpoint) => {
+    const sendData = async (method, endpoint) => {
 
         const recordListFormatted = () => {
             var returnList = new Array();
@@ -73,42 +73,50 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
             subuser: currentSubuser.id,
             time: datetime,
             title: (title.length <= 0 ? 'no title' : title),
-            meal_content: recordListFormatted()
+            meal_content: recordListFormatted(),
+            recipe_meal_content: recipeRecordList.map(element=>{ return { recipe: element.recipe.id }})
         };
 
-        httpRequest({
-            method: method,
-            endpoint: endpoint,
-            body: body,
-            isAuthRequired: true,
-            navigation: navigation
-        })
+        console.log(body)
 
-        dispatch(clearRecord());
-        onSubmit();
+        try {
+            const result = await httpRequest({
+                method: method,
+                endpoint: endpoint,
+                body: body,
+                isAuthRequired: true,
+                navigation: navigation
+            });
+
+            if (result.response.status == 201) {
+                dispatch(clearRecord());
+                onSubmit();
+            } 
+            else {
+                Alert.alert(
+                    "Error",
+                    `Could not send data. Check network is avaiable`,
+                    [
+                        { text: "OK", onPress: () => {} }
+                    ]
+                );
+            }
+        } catch (error) {
+            Alert.alert(
+                "Error",
+                `Could not send data. Check network is avaiable`,
+                [
+                    { text: "OK", onPress: () => {} }
+                ]
+            );
+        }
+        
     };
 
     const validate = () => {
         
     };
 
-    const renderItem = (item) => {
-
-        return(
-            <View style={styles.itemContainer}>
-                <View style={styles.item}>
-                    <Text style={styles.itemTextLeft}>{item.food_data.name}</Text>
-                    <Text style={styles.itemTextRight}>{amountFormatter(item.amount_in_grams)} g</Text>
-                    <CustomButton
-                    buttonStyle={styles.itemButton}
-                    textStyle={styles.itemButtonText}
-                    text={'delete'}
-                    onPress={()=>{dispatch(deleteRecordSelection(item.food_data.id))}}
-                    />
-                </View>
-            </View>
-        );
-    };
     
     const onDateConfirm = (event, date) => {
         if (event.type == 'set') {
@@ -168,6 +176,78 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
         );
     };
 
+    const foodFlatList = () => {
+        const renderItem = (item) => {
+            const onDelete = () => {
+                dispatch(deleteRecordSelection(item.food_data.id));
+            };
+            return(
+                <View style={styles.itemContainer}>
+                    <View style={styles.item}>
+                        <Text style={styles.itemTextLeft}>{item.food_data.name}</Text>
+                        <Text style={styles.itemTextRight}>{amountFormatter(item.amount_in_grams)} g</Text>
+                        <CustomButton
+                        buttonStyle={styles.itemButton}
+                        textStyle={styles.itemButtonText}
+                        text={'delete'}
+                        onPress={onDelete}
+                        />
+                    </View>
+                </View>
+            );
+        };
+        return (
+            <FlatList
+            
+            data={recordList} 
+            renderItem={
+                ({item}) => renderItem(item)
+            }
+            keyExtractor={item => `${item.food_data.id}`}
+            />
+        );
+    };
+
+    const recipeFlatList = () => {
+        const renderItem = (item) => {
+            const onDelete = () => {
+                dispatch(deleteRecipeRecordSelection(item.tempID));
+            };
+            console.log(item)
+            return(
+                <View style={styles.itemContainer}>
+                    <View style={styles.item}>
+                        <Text style={styles.itemTextLeft}>{item.recipe.title}</Text>
+                        <CustomButton
+                        buttonStyle={styles.itemButton}
+                        textStyle={styles.itemButtonText}
+                        text={'delete'}
+                        onPress={onDelete}
+                        />
+                    </View>
+                </View>
+            );
+        };
+        return (
+            <FlatList
+            data={recipeRecordList} 
+            renderItem={
+                ({item}) => renderItem(item)
+            }
+            keyExtractor={item => `${item.tempID}`}
+            />
+        );
+    };
+
+    const flatlistComponents = [
+        { id: 1, component: foodFlatList() },
+        { id: 2, component: recipeFlatList() }
+    ]
+
+    const renderLists = ({item}) => {
+        return item.component;
+    };
+
     return (
         <View style={styles.container}>
             <FlatList
@@ -186,19 +266,17 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
                     
                 </View>
             }
-
-            data={recordList} renderItem={
-               ({item}) => renderItem(item)
-            }
-            keyExtractor={item => `${item.food_data.id}`}
+            
+            data={flatlistComponents}
+            renderItem={renderLists}
+            keyExtractor={item=>item.id}
+            
             ListFooterComponent={
                 <View style={styles.footer}>
                     <CustomButton
-                    buttonStyle={recordList.length > 0 ? {} : {backgroundColor: '#ddd'}}
+                    buttonStyle={recordList.length > 0 || recipeRecordList.length > 0 ? {} : {backgroundColor: '#ddd'}}
                     text={'submit'}
-                    onPress={()=>{
-                        onPress();
-                    }}
+                    onPress={onPress}
                     />
                 </View>
             }

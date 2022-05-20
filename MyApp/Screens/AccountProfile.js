@@ -97,7 +97,7 @@ function AccountProfile(props) {
             };
 
             dispatch(setUser(load_user));
-            dispatch(setSubuserArray(result.json.people));
+            dispatch(setSubuserArray(result.json.subuser));
 
             setLoggedIn(true);
             setIsLoading(false);

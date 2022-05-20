@@ -114,7 +114,7 @@ useraccount_urls = [
 # url for subusers, single entity specified by username + name of subuser (name is unique per subuser per useraccount)
 # model : `~myAPI.subuser`
 subuser_url_base = useraccount_url_detail + 'subuser/'
-subuser_url_detail = subuser_url_base + '<str:name>/'
+subuser_url_detail = subuser_url_base + '<str:subuser_id>/'
 
 subuser_urls = [
     path(subuser_url_base, views.SubuserViewSet.as_view(

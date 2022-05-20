@@ -9,16 +9,16 @@ import FoodDataSelectionList from "./FoodDataSelectionList";
 
 export default function FloatButton({ navigation, isEditingFood=false, isShowManualModalInitial=false, showManualButton=true, showListButton=false }) {
 
-    const { recordList } = useSelector(state => state.mealRecord);
+    const { recordList, recipeRecordList } = useSelector(state => state.mealRecord);
     const { name, amount_in_grams, id, nutrient_data, image } = useSelector(state => state.fooddata.fooddata);
     const [isShowListModal, setIsShowListModal] = useState(false);
     const [isShowManualModal, setIsShowManualModal] = useState(isShowManualModalInitial); // default false
 
     const listIndicator = () => {
-        if (recordList.length > 0) {
+        if (recordList.length > 0 || recipeRecordList.length > 0) {
             return (
                 <View style={styles.listNumberIndicator}>
-                    <Text> { recordList.length } </Text>
+                    <Text> { recordList.length+recipeRecordList.length } </Text>
                 </View>
             );
         }

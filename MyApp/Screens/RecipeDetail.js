@@ -8,7 +8,7 @@ import { addRecipeRecordSelection } from '../redux/mealRecordSlice'
 import { VictoryAnimation, VictoryPie, VictoryLabel } from "victory-native";
 import targetJson from '../assets/JSON/gov_diet_recommendation.json';
 import unitJson from '../assets/JSON/gov_diet_recommendation_units.json';
-import { genderMap, ageMap } from '../API/helper'
+import { genderMap, ageMap, amountFormatter } from '../API/helper'
 import Svg from "react-native-svg";
 import { formatDate, lessThanNutrients } from '../API/helper';
 import { setRecipeID, setRecipeImage, setSteps, setTags, setTitle, setIngredient, addTag, addStep, addIngredient, updateIngredient, updateStep, deleteTag, deleteStep, deleteIngredient, clearAllRecipe } from '../redux/recipeSlice'
@@ -46,6 +46,32 @@ function RecipeDetail(props) {
         }
     }
 
+    const deleteRecipe = async () => {
+
+        if (user.username == '' || currentSubuser.id == '') {
+                return;
+            }
+        try {
+            const result = await ServerRequest.httpRequest({
+                method: 'DELETE',
+                endpoint: `api/useraccounts/${user.username}/myrecipes/${props.route.params.recipe.id}/`,
+                isAuthRequired: true,
+                navigation: props.navigation
+            });
+            if (result.response.status == 200) {
+                props.navigation.navigate('Recipe');
+            }
+        } catch (error) {
+            Alert.alert(
+                "Error",
+                `Could not delete`,
+                [
+                    { text: "OK", onPress: () => { props.navigation.navigate('Recipe'); } },
+                ]
+            );
+        }
+    }
+
     const getRecipeNutrientData = async () => {
         try {
             const result = await ServerRequest.httpRequest({
@@ -65,7 +91,7 @@ function RecipeDetail(props) {
 
     const getUserRecord = async () => {
 
-        if (user.username == '' || currentSubuser.name == '') {
+        if (user.username == '' || currentSubuser.id == '') {
                 return;
             }
         try {
@@ -74,14 +100,16 @@ function RecipeDetail(props) {
                 endpoint: 'api/useraccounts/'
                 + user.username
                 + '/subuser/'
-                + currentSubuser.name
+                + currentSubuser.id
                 + '/userrecord/'
                 + formatDate(new Date()) + '/',
                 isAuthRequired: true,
                 navigation: props.navigation
             });
-            setRecord(result.json);
-            console.log(result.json)
+            if (result.response.status == 200) {
+                setRecord(result.json);
+                console.log('rec', result.json)
+            }
         } catch (error) {
             console.log('userrecord...', error)
         }
@@ -102,13 +130,21 @@ function RecipeDetail(props) {
         return reload;
     }, [props]);
 
-    const renderData = (item) => {
-        return(
-            <View style={styles.stepsTab}>
-                <Text>{item.step_number}</Text>
-                <Text>{item.text}</Text>
-            </View>
-        )
+    const recordButton = () => {
+        const onAdd = () => {
+            dispatch(addRecipeRecordSelection(props.route.params.recipe));
+            props.navigation.navigate('Create record')
+        };
+        if (props.route.params.isRecording) {
+            return (
+                <View style={styles.floatButtonContainer}>
+                    <CustomButton
+                        text="Add"
+                        onPress={onAdd}
+                    />
+                </View>
+            );
+        }
     }
 
     const recordModal = () => {
@@ -129,7 +165,7 @@ function RecipeDetail(props) {
             </Modal>
         );
     }
-    console.log(data)
+    
     const singleNutrientBox = (nutrient) => {
         if (nutrient.name == 'is_missing_value') {
             return;
@@ -253,10 +289,46 @@ function RecipeDetail(props) {
     };
 
     const onDelete = () => {
+        Alert.alert(
+            "Warning",
+            `Are you sure you want to delete?`,
+            [
+                { text: "OK", onPress: () => { deleteRecipe(); } },
+                { text: "Cancel", onPress: () => {} }
+            ]
+        );
 
     };
 
+    const ingredients = () => {
+        const renderItem = ({item}) => {
+            
+            return(
+                <View style={styles.ingredient}>
+                    <Text style={{flex: 2}}>{ item.food_data.name }</Text>
+                    <Text style={{flex: 1}}>{ amountFormatter(item.amount) } { item.unit }</Text>
+                </View>
+            );
+        };
+        
+        return (
+            <FlatList 
+            style={styles.ingredientContainer}
+            data={data.ingredients}
+            renderItem={renderItem}
+            keyExtractor={item=>item.id}
+            />
+        );
+    };
 
+    const renderData = (item) => {
+        return(
+            <View style={styles.stepsTab}>
+                <Text>{item.step_number}</Text>
+                <Text>{item.text}</Text>
+            </View>
+        )
+    }
     // https://reactnative.dev/docs/flatlist
     return(
         <View >
@@ -267,7 +339,7 @@ function RecipeDetail(props) {
             ListHeaderComponent={
                 <View>
                 <View style={[styles.account, styles.header]}>
-                    <Text style={styles.titleText}>title: {data.title}</Text>
+                    <Text style={styles.titleText}>{data.title}</Text>
                     <Text style={styles.accountText}>
                         created by: {data.user + '\n'} 
                     </Text>
@@ -303,7 +375,7 @@ function RecipeDetail(props) {
                     </View>
                  
                     { nutrientPanel()}
-             
+                    { ingredients() }
                 </View>
             }
             
@@ -320,6 +392,7 @@ function RecipeDetail(props) {
                 </View>
             }
             />
+            { recordButton() }
         </View>
     );
 };
@@ -366,10 +439,10 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     },
     recordInfo: {
-        borderColor: green
+        borderColor: orange
     },
     recipeInfo: {
-        borderColor: orange
+        borderColor: green
     },
     recipeInfoExceed: {
         borderColor: red
@@ -407,6 +480,19 @@ const styles = StyleSheet.create({
         height: 300,
         borderRadius: 15,
     },
+    ingredientContainer: {
+        margin: 10, 
+        backgroundColor: '#fff'
+    },
+    ingredient: {
+        flexDirection: 'row', 
+        margin: 5
+    },
+    floatButtonContainer: {
+        position: 'absolute',
+        bottom: 70,
+        right: 20
+    }
 });
 
 export default RecipeDetail

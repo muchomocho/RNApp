@@ -25,7 +25,7 @@ export default function MealRecord({data, parentSet, navigation}) {
             try {
                 const result = await httpRequest({
                     method: 'DELETE',
-                    endpoint: `api/useraccounts/${user.username}/subuser/${currentSubuser.name}/usermealrecord/${id}/`,
+                    endpoint: `api/useraccounts/${user.username}/subuser/${currentSubuser.id}/usermealrecord/${id}/`,
                     isAuthRequired: true,
                     navigation: navigation
                 });
@@ -182,18 +182,63 @@ export default function MealRecord({data, parentSet, navigation}) {
             );
         };
       
-        const renderItem = (item) => {
+        
+        const foodFlatList = () => {
+            const renderItem = (item) => {
 
+                return (
+                    <View style={styles.mealContent}>
+                        <View style={styles.foodNameText}>
+                            <Text>{item.food_data.name}</Text>
+                        </View>
+                        <View>
+                            <Text>{amountFormatter(item.amount_in_grams)} g</Text>
+                        </View>
+                    </View>
+                );
+            };
             return (
-                <View style={styles.mealContent}>
-                    <View style={styles.foodNameText}>
-                        <Text>{item.food_data.name}</Text>
-                    </View>
-                    <View>
-                        <Text>{amountFormatter(item.amount_in_grams)} g</Text>
-                    </View>
-                </View>
+                <FlatList
+                
+                data={singleData.meal_content} 
+                renderItem={
+                    ({item}) => {return renderItem(item)}
+                }
+                keyExtractor={item => `${item.id}`}
+                />
             );
+        };
+
+        const recipeFlatList = () => {
+            const renderItem = (item) => {
+
+                return (
+                    <View style={styles.mealContent}>
+                        <View style={styles.foodNameText}>
+                            <Text>{item.recipe.title}</Text>
+                        </View>
+                    </View>
+                );
+            };
+            return (
+                <FlatList
+                
+                data={singleData.recipe_meal_content} 
+                renderItem={
+                    ({item}) => {return renderItem(item)}
+                }
+                keyExtractor={item => `${item.tempID}`}
+                />
+            );
+        };
+
+        const recordComponents = [
+            { id: 1, component: foodFlatList() },
+            { id: 2, component: recipeFlatList() }
+        ];
+
+        const renderLists = ({item}) => {
+            return item.component;
         };
     
         return (
@@ -212,11 +257,9 @@ export default function MealRecord({data, parentSet, navigation}) {
                     )
                 }}
 
-                data={singleData.meal_content} 
-                renderItem={
-                    ({item}) => {return renderItem(item)}
-                }
-                keyExtractor={item => `${item.id}`}
+                data={recordComponents}
+                renderItem={renderLists}
+                keyExtractor={item=>item.id}
                 
             />
         );

@@ -51,7 +51,7 @@ class SubuserSerializer(serializers.ModelSerializer):
 
         instance = self.Meta.model(**validated_data)
         instance.save()
-        self.context['request'].user.people.add(instance)
+        self.context['request'].user.subuser.add(instance)
         return instance
 
     # custom extra information to give age to client
@@ -62,11 +62,12 @@ class SubuserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    people = SubuserSerializer(many=True)
+    subuser = SubuserSerializer(many=True)
 
     class Meta:
         model = UserAccount
-        fields = ['id', 'username', 'email', 'people']
+        fields = ['id', 'username', 'email', 'subuser',
+                  'recordable_subuser', 'viewable_subuser']
 
 
 class NutritionalDataSerializer(serializers.ModelSerializer):
@@ -155,6 +156,25 @@ class UserMealContentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class UserMealRecipeContentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserMealRecipeContent
+        fields = ['recipe']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        recipe = RecipeSerializer(instance.recipe)
+        data.pop('recipe')
+        data['recipe'] = \
+            {
+                "id": recipe.data['id'],
+                "title": recipe.data['title'],
+        }
+
+        return data
+
+
 class UserMealRecordSerializer(serializers.ModelSerializer):
     class SimpleUserMealContentSerializer(serializers.ModelSerializer):
 
@@ -162,15 +182,22 @@ class UserMealRecordSerializer(serializers.ModelSerializer):
             model = UserMealRecordContent
             fields = ['id', 'food_data', 'amount_in_grams']
 
-    meal_content = SimpleUserMealContentSerializer(many=True)
+    meal_content = SimpleUserMealContentSerializer(many=True, allow_null=True)
+    recipe_meal_content = UserMealRecipeContentSerializer(
+        many=True, allow_null=True)
 
     class Meta:
         model = UserMealRecord
-        fields = ['id', 'subuser', 'time', 'title', 'meal_content']
+        fields = ['id', 'subuser', 'time', 'title',
+                  'meal_content', 'recipe_meal_content']
+
+    def validate(self, attrs):
+        return super().validate(attrs)
 
     def create(self, validated_data):
-
         meals_data = validated_data.pop('meal_content')
+        recipes_data = validated_data.pop('recipe_meal_content')
+
         if 'time' in validated_data:
             time = validated_data['time']
 
@@ -195,12 +222,25 @@ class UserMealRecordSerializer(serializers.ModelSerializer):
 
             meal_record.meal_content.add(meal_content)
 
+        for recipe_data in recipes_data:
+
+            recipe = recipe_data.pop('recipe')
+            recipe_instance = Recipe.objects.get(id=recipe.id)
+            recipe_content = UserMealRecipeContent.objects.create(
+                parent_record=meal_record, recipe=recipe_instance, **recipe_data)
+            recipe_instance.last_used = timezone.now()
+            recipe_instance.save()
+
+            meal_record.recipe_meal_content.add(recipe_content)
+
         return meal_record
 
     def update(self, instance, validated_data):
 
-        meals_data = validated_data.pop('meal_content')
         instance.meal_content.all().delete()
+        instance.recipe_meal_content.all().delete()
+        recipes_data = validated_data.pop('recipe_meal_content')
+        meals_data = validated_data.pop('meal_content')
 
         for meal_data in meals_data:
 
@@ -210,6 +250,15 @@ class UserMealRecordSerializer(serializers.ModelSerializer):
                 parent_record=instance, food_data=food_instance, **meal_data)
 
             instance.meal_content.add(meal_content)
+
+        for recipe_data in recipes_data:
+
+            recipe = recipe_data.pop('recipe')
+            recipe_instance = Recipe.objects.get(id=recipe.id)
+            recipe_content = UserMealRecipeContent.objects.create(
+                parent_record=instance, recipe=recipe_instance, **recipe_data)
+
+            instance.recipe_meal_content.add(recipe_content)
 
         instance.title = validated_data.pop('title')
         instance.time = validated_data.pop('time')

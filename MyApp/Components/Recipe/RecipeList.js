@@ -13,6 +13,7 @@ import CustomButton from "../../Components/CustomButton";
 import { clean } from '../../API/helper'
 
 function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
+
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
 
     const [data, setData] = useState([]);
@@ -26,7 +27,7 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
                 var endpoint = ''
                 var isLoggedin = false
                 if (isRecommendation && user != undefined && currentSubuser != undefined) {
-                    endpoint = `api/useraccounts/${user.username}/subuser/${currentSubuser.name}/reciperecommendation/`;
+                    endpoint = `api/useraccounts/${user.username}/subuser/${currentSubuser.id}/reciperecommendation/`;
                     isLoggedin = true;
                 }
                 else {
@@ -71,6 +72,7 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
             getRecipe();
           } else {
             setMyRecipe(false);
+            setData([]);
           }
         });
     
@@ -100,12 +102,15 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
         return(
             <TouchableOpacity 
             style={styles.recipeContainer}
-            onPress={() => {navigation.navigate('Recipe detail', {recipe: item});}}
+            onPress={() => {navigation.navigate('Recipe detail', { recipe: item, isRecording: isRecording });}}
             >   
                 { image }
                 <View style={styles.detail}>
                     <Text style={styles.detailTitle}>{item.title}</Text>
-                    <Text style={styles.detailText}>created by {item.user}</Text>
+                    {
+                        item.user != 'admin' &&
+                        <Text style={styles.detailText}>created by {item.user}</Text>
+                    }
                     { 
                         isRecommendation &&
                         <Text>High in: { clean(item.high_in) } </Text>
@@ -176,13 +181,13 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
                 }
                 {
                     !isRecommendation &&
-                <View style={styles.searchBarContainer}>
-                    <SearchBar
-                    value={searchValue}
-                    setValue={setSearchValue}
-                    onSearch={()=>{onSearch(searchValue)}}
-                    />
-                </View>
+                    <View style={styles.searchBarContainer}>
+                        <SearchBar
+                        value={searchValue}
+                        setValue={setSearchValue}
+                        onSearch={()=>{onSearch(searchValue)}}
+                        />
+                    </View>
                 }
             </View>
         );
@@ -320,7 +325,7 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         position: 'absolute',
-        bottom: 90,
+        bottom: 20,
         right: 20,
     },
     button: {

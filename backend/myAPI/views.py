@@ -37,11 +37,11 @@ def get_nutrient_keys():
 # function to get a set of nutrient data for a single day
 
 
-def userrecord_single(date_str, username, name):
+def userrecord_single(date_str, username, subuser_id):
     user = get_object_or_404(UserAccount, username=username)
     user_id = user.id
     date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-    subuser = get_object_or_404(Subuser, user=user_id, name=name)
+    subuser = get_object_or_404(Subuser, user=user_id, id=subuser_id)
     record_list = UserMealRecord.objects.filter(
         subuser=subuser, time__year=date_obj.year, time__month=date_obj.month, time__day=date_obj.day)
 
@@ -66,21 +66,24 @@ def userrecord_single(date_str, username, name):
                 if nutrition_data.name == key:
                     return_json[key] += decimal.Decimal(nutrition_data.value) * (meal_content.amount_in_grams /
                                                                                  food_data.amount_in_grams) * decimal.Decimal(helper.unit_converter(units[key], nutrition_data.unit))
+                    print(key, decimal.Decimal(nutrition_data.value) * (meal_content.amount_in_grams /
+                                                                        food_data.amount_in_grams) * decimal.Decimal(helper.unit_converter(units[key], nutrition_data.unit)))
 
     # details of what recipe user had
     recipe_content_list = UserMealRecipeContent.objects.filter(
         parent_record__in=[record.id for record in record_list])
 
-    for recipe in recipe_content_list:
+    for recipe_content in recipe_content_list:
         return_json = recipe_nutrient(
-            recipe_id=recipe.id, return_json=return_json, user=user)
+            recipe_id=recipe_content.recipe_id, return_json=return_json, user=user)
 
     return_json['date'] = date_str
+
     return return_json
 
 
 # function to get a set of nutrient data for a range of days
-def userrecord_date_range(from_date, on_date, name, username):
+def userrecord_date_range(from_date, on_date, subuser_id, username):
     # https://stackoverflow.com/questions/16870663/how-do-i-validate-a-date-string-format-in-python
     try:
         start_date = datetime.strptime(from_date, '%Y-%m-%d')
@@ -108,7 +111,7 @@ def userrecord_date_range(from_date, on_date, name, username):
 
     for date in date_container:
         record_json_single = userrecord_single(
-            date_str=date, username=username, name=name)
+            date_str=date, username=username, subuser_id=subuser_id)
         record_json_list.append(record_json_single)
 
     # if empty after filter just return
@@ -127,7 +130,8 @@ def userrecord_date_range(from_date, on_date, name, username):
     # append the following data
     for data in data_json:
         for key, value in data.items():
-            return_json[key].append(value)
+            if key in return_json.keys():
+                return_json[key].append(value)
 
     return return_json
 
@@ -183,12 +187,30 @@ def recipe_nutrient(recipe_id, return_json=None, user=None):
                             units[key], nutrient.unit))
 
     return_json['is_missing_value'] = is_missing_value
-
+    print(return_json)
     return return_json
 
-# Create your views here.
+
+def get_subuser_allow_view(user, subuser_id):
+    if len(request.user.subuser.all().filter(id=subuser_id)) == 0 and \
+            len(request.user.recordable_subuser.filter(id=subuser_id)) == 0 and \
+            len(request.user.viewable_subuser.filter(id=subuser_id)) == 0:
+        return False
+
+    subuser = get_object_or_404(Subuser, id=subuser_id)
+    return subuser
 
 
+def get_subuser_allow_edit(user, subuser_id):
+    if len(request.user.subuser.all().filter(id=subuser_id)) == 0 and \
+            len(request.user.recordable_subuser.filter(id=subuser_id)) == 0:
+        return False
+
+    subuser = get_object_or_404(Subuser, id=subuser_id)
+    return subuser
+
+
+    # Create your views here.
 """
 django rest framework simple jwt 
 + 
@@ -293,7 +315,7 @@ class UserRecordViewSet(viewsets.ModelViewSet):
 
         if request.user.is_authenticated and request.user.username == kwargs['username']:
             return_json = userrecord_single(
-                kwargs['date'], kwargs['username'], kwargs['name'])
+                kwargs['date'], kwargs['username'], kwargs['subuser_id'])
             if 'error' in return_json.keys():
                 return Response(return_json['error'], status.HTTP_400_BAD_REQUEST)
             return Response(return_json)
@@ -302,14 +324,15 @@ class UserRecordViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
-            name = kwargs['name']
+            subuser_id = kwargs['subuser_id']
+
             from_date = kwargs['from']
             nutrition_type = request.query_params.get('nutrition', None)
             to_date = kwargs['date']
 
             # if date is specified, turn the data into array of data
             return_json = userrecord_date_range(
-                from_date, to_date, name, request.user.username)
+                from_date, to_date, subuser_id, request.user.username)
             if 'error' in return_json.keys():
                 return Response(return_json['error'], status.HTTP_400_BAD_REQUEST)
             return Response(return_json)
@@ -342,7 +365,7 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
             UserAccount.objects.all(), username=kwargs['username'])
 
         subuser = get_object_or_404(
-            Subuser.objects.all(), name=kwargs['name'], user=user.id)
+            Subuser.objects.all(), id=kwargs['subuser_id'], user=user.id)
         meal_record = get_object_or_404(
             UserMealRecord, id=kwargs['usermealrecord_id'])
         serializer = self.serializer_class(meal_record)
@@ -359,7 +382,7 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
             UserAccount.objects.all(), username=kwargs['username'])
 
         subuser = get_object_or_404(
-            Subuser.objects.all(), name=kwargs['name'], user=user.id)
+            Subuser.objects.all(), id=kwargs['subuser_id'], user=user.id)
 
         date = request.query_params.get('date', None)
 
@@ -391,10 +414,13 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
             if not isFoodDataCreationSuccess:
                 return Response("requires fooddata", status=status.HTTP_400_BAD_REQUEST)
 
+            if len(request.data['meal_content']) == 0 and len(request.data['recipe_meal_content']) == 0:
+                return Response("requires at least some food or recipe data", status=status.HTTP_400_BAD_REQUEST)
+
             user = get_object_or_404(
                 UserAccount.objects.all(), username=kwargs['username'])
             subuser = get_object_or_404(
-                Subuser.objects.all(), name=kwargs['name'], user=user.id)
+                Subuser.objects.all(), id=kwargs['subuser_id'], user=user.id)
             request.data['subuser'] = subuser.id
             serializer = self.serializer_class(data=request.data)
 
@@ -425,9 +451,10 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, usermealrecord_id, *args, **kwargs):
+        meal_record = get_object_or_404(
+            UserMealRecord, id=usermealrecord_id)
+
         if meal_record.subuser in request.user.subuser.all():
-            meal_record = get_object_or_404(
-                UserMealRecord, id=usermealrecord_id)
             meal_record.delete()
             return Response('{ success }', status=status.HTTP_200_OK)
         return Response({'only owner can delete', status.HTTP_401_UNAUTHORIZED})
@@ -511,7 +538,7 @@ class SubuserViewSet(viewsets.ModelViewSet):
             serializer = SubuserSerializer(
                 self.queryset.filter(user=request.user), many=True)
             subuser = self.queryset.get(
-                user=request.user, name=kwargs['name'])
+                user=request.user, id=kwargs['subuser_id'])
             serializer = SubuserSerializer(subuser)
 
             return Response(serializer.data)
@@ -522,7 +549,7 @@ class SubuserViewSet(viewsets.ModelViewSet):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
 
             subuser = self.queryset.get(
-                user=request.user, name=kwargs['name'])
+                user=request.user, id=kwargs['subuser_id'])
             serializer = SubuserSerializer(subuser)
 
             return Response(serializer.data)
@@ -604,11 +631,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
 
         recipe = get_object_or_404(self.queryset, id=kwargs['recipe_id'])
+
         if recipe.is_hidden:
-            return Response(status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_404_NOT_FOUND)
         if recipe.is_private and (request.user.is_authenticated and request.user != recipe.user):
-            return Response(status.HTTP_401_UNAUTHORIZED)
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         serializer = RecipeSerializer(recipe)
+
         return Response(serializer.data)
 
     # https://docs.djangoproject.com/en/4.0/topics/db/queries/
@@ -669,9 +698,14 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
             return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
         # get the data for subuser logged in
-        subuser_name = kwargs['name']
-        subuser_obj = Subuser.objects.get(
-            user=request.user, name=subuser_name)
+        subuser_id = kwargs['subuser_id']
+
+        if len(request.user.subuser.all().filter(id=subuser_id)) == 0 and \
+                len(request.user.recordable_subuser.filter(id=subuser_id)) == 0 and \
+                len(request.user.viewable_subuser.filter(id=subuser_id)) == 0:
+            return Response('this useraccount cannot view this subuser', status=status.HTTP_401_UNAUTHORIZED)
+
+        subuser_obj = Subuser.objects.get(id=subuser_id)
         age = str(helper.age_map(
             helper.get_age_from_dob(subuser_obj.date_of_birth)))
         gender = helper.genderMap(subuser_obj.gender)
@@ -682,7 +716,7 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
                          ).strftime('%Y-%m-%d')
             on_date = None
             record = userrecord_date_range(
-                from_date=from_date, on_date=on_date, username=request.user.username, name=subuser_name)
+                from_date=from_date, on_date=on_date, username=request.user.username, subuser_id=subuser_id)
 
             # reference to recommendation
             dir = os.path.dirname(__file__)  # get current directory
@@ -702,11 +736,51 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
             sorted_percent = sorted(
                 record_avg_percent, key=lambda percent: percent[1])
 
-            print(record_avg_percent)
-            print(sorted_percent)
-            sql_sub_inner = '''
+            sql_sub_inner2 = '''
+                    (SELECT recipe_inner.id, recipe_inner.is_private, recipe_inner.is_hidden, ingredient_inner.id, ingredient_inner.food_data_id, ingredient_inner.amount, ingredient_inner.unit, food_data_inner.id, food_data_inner.amount_in_grams, nutrition_inner.id, nutrition_inner.value, nutrition_inner.unit, nutrition_inner.name, 
+                    ((ingredient_inner.amount*1.0 / food_data_inner.amount_in_grams*1.0) * 
+                    (CASE 
+                    WHEN ingredient_inner.unit = 'g' THEN 1
+                    WHEN ingredient_inner.unit = 'mg' THEN 1/1000
+                    WHEN ingredient_inner.unit = 'microg' THEN 1/1000000
+                    ELSE 0
+                    END
+                    ) *
+                    nutrition_inner.value) AS total
+                    FROM myAPI_recipe AS recipe_inner 
+                    LEFT JOIN myAPI_recipeingredient AS ingredient_inner
+                    ON recipe_inner.id = ingredient_inner.recipe_id
+                    LEFT JOIN myAPI_fooddata as food_data_inner
+                    ON ingredient_inner.food_data_id = food_data_inner.id
+                    LEFT JOIN myAPI_nutritionaldata AS nutrition_inner
+                    ON food_data_inner.id = nutrition_inner.parent_food_id
+                    LEFT JOIN myAPI_useraccount AS useraccount_inner
+                    ON recipe_inner.username = useraccount_inner.username
+                    WHERE 
+                    recipe_inner.is_hidden = 0 AND
+                    (recipe_inner.is_private = 0 OR (recipe_inner.is_private = 1 AND recipe_inner.username = '{username}')) AND
+                    ((nutrition_inner.name = 'salt' AND nutrition_inner.value >= {salt_value})  OR
+                    (nutrition_inner.name = 'free_sugars' AND nutrition_inner.value >= {sugar_value}) OR
+                    (nutrition_inner.name = 'fat' AND nutrition_inner.value >= {fat_value}) OR
+                    (nutrition_inner.name = 'energy_kj' AND nutrition_inner.value >= {energy_kj_value}) OR
+                    (nutrition_inner.name = 'energy_kcal' AND nutrition_inner.value >= {energy_kcal_value}) OR
+                    (nutrition_inner.name = 'saturated_fat' AND nutrition_inner.value >= {sat_fat_value})))
+            '''.format(
+                username=kwargs['username'],
+                salt_value=gov_recommendation[age][gender]['salt'],
+                sugar_value=gov_recommendation[age][gender]['free_sugars'],
+                fat_value=gov_recommendation[age][gender]['fat'],
+                energy_kcal_value=gov_recommendation[age][gender]['energy_kcal'],
+                energy_kj_value=gov_recommendation[age][gender]['energy_kj'],
+                sat_fat_value=gov_recommendation[age][gender]['saturated_fat'],
+            )
+
+            recipe_recommended = []
+            random.shuffle(sorted_percent[:5])
+            for element in sorted_percent[:3]:
+                sql_sub_inner = '''
                     (SELECT recipe.id, recipe.is_private, recipe.is_hidden, ingredient.id, ingredient.food_data_id, ingredient.amount, ingredient.unit, food_data.id, food_data.amount_in_grams, nutrition.id, nutrition.value, nutrition.unit, nutrition.name, 
-                    MAX(ingredient.amount / food_data.amount_in_grams * 
+                    MAX((ingredient.amount*1.0 / food_data.amount_in_grams* 1.0) * 
                     (CASE 
                     WHEN ingredient.unit = 'g' THEN 1
                     WHEN ingredient.unit = 'mg' THEN 1/1000
@@ -726,32 +800,20 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
                     ON recipe.username = useraccount.username
                     WHERE 
                     recipe.is_hidden = 0 AND
+                    nutrition.name = '{name}' AND
                     (recipe.is_private = 0 OR (recipe.is_private = 1 AND recipe.username = '{username}')) AND
-                    ((nutrition.name = 'salt' AND nutrition.value <= {salt_value})  OR
-                    (nutrition.name = 'free_sugars' AND nutrition.value <= {sugar_value}) OR
-                    (nutrition.name = 'fat' AND nutrition.value <= {fat_value}) OR
-                    (nutrition.name = 'energy_kj' AND nutrition.value <= {energy_kj_value}) OR
-                    (nutrition.name = 'energy_kcal' AND nutrition.value <= {energy_kcal_value}) OR
-                    (nutrition.name = 'saturated_fat' AND nutrition.value <= {sat_fat_value})))
+                    recipe.id NOT IN
+                    (SELECT recipe.id FROM {sql_sub_inner2} AS recipe))
             '''.format(
-                username=kwargs['username'],
-                salt_value=gov_recommendation[age][gender]['salt'],
-                sugar_value=gov_recommendation[age][gender]['free_sugars'],
-                fat_value=gov_recommendation[age][gender]['fat'],
-                energy_kcal_value=gov_recommendation[age][gender]['energy_kcal'],
-                energy_kj_value=gov_recommendation[age][gender]['energy_kj'],
-                sat_fat_value=gov_recommendation[age][gender]['saturated_fat'],
-            )
-
-            recipe_recommended = []
-            random.shuffle(sorted_percent[:5])
-            for element in sorted_percent[:3]:
-
+                    username=kwargs['username'],
+                    sql_sub_inner2=sql_sub_inner2,
+                    name=element[0]
+                )
                 recipe_max_id = Recipe.objects.raw(
                     '''
                     SELECT recipe.id FROM
                     {sql_sub_inner} AS recipe
-                    '''.format(sql_sub_inner=sql_sub_inner, name=element[0]))
+                    '''.format(sql_sub_inner=sql_sub_inner))
 
                 try:
                     recipe_max_nutrition_name = Recipe.objects.get(
@@ -795,12 +857,15 @@ class PersonalRecipeViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         # due to possibilty of data being used in the past data is not completely deleted, only disallows future usage and deletes image, but data is still referenced in records
+        if not request.user.is_authenticated or request.user.username != kwargs['username']:
+            return Response('only owner can delete.', status=status.HTTP_401_UNAUTHORIZED)
+
         recipe = get_object_or_404(
-            self.queryset, owner=kwargs['username'], id=kwargs['myrecipe_id'])
+            self.queryset, user=request.user, id=kwargs['myrecipe_id'])
         recipe.main_img.delete()
         recipe.is_hidden = True
         recipe.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response('deleted', status=status.HTTP_200_OK)
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -916,6 +981,9 @@ class PersonalFoodDataViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         # due to possibilty of data being used in the past data is not completely deleted, only disallows future usage and deletes image, but data is still referenced in records
+        if not request.user.is_authenticated or request.user.username != kwargs['username']:
+            return Response('only owner can delete.', status=status.HTTP_401_UNAUTHORIZED)
+
         food_data = get_object_or_404(
             self.queryset, uploader=kwargs['username'], id=kwargs['myfood_id'])
         food_data.main_img.delete()

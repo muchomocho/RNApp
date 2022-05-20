@@ -28,7 +28,7 @@ export const mealRecordSlice = createSlice({
             },
 
             recordList: [...action.payload.meal_content],
-            //recipeRecordList: [...action.payload.recipe_content]
+            recipeRecordList: action.payload.recipe_meal_content.map((element, index) => {return { tempID: index, ...element } })
         }
     },
 
@@ -63,19 +63,37 @@ export const mealRecordSlice = createSlice({
     },
 
     addRecipeRecordSelection: (state, action) => {
-        
+        console.log({ 
+            ...state, 
+            recipeRecordList: [
+                ...state.recipeRecordList, 
+                {
+                    tempID: state.recipeRecordList.length,
+                    recipe: {
+                        id: action.payload.id,
+                        title: action.payload.title
+                    }
+                }
+            ]
+        })
         return { 
             ...state, 
             recipeRecordList: [
                 ...state.recipeRecordList, 
-                action.payload
+                {
+                    tempID: state.recipeRecordList.length,
+                    recipe: {
+                        id: action.payload.id,
+                        title: action.payload.title
+                    }
+                }
             ]
         }
     },
 
     deleteRecipeRecordSelection: (state, action) => {
         for (var index in state.recipeRecordList) {
-            if (state.recipeRecordList[index].recipe.id == action.payload) {
+            if (state.recipeRecordList[index].tempID == action.payload) {
                 state.recipeRecordList.splice(index, 1)
                 return;
             }
@@ -105,6 +123,6 @@ export const mealRecordSlice = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { setMealRecord, addRecordSelection, clearRecord, deleteRecordSelection, setSubuserArray, setIsMealUpdate } = mealRecordSlice.actions
+export const { setMealRecord, addRecordSelection, clearRecord, deleteRecordSelection, setSubuserArray, setIsMealUpdate, addRecipeRecordSelection, deleteRecipeRecordSelection } = mealRecordSlice.actions
 
 export default mealRecordSlice.reducer

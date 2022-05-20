@@ -89,8 +89,14 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 class Subuser(models.Model):
     # an account have multiple users, such as family members
     user = models.ManyToManyField(settings.AUTH_USER_MODEL,
-                                  related_name='people'
+                                  related_name='subuser'
                                   )
+    recordable_user = models.ManyToManyField(settings.AUTH_USER_MODEL,
+                                             related_name='recordable_subuser'
+                                             )
+    viewable_user = models.ManyToManyField(settings.AUTH_USER_MODEL,
+                                           related_name='viewable_subuser'
+                                           )
     name = models.CharField(max_length=30,
                             validators=[
                                 RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\-, ]*$', message='Name must consist of alphanumeric, underscore or hyphen',
@@ -110,6 +116,10 @@ class Subuser(models.Model):
         (OTHER, 'Other')
     ]
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+
+
+class UserShareRequest(models.Model):
+    pass
 
 
 class FoodData(models.Model):
@@ -211,7 +221,6 @@ class UserMealRecipeContent(models.Model):
     parent_record = models.ForeignKey(
         UserMealRecord, related_name='recipe_meal_content', on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    amount_in_grams = models.DecimalField(max_digits=15, decimal_places=5)
 
 
 class UserMealRecordContent(models.Model):
