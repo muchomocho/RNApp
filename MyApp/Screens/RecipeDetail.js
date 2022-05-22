@@ -146,25 +146,6 @@ function RecipeDetail(props) {
             );
         }
     }
-
-    const recordModal = () => {
-
-        return (
-            <Modal
-                animationType="slide"
-                visible={isShowModal} >
-                <CustomButton
-                    buttonStyle={styles.closeButton}
-                    textStyle={styles.closeButtontext}
-                    text="close"
-                    onPress={switchShowModal}
-                />
-                <View>
-                    <Text> {data.title}</Text>
-                </View>
-            </Modal>
-        );
-    }
     
     const singleNutrientBox = (nutrient) => {
         if (nutrient.name == 'is_missing_value') {
@@ -178,7 +159,7 @@ function RecipeDetail(props) {
         if (unit == 'microg') { unit = '\u00b5g' }
         // https://formidable.com/open-source/victory/gallery/animating-circular-progress-bar/
         return (
-        <View >
+        <View key={nutrient.name}>
             <View style={{backgroundColor: '#fff', margin: 5, width: 100, height: 100}}>
                 <Svg style={{backgroundColor:'#fff', elevation: 3}} viewBox="0 0 400 400" width="100%" height="100%">
                     <VictoryPie
@@ -274,9 +255,6 @@ function RecipeDetail(props) {
         }
     };
 
-    const switchShowModal = () => {
-        setIsShowModal(!isShowModal);
-    };
 
     const onEdit = () => {
         dispatch(setRecipeID(data.id));
@@ -304,7 +282,7 @@ function RecipeDetail(props) {
         const renderItem = ({item}) => {
             
             return(
-                <View style={styles.ingredient}>
+                <View key={item.food_data.id} style={styles.ingredient}>
                     <Text style={{flex: 2}}>{ item.food_data.name }</Text>
                     <Text style={{flex: 1}}>{ amountFormatter(item.amount) } { item.unit }</Text>
                 </View>
@@ -316,14 +294,14 @@ function RecipeDetail(props) {
             style={styles.ingredientContainer}
             data={data.ingredients}
             renderItem={renderItem}
-            keyExtractor={item=>item.id}
+            keyExtractor={item=>item.food_data.id}
             />
         );
     };
 
     const renderData = (item) => {
         return(
-            <View style={styles.stepsTab}>
+            <View key={item.step_number} style={styles.stepsTab}>
                 <Text>{item.step_number}</Text>
                 <Text>{item.text}</Text>
             </View>

@@ -192,18 +192,26 @@ def recipe_nutrient(recipe_id, return_json=None, user=None):
 
 
 def get_subuser_allow_view(user, subuser_id):
-    if len(request.user.subuser.all().filter(id=subuser_id)) == 0 and \
-            len(request.user.recordable_subuser.filter(id=subuser_id)) == 0 and \
-            len(request.user.viewable_subuser.filter(id=subuser_id)) == 0:
+    if len(user.subuser.all().filter(id=subuser_id)) == 0 and \
+            len(user.recordable_subuser.filter(id=subuser_id)) == 0 and \
+            len(user.viewable_subuser.filter(id=subuser_id)) == 0:
         return False
 
     subuser = get_object_or_404(Subuser, id=subuser_id)
     return subuser
 
 
-def get_subuser_allow_edit(user, subuser_id):
-    if len(request.user.subuser.all().filter(id=subuser_id)) == 0 and \
-            len(request.user.recordable_subuser.filter(id=subuser_id)) == 0:
+def get_subuser_allow_record(user, subuser_id):
+    if len(user.subuser.all().filter(id=subuser_id)) == 0 and \
+            len(user.recordable_subuser.filter(id=subuser_id)) == 0:
+        return False
+
+    subuser = get_object_or_404(Subuser, id=subuser_id)
+    return subuser
+
+
+def get_subuser_allow_all(user, subuser_id):
+    if len(user.subuser.all().filter(id=subuser_id)) == 0:
         return False
 
     subuser = get_object_or_404(Subuser, id=subuser_id)
@@ -312,33 +320,45 @@ class UserRecordViewSet(viewsets.ModelViewSet):
     """
 
     def retrieve(self, request, *args, **kwargs):
+        # check user is authenticated
+        if not request.user.is_authenticated or request.user.username != kwargs['username']:
+            content = {'requires log in to see'}
+            return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
-        if request.user.is_authenticated and request.user.username == kwargs['username']:
-            return_json = userrecord_single(
-                kwargs['date'], kwargs['username'], kwargs['subuser_id'])
-            if 'error' in return_json.keys():
-                return Response(return_json['error'], status.HTTP_400_BAD_REQUEST)
-            return Response(return_json)
-        content = {'requires log in to see'}
-        return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+        subuser = get_subuser_allow_view(
+            user=request.user, subuser_id=kwargs['subuser_id'])
+        # check the account has privilage to view this account
+        if not subuser:
+            return Response('this data cannot be viewed on this account.', status=status.HTTP_401_UNAUTHORIZED)
+
+        return_json = userrecord_single(
+            kwargs['date'], kwargs['username'], kwargs['subuser_id'])
+        if 'error' in return_json.keys():
+            return Response(return_json['error'], status.HTTP_400_BAD_REQUEST)
+        return Response(return_json)
 
     def list(self, request, *args, **kwargs):
-        if request.user.is_authenticated and request.user.username == kwargs['username']:
-            subuser_id = kwargs['subuser_id']
+       # check user is authenticated
+        if not request.user.is_authenticated or request.user.username != kwargs['username']:
+            content = {'requires log in to see'}
+            return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
-            from_date = kwargs['from']
-            nutrition_type = request.query_params.get('nutrition', None)
-            to_date = kwargs['date']
+        subuser = get_subuser_allow_view(
+            user=request.user, subuser_id=kwargs['subuser_id'])
+        # check the account has privilage to view this account
+        if not subuser:
+            return Response('this data cannot be viewed on this account.', status=status.HTTP_401_UNAUTHORIZED)
 
-            # if date is specified, turn the data into array of data
-            return_json = userrecord_date_range(
-                from_date, to_date, subuser_id, request.user.username)
-            if 'error' in return_json.keys():
-                return Response(return_json['error'], status.HTTP_400_BAD_REQUEST)
-            return Response(return_json)
+        from_date = kwargs['from']
+        nutrition_type = request.query_params.get('nutrition', None)
+        to_date = kwargs['date']
 
-        content = {'requires log in to see'}
-        return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+        # if date is specified, turn the data into array of data
+        return_json = userrecord_date_range(
+            from_date, to_date, kwargs['subuser_id'], request.user.username)
+        if 'error' in return_json.keys():
+            return Response(return_json['error'], status.HTTP_400_BAD_REQUEST)
+        return Response(return_json)
 
 
 class UserMealRecordViewSet(viewsets.ModelViewSet):
@@ -357,15 +377,19 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         return data
 
     def retrieve(self, request, *args, **kwargs):
-
+        # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
-            return Response({'requires login'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'requires log in to see'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        subuser = get_subuser_allow_view(
+            user=request.user, subuser_id=kwargs['subuser_id'])
+        # check the account has privilage to view this account
+        if not subuser:
+            return Response('this data cannot be viewed on this account.', status=status.HTTP_401_UNAUTHORIZED)
 
         user = get_object_or_404(
             UserAccount.objects.all(), username=kwargs['username'])
 
-        subuser = get_object_or_404(
-            Subuser.objects.all(), id=kwargs['subuser_id'], user=user.id)
         meal_record = get_object_or_404(
             UserMealRecord, id=kwargs['usermealrecord_id'])
         serializer = self.serializer_class(meal_record)
@@ -375,8 +399,15 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         return Response(return_data)
 
     def list(self, request, *args, **kwargs):
+        # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
-            return Response({'requires login'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'requires log in to see'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        subuser = get_subuser_allow_view(
+            user=request.user, subuser_id=kwargs['subuser_id'])
+        # check the account has privilage to view this account
+        if not subuser:
+            return Response('this data cannot be viewed on this account.', status=status.HTTP_401_UNAUTHORIZED)
 
         user = get_object_or_404(
             UserAccount.objects.all(), username=kwargs['username'])
@@ -406,32 +437,42 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         return Response(return_data)
 
     def create(self, request, *args, **kwargs):
+        # check user is authenticated
+        if not request.user.is_authenticated or request.user.username != kwargs['username']:
+            return Response({'requires log in to see'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if request.user.is_authenticated:
-            isFoodDataCreationSuccess = self.__food_get_or_create(
-                request, kwargs['username'])
+        subuser = get_subuser_allow_record(
+            user=request.user, subuser_id=kwargs['subuser_id'])
+        # check the account has privilage to view this account
+        if not subuser:
+            return Response('this data cannot be viewed on this account.', status=status.HTTP_401_UNAUTHORIZED)
 
-            if not isFoodDataCreationSuccess:
-                return Response("requires fooddata", status=status.HTTP_400_BAD_REQUEST)
+        isFoodDataCreationSuccess = self.__food_get_or_create(
+            request, kwargs['username'])
 
-            if len(request.data['meal_content']) == 0 and len(request.data['recipe_meal_content']) == 0:
-                return Response("requires at least some food or recipe data", status=status.HTTP_400_BAD_REQUEST)
+        if not isFoodDataCreationSuccess:
+            return Response("requires fooddata", status=status.HTTP_400_BAD_REQUEST)
 
-            user = get_object_or_404(
-                UserAccount.objects.all(), username=kwargs['username'])
-            subuser = get_object_or_404(
-                Subuser.objects.all(), id=kwargs['subuser_id'], user=user.id)
-            request.data['subuser'] = subuser.id
-            serializer = self.serializer_class(data=request.data)
+        if len(request.data['meal_content']) == 0 and len(request.data['recipe_meal_content']) == 0:
+            return Response("requires at least some food or recipe data", status=status.HTTP_400_BAD_REQUEST)
 
-            # rest is taken care of by serializer
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'requires login'}, status=status.HTTP_401_UNAUTHORIZED)
+        user = get_object_or_404(
+            UserAccount.objects.all(), username=kwargs['username'])
+
+        request.data['subuser'] = subuser.id
+        serializer = self.serializer_class(data=request.data)
+
+        # rest is taken care of by serializer
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
+        # check user is authenticated
+        if not request.user.is_authenticated or request.user.username != kwargs['username']:
+            return Response({'requires log in to see'}, status=status.HTTP_401_UNAUTHORIZED)
+
         isFoodDataCreationSuccess = self.__food_get_or_create(
             request, kwargs['username'])
 
@@ -440,6 +481,12 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
 
         meal_record = get_object_or_404(
             self.queryset, id=kwargs['usermealrecord_id'])
+
+        subuser = get_subuser_allow_record(
+            user=request.user, subuser_id=kwargs['subuser_id'])
+        # check the account has privilage to view this account
+        if not subuser or meal_record.subuser.id != subuser.id:
+            return Response('this data cannot be viewed on this account.', status=status.HTTP_401_UNAUTHORIZED)
 
         serializer = self.serializer_class(meal_record, data=request.data)
 
@@ -451,13 +498,24 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, usermealrecord_id, *args, **kwargs):
+        # check user is authenticated
+        if not request.user.is_authenticated or request.user.username != kwargs['username']:
+            return Response({'requires log in to see'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        subuser = get_subuser_allow_all(
+            user=request.user, subuser_id=kwargs['subuser_id'])
+        # check the account has privilage to view this account
+        if not subuser:
+            return Response('this data cannot be viewed on this account.', status=status.HTTP_401_UNAUTHORIZED)
+
         meal_record = get_object_or_404(
             UserMealRecord, id=usermealrecord_id)
 
-        if meal_record.subuser in request.user.subuser.all():
-            meal_record.delete()
-            return Response('{ success }', status=status.HTTP_200_OK)
-        return Response({'only owner can delete', status.HTTP_401_UNAUTHORIZED})
+        if meal_record.subuser.id != subuser.id:
+            return Response({'only owner can delete', status.HTTP_401_UNAUTHORIZED})
+
+        meal_record.delete()
+        return Response('{ success }', status=status.HTTP_200_OK)
 
     def __food_get_or_create(self, request, username):
         for meal_content in request.data['meal_content']:
@@ -519,7 +577,6 @@ class SubuserViewSet(viewsets.ModelViewSet):
     serializer_class = SubuserSerializer
 
     def create(self, request, *args, **kwargs):
-
         if request.user.is_authenticated and request.user.username == kwargs['username']:
             request.data['user'] = [request.user.id]
             serializer = SubuserSerializer(
@@ -533,14 +590,12 @@ class SubuserViewSet(viewsets.ModelViewSet):
         return Response(message, status=status.HTTP_401_UNAUTHORIZED)
 
     def list(self, request, *args, **kwargs):
-
         if request.user.is_authenticated and request.user.username == kwargs['username']:
-            serializer = SubuserSerializer(
-                self.queryset.filter(user=request.user), many=True)
-            subuser = self.queryset.get(
-                user=request.user, id=kwargs['subuser_id'])
-            serializer = SubuserSerializer(subuser)
+            subusers = self.queryset.filter(user=request.user) |\
+                request.user.recordable_subuser.all() |\
+                request.user.viewable_subuser.all()
 
+            serializer = SubuserSerializer(subusers, many=True)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -548,8 +603,8 @@ class SubuserViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
 
-            subuser = self.queryset.get(
-                user=request.user, id=kwargs['subuser_id'])
+            subuser = get_subuser_allow_view(
+                user=request.user, subuser_id=kwargs['subuser_id'])
             serializer = SubuserSerializer(subuser)
 
             return Response(serializer.data)
@@ -582,18 +637,19 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
     lookup_field = 'username'
 
-    def retrieve(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            serializer = UserProfileSerializer(
-                self.queryset.get(username=request.user.username))
-            return Response(serializer.data)
-        content = {'requires log in to see'}
-        return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+    # def retrieve(self, request, *args, **kwargs):
+    #     if request.user.is_authenticated:
+    #         serializer = UserProfileSerializer(
+    #             self.queryset.get(username=request.user.username))
+    #         return Response(serializer.data)
+    #     content = {'requires log in to see'}
+    #     return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
     def list(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
-            serializer = UserProfileSerializer(self.queryset.filter(
-                username=request.user.username), many=True)
+            query_all_subuser = request.user.subuser.all(
+            ) | request.user.recordable_subuser.all() | request.user.viewable_subuser.all()
+            serializer = UserProfileSerializer(query_all_subuser, many=True)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -698,17 +754,14 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
             return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
         # get the data for subuser logged in
-        subuser_id = kwargs['subuser_id']
-
-        if len(request.user.subuser.all().filter(id=subuser_id)) == 0 and \
-                len(request.user.recordable_subuser.filter(id=subuser_id)) == 0 and \
-                len(request.user.viewable_subuser.filter(id=subuser_id)) == 0:
+        subuser = get_subuser_allow_view(
+            user=request.user, subuser_id=kwargs['subuser_id'])
+        if not subuser:
             return Response('this useraccount cannot view this subuser', status=status.HTTP_401_UNAUTHORIZED)
 
-        subuser_obj = Subuser.objects.get(id=subuser_id)
         age = str(helper.age_map(
-            helper.get_age_from_dob(subuser_obj.date_of_birth)))
-        gender = helper.genderMap(subuser_obj.gender)
+            helper.get_age_from_dob(subuser.date_of_birth)))
+        gender = helper.genderMap(subuser.gender)
 
         if not gender == 'O':
 
@@ -716,7 +769,7 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
                          ).strftime('%Y-%m-%d')
             on_date = None
             record = userrecord_date_range(
-                from_date=from_date, on_date=on_date, username=request.user.username, subuser_id=subuser_id)
+                from_date=from_date, on_date=on_date, username=request.user.username, subuser_id=subuser.id)
 
             # reference to recommendation
             dir = os.path.dirname(__file__)  # get current directory
@@ -1000,3 +1053,65 @@ class NutritionalViewSet(viewsets.ModelViewSet):
 class RecipeIngredientViewSet(viewsets.ModelViewSet):
     queryset = RecipeIngredient.objects.all()
     serializer_class = RecipeIngredientSerializer
+
+
+class UserRequestViewSet(viewsets.ModelViewSet):
+    queryset = UserShareRequest.objects.all()
+    serializer_class = UserShareRequestSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response('requries login', status=status.HTTP_401_UNAUTHORIZED)
+
+        share_request = get_object_or_404(id=kwargs['request_id'])
+
+        if request.user.username != share_request.request_received_from or request.user.username != share_request.request_sent_to:
+            return Response('action not allowed.', status=status.HTTP_401_UNAUTHORIZED)
+
+        share_request.delete()
+        return Response(status=status.HTTP_200_OK)
+
+
+class UserShareRequestReceivedViewSet(UserRequestViewSet):
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response('requries login', status=status.HTTP_401_UNAUTHORIZED)
+
+        share_requests = self.queryset.filter(
+            request_sent_to=request.user)
+
+        serializer = self.serializer_class(share_requests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserShareRequestSentViewSet(UserRequestViewSet):
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.username != kwargs['username']:
+            return Response('requires log in', status=status.HTTP_401_UNAUTHORIZED)
+
+        if request.user.username == request.data['request_sent_to']:
+            return Response('cannot request yourself', status=status.HTTP_400_BAD_REQUEST)
+
+        if not UserAccount.objects.filter(username=request.data['request_sent_to']).exists():
+            return Response('request useraccount does not exist', status=status.HTTP_400_BAD_REQUEST)
+
+        if UserShareRequest.objects.filter(request_received_from=request.user, request_sent_to=request.data['request_sent_to']).exists():
+            return Response('request already made', status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = UserShareRequestSerializer(
+            data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response('requries login', status=status.HTTP_401_UNAUTHORIZED)
+
+        share_requests = self.queryset.filter(
+            request_received_from=request.user)
+        serializer = self.serializer_class(share_requests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

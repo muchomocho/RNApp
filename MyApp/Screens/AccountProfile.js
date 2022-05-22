@@ -23,9 +23,9 @@ function AccountProfile(props) {
     const [isLoading, setIsLoading] = useState(true);
     const dispatch = useDispatch();
 
-    const deleteSubUser = async (subusername) => {
+    const deleteSubUser = async () => {
         try {
-            const endpoint = 'api/useraccounts/' + username + '/userprofile/' + subusername + '/';
+            const endpoint = 'api/useraccounts/' + user.username + '/subuser/' + currentSubuser.id + '/';
             const result = await APIRequest.httpRequest({
                 method: 'DELETE',
                 endpoint: endpoint,
@@ -47,12 +47,12 @@ function AccountProfile(props) {
           );
     };
 
-    const deleteSubUserAlert = (subusername) => {
+    const deleteSubUserAlert = () => {
         return Alert.alert(
             "Warning",
             "Are you sure you wan to delete?",
             [
-              { text: "OK", onPress: () => { deleteSubUser(subusername); getUserProfile(); } }
+              { text: "OK", onPress: () => { deleteSubUser(); getUserProfile(); } }
             ]
           );
     };
@@ -60,7 +60,6 @@ function AccountProfile(props) {
     const onLogout = () => {
         setLoggedIn(false);
         dispatch(setLogout());
-        console.log('asdadsa')
         dispatch(clearAllFoodData());
         dispatch(clearRecord());
         Authentication.logOut();
@@ -96,8 +95,14 @@ function AccountProfile(props) {
                 email: result.json.email
             };
 
+            const subusers = {
+                privilege_all: result.json.subuser,
+                privilege_record: result.json.recordable_subuser,
+                privilege_view: result.json.viewable_subuser
+            }
+
             dispatch(setUser(load_user));
-            dispatch(setSubuserArray(result.json.subuser));
+            dispatch(setSubuserArray(subusers));
 
             setLoggedIn(true);
             setIsLoading(false);

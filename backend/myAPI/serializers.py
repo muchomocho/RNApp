@@ -413,3 +413,22 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'user', 'recipe', 'text']
+
+
+class UserShareRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserShareRequest
+        fields = ['id', 'request_sent_to', 'text']
+
+    def create(self, validated_data):
+        request_from_user = self.context['request'].user
+        instance = self.Meta.model(
+            request_received_from=request_from_user, **validated_data)
+        instance.save()
+
+        return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['request_received_from'] = instance.request_received_from.username
+        return data

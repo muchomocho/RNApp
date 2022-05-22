@@ -128,6 +128,17 @@ subuser_urls = [
          views.UserProfileViewSet.as_view({'get': 'retrieve'}), name='userprofile')
 ]
 
+request_from_url = useraccount_url_detail + 'request-from/'
+request_to_url = useraccount_url_detail + 'request-to/'
+
+userrequest_urls = [
+    path(request_from_url, views.UserShareRequestReceivedViewSet.as_view(
+        {'get': 'list', 'delete': 'destroy'}), name='request-from'),
+    path(request_to_url, views.UserShareRequestSentViewSet.as_view(
+        {'get': 'list', 'post': 'create', 'delete': 'destroy'}), name='request-to'),
+
+]
+
 # model : `~myAPI.UserMealRecord`
 # gets a formatted version of meal record nutrition data
 userrecord_url_base = subuser_url_detail + 'userrecord/'
@@ -182,6 +193,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]\
     + useraccount_urls\
+    + userrequest_urls \
     + recipe_urls\
     + fooddata_urls\
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

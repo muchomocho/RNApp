@@ -12,7 +12,10 @@ const initialState = {
         id: '',
         name: '',
         age: '',
-        gender: ''
+        gender: '',
+        privilege_all: false,
+        privilege_record: false,
+        privilege_view: false
     },
 
     subuserArray: [],
@@ -54,17 +57,62 @@ export const userSlice = createSlice({
                 id: action.payload.id,
                 name: action.payload.name,
                 age: action.payload.age,
-                gender: action.payload.gender
+                gender: action.payload.gender,
+                privelege_all: action.payload.privelege_all,
+                privelege_record: action.payload.privelege_record,
+                privelege_view: action.payload.privelege_view
             }
         } 
     },
     setSubuserArray: (state, action) => {
         console.log(action.payload)
         console.log(state)
+
+        subuser_ids = {};
+
+        var subuser_all = action.payload.privilege_all.map(element => {
+            element.privilege_all = true;
+            element.privilege_all = true;
+            element.privilege_all = true;
+            return element;
+        });
+
+        for (var element of subuser_all){
+            subuser_ids[element.id] = true;
+        }
+
+        var recordable_subuser = action.payload.privilege_record.filter(element => 
+            !(Object.prototype.hasOwnProperty.call(subuser_ids, element.id))
+        );
+
+        recordable_subuser = recordable_subuser.map(element => {
+            element.privilege_all = false;
+            element.privilege_recordable = true;
+            element.privilege_viewable = true;
+            return element;
+        });
+
+        for (var element of recordable_subuser){
+            subuser_ids[element.id] = true;
+        }
+
+        var viewable_subuser = action.payload.privilege_view.filter(element => 
+            !(Object.prototype.hasOwnProperty.call(subuser_ids, element.id))
+        );
+        
+        viewable_subuser = viewable_subuser.map(element => {
+            element.privilege_all = false;
+            element.privilege_recordable = false;
+            element.privilege_viewable = true;
+            return element;
+        });
+        
         return {
             ...state, 
             subuserArray: [
-                ...action.payload
+                ...viewable_subuser,
+                ...recordable_subuser,
+                ...subuser_all
             ]
         }
     },
@@ -78,9 +126,13 @@ export const userSlice = createSlice({
             },
 
             currentSubuser: {
+                id: '',
                 name: '',
                 age: '',
-                gender: ''
+                gender: '',
+                privilege_all: false,
+                privilege_record: false,
+                privilege_view: false
             },
 
             subuserArray: []

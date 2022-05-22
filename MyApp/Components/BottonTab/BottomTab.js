@@ -15,6 +15,7 @@ import UserRecord from '../../Screens/UserRecords';
 import FoodDataList from '../../Screens/FoodDataList';
 import CreateRecord from '../../Screens/CreateRecord';
 import CheckFoodData from '../../Screens/CheckFoodData';
+import Request from '../../Screens/Request';
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator();
@@ -75,6 +76,8 @@ const BottomTab = () => {
                 }
             }
             />
+            <Tab.Screen name='Request' component={Request} />
+
             
             { /* we want to show tabs on these pages but not their icons in the tabs, so they are included here but hidden by style. */ }
             <Tab.Screen 

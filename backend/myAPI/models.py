@@ -119,7 +119,11 @@ class Subuser(models.Model):
 
 
 class UserShareRequest(models.Model):
-    pass
+    request_received_from = models.ForeignKey(
+        settings.AUTH_USER_MODEL, to_field='username', related_name='request_received_from', on_delete=models.CASCADE)
+    request_sent_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL, to_field='username', related_name='request_sent_to', on_delete=models.CASCADE)
+    text = models.TextField(max_length=300, null=True)
 
 
 class FoodData(models.Model):
