@@ -29,10 +29,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     },
 
-    activeButton: {
-        //backgroundColor: '#561ddbee',
-    },
-
     container: {
         width: '100%',
         backgroundColor: '#561ddb',

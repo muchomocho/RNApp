@@ -30,7 +30,7 @@ export default function ImagePickerComponent({onImageSelect}) {
         try {
             if (Platform.OS === 'ios') {
                 await requestMediaPermission();
-                if (mediastatus !== 'granted') {
+                if (mediastatus.status !== 'granted') {
                     return
                 }
             }
@@ -40,6 +40,7 @@ export default function ImagePickerComponent({onImageSelect}) {
                 allowsEditing: true,
                 //aspect: [4, 3],
                 quality: 1,
+                presentationStyle: 0
             });
         
             if (!result.cancelled) {
@@ -55,9 +56,11 @@ export default function ImagePickerComponent({onImageSelect}) {
     const pickFromCamera = async () => {
         try {
             if (Platform.OS === 'ios') {
+                //await Permissions.askAsync(Permissions.CAMERA_ROLL);
                 await requestCameraPermission();
-                if (camerastatus !== 'granted') {
-                    return
+                console.log(camerastatus)
+                if (camerastatus.status !== 'granted') {
+                    return;
                 }
             }
             let result = await ImagePicker.launchCameraAsync({
@@ -65,6 +68,7 @@ export default function ImagePickerComponent({onImageSelect}) {
                 allowsEditing: true,
                 //aspect: [4, 4],
                 quality: 1,
+                presentationStyle: 0
             });
         
             if (!result.cancelled) {

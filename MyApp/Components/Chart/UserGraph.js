@@ -15,16 +15,6 @@ export default function UserGraph ({ data, dates }) {
 
     const [focusData, setFocusData] = useState('energy_kcal');
 
-    //const [data, setData] = useState({});
-
-    // useEffect(() => {
-    //     console.log(data)
-    //     setData(data)
-    
-    //     // Return the function to unsubscribe from the event so it gets removed on unmount
-    // }, [data, userData]);
-
-
     const formatDate = (dateStr) => {
         return dateStr.split('-')[2];
     }
@@ -50,7 +40,7 @@ export default function UserGraph ({ data, dates }) {
             && (dates !== undefined && dates.length > 0)) {
                 const line = parseFloat(json[ageMap(currentSubuser.age)][genderMap(currentSubuser.gender)][focusData]);
                 const lineData = dates.map(date => ({x: formatDate(date), y: line}));
-                //console.log(lineData)
+          
                 return (
                     <VictoryLine 
                         data={lineData}
@@ -61,7 +51,7 @@ export default function UserGraph ({ data, dates }) {
     };
 
     const plotDot = () => {
-        //console.log(datePoint())
+    
         return (
             <VictoryBar
                 style={{data: {fill: "#0041b0"}}}
@@ -104,9 +94,9 @@ export default function UserGraph ({ data, dates }) {
     }
 
     const plot = () => {
-        // console.log('data: ', data)
+ 
         const formattedData = () => {
-             //console.log('data',data)
+
             var returnArray = new Array();
 
             dates.forEach(((element) => {

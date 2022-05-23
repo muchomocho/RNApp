@@ -106,7 +106,7 @@ function AccountProfile(props) {
 
             setLoggedIn(true);
             setIsLoading(false);
-
+            
             return true;
         } catch (error) {
             setLoggedIn(false);
@@ -181,27 +181,54 @@ function AccountProfile(props) {
     };
 
     const renderData = (item) => {
+  
+        const privilegeBanner = () => {
+            if (item.privilege_all) return;
+            if (item.privilege_recordable) {
+                console.log('ayaya')
+                return (
+                    <View style={styles.peopleExtraBanner}>
+                        <Text style={{color: '#fff'}}>This subuser is for viewing / recording</Text>
+                    </View>
+                );
+            }
+            if (item.privilege_viewable) {
+                console.log('ayaya')
+
+                return (
+                    <View style={styles.peopleExtraBanner}>
+                        <Text style={{color: '#fff'}}>This subuser is for viewing</Text>
+                    </View>
+                );
+            }
+        };
         return(
-            <TouchableOpacity 
-            style={styles.peopleTab}
-            onPress={()=>{
-                dispatch(setCurrentSubuser(item))
-                props.navigation.navigate('User record')
-                }}>
-                <View style={styles.iconContainer}>
-                </View>
-                <View style={styles.peopleDetailContainer}>
-                    <Text style={styles.peopleTextName}>{item.name}</Text>
-                    <View style={styles.labelContainer}>
-                        <Text>Age</Text>
-                        <Text style={styles.peopleText}>{item.age}</Text>
+            <View style={styles.peopleTabOuter}>
+                { privilegeBanner() }
+                <TouchableOpacity 
+                style={[styles.peopleTab, item.privilege_recordable || item.privilege_viewable ? { borderTopRightRadius: 0, borderTopLeftRadius: 0 } : {}]}
+                onPress={()=>{
+                    dispatch(setCurrentSubuser(item))
+                    props.navigation.navigate('User record')
+                    }}>
+                    
+                    <View style={styles.peopleTabInner}>
+                        <View style={styles.iconContainer}>
+                        </View>
+                        <View style={styles.peopleDetailContainer}>
+                            <Text style={styles.peopleTextName}>{item.name}</Text>
+                            <View style={styles.labelContainer}>
+                                <Text>Age</Text>
+                                <Text style={styles.peopleText}>{item.age}</Text>
+                            </View>
+                            <View style={styles.labelContainer}>
+                                <Text>Gender</Text>
+                                <Text style={styles.peopleText}>{item.gender}</Text>
+                            </View>
+                        </View>
                     </View>
-                    <View style={styles.labelContainer}>
-                        <Text>Gender</Text>
-                        <Text style={styles.peopleText}>{item.gender}</Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
+                </TouchableOpacity>
+            </View>
         )
     }
 
@@ -330,13 +357,20 @@ const styles = StyleSheet.create({
         backgroundColor: '#eee',
         borderRadius: 100
     },
+    peopleExtraBanner: {
+        backgroundColor: '#561ddb',
+        padding: 5,
+        borderTopRightRadius: 5,
+        borderTopLeftRadius: 5,
+    },
+    peopleTabOuter: {
+        margin: 10,
+    },
     peopleTab: {
-        flexDirection: 'row',
-        height: 100,
         backgroundColor: '#fff',
         borderRadius: 5,
         padding: 20,
-        margin: 10,
+        
 
         elevation: 3,
         shadowColor: '#eee',
@@ -346,6 +380,10 @@ const styles = StyleSheet.create({
             width: 0,
             height: 100
         },
+    },
+    peopleTabInner: {
+        flexDirection: 'row',
+        backgroundColor: '#fff',
     },
     peopleDetailContainer: {
         flex: 2,

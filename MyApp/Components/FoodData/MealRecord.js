@@ -150,23 +150,29 @@ export default function MealRecord({data, parentSet, navigation}) {
                     { deleteConfirmModal() }
                     { deleteFailModal() }
                     { timeText(singleData.time) }
-                    <CustomButton
-                        buttonStyle={styles.mealContentHeaderButton}
-                        textStyle={styles.mealContentHeaderButtonText}
-                        text="edit"
-                        onPress={() => {
-                            dispatch(clearRecord());
-                            dispatch(setMealRecord(singleData));
-                            dispatch(setIsMealUpdate(true));
-                            navigation.navigate('Create record');
-                        }}
-                    />
-                    <CustomButton
-                        buttonStyle={styles.mealContentHeaderButton}
-                        textStyle={styles.mealContentHeaderButtonText}
-                        text={'delete'}
-                        onPress={() => { setFocusData(singleData); setShowDeleteWarning(true) }}
-                    />
+                    {
+                        (currentSubuser.privilege_all || currentSubuser.priviege_record) &&
+                        <CustomButton
+                            buttonStyle={styles.mealContentHeaderButton}
+                            textStyle={styles.mealContentHeaderButtonText}
+                            text="edit"
+                            onPress={() => {
+                                dispatch(clearRecord());
+                                dispatch(setMealRecord(singleData));
+                                dispatch(setIsMealUpdate(true));
+                                navigation.navigate('Create record');
+                            }}
+                        />
+                    }
+                    {
+                        currentSubuser.privilege_all &&
+                        <CustomButton
+                            buttonStyle={styles.mealContentHeaderButton}
+                            textStyle={styles.mealContentHeaderButtonText}
+                            text={'delete'}
+                            onPress={() => { setFocusData(singleData); setShowDeleteWarning(true) }}
+                        />
+                    }
                 </View>
             );
         };

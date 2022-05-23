@@ -58,22 +58,20 @@ export const userSlice = createSlice({
                 name: action.payload.name,
                 age: action.payload.age,
                 gender: action.payload.gender,
-                privelege_all: action.payload.privelege_all,
-                privelege_record: action.payload.privelege_record,
-                privelege_view: action.payload.privelege_view
+                privilege_all: action.payload.privilege_all,
+                privilege_record: action.payload.privilege_record,
+                privilege_view: action.payload.privilege_view
             }
         } 
     },
     setSubuserArray: (state, action) => {
-        console.log(action.payload)
-        console.log(state)
 
         subuser_ids = {};
 
         var subuser_all = action.payload.privilege_all.map(element => {
             element.privilege_all = true;
-            element.privilege_all = true;
-            element.privilege_all = true;
+            element.privilege_recordable = true;
+            element.privilege_viewable = true;
             return element;
         });
 

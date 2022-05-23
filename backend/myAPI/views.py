@@ -39,9 +39,8 @@ def get_nutrient_keys():
 
 def userrecord_single(date_str, username, subuser_id):
     user = get_object_or_404(UserAccount, username=username)
-    user_id = user.id
     date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-    subuser = get_object_or_404(Subuser, user=user_id, id=subuser_id)
+    subuser = get_subuser_allow_view(user=user, subuser_id=subuser_id)
     record_list = UserMealRecord.objects.filter(
         subuser=subuser, time__year=date_obj.year, time__month=date_obj.month, time__day=date_obj.day)
 
@@ -412,9 +411,6 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(
             UserAccount.objects.all(), username=kwargs['username'])
 
-        subuser = get_object_or_404(
-            Subuser.objects.all(), id=kwargs['subuser_id'], user=user.id)
-
         date = request.query_params.get('date', None)
 
         return_data = []
@@ -763,125 +759,124 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
             helper.get_age_from_dob(subuser.date_of_birth)))
         gender = helper.genderMap(subuser.gender)
 
-        if not gender == 'O':
+        if gender == 'O' or gender == 'other':
+            return Response([])
 
-            from_date = (datetime.now() - timedelta(days=6)
-                         ).strftime('%Y-%m-%d')
-            on_date = None
-            record = userrecord_date_range(
-                from_date=from_date, on_date=on_date, username=request.user.username, subuser_id=subuser.id)
+        from_date = (datetime.now() - timedelta(days=6)
+                     ).strftime('%Y-%m-%d')
+        on_date = None
+        record = userrecord_date_range(
+            from_date=from_date, on_date=on_date, username=request.user.username, subuser_id=subuser.id)
 
-            # reference to recommendation
-            dir = os.path.dirname(__file__)  # get current directory
-            file_path = os.path.join(
-                dir, 'Assets/gov_diet_recommendation.json')
-            with open(file_path) as json_file:
-                gov_recommendation = json.load(json_file)
+        # reference to recommendation
+        dir = os.path.dirname(__file__)  # get current directory
+        file_path = os.path.join(
+            dir, 'Assets/gov_diet_recommendation.json')
+        with open(file_path) as json_file:
+            gov_recommendation = json.load(json_file)
 
-            record_avg_percent = []
-            for key, value in record.items():
-                if key == 'date' or key == 'salt' or key == 'energy_kcal' or key == 'energy_kj' or key == 'free_sugars' or key == 'fat' or key == 'saturated_fat':
-                    continue
-                record_avg = sum(value) / len(value)
-                record_avg_percent.append(
-                    (key, decimal.Decimal(gov_recommendation[age][gender][key]) / record_avg) if record_avg > 0 else (key, 0))
+        record_avg_percent = []
+        for key, value in record.items():
+            if key == 'date' or key == 'salt' or key == 'energy_kcal' or key == 'energy_kj' or key == 'free_sugars' or key == 'fat' or key == 'saturated_fat':
+                continue
+            record_avg = sum(value) / len(value)
+            record_avg_percent.append(
+                (key, decimal.Decimal(gov_recommendation[age][gender][key]) / record_avg) if record_avg > 0 else (key, 0))
 
-            sorted_percent = sorted(
-                record_avg_percent, key=lambda percent: percent[1])
+        sorted_percent = sorted(
+            record_avg_percent, key=lambda percent: percent[1])
 
-            sql_sub_inner2 = '''
-                    (SELECT recipe_inner.id, recipe_inner.is_private, recipe_inner.is_hidden, ingredient_inner.id, ingredient_inner.food_data_id, ingredient_inner.amount, ingredient_inner.unit, food_data_inner.id, food_data_inner.amount_in_grams, nutrition_inner.id, nutrition_inner.value, nutrition_inner.unit, nutrition_inner.name, 
-                    ((ingredient_inner.amount*1.0 / food_data_inner.amount_in_grams*1.0) * 
-                    (CASE 
-                    WHEN ingredient_inner.unit = 'g' THEN 1
-                    WHEN ingredient_inner.unit = 'mg' THEN 1/1000
-                    WHEN ingredient_inner.unit = 'microg' THEN 1/1000000
-                    ELSE 0
-                    END
-                    ) *
-                    nutrition_inner.value) AS total
-                    FROM myAPI_recipe AS recipe_inner 
-                    LEFT JOIN myAPI_recipeingredient AS ingredient_inner
-                    ON recipe_inner.id = ingredient_inner.recipe_id
-                    LEFT JOIN myAPI_fooddata as food_data_inner
-                    ON ingredient_inner.food_data_id = food_data_inner.id
-                    LEFT JOIN myAPI_nutritionaldata AS nutrition_inner
-                    ON food_data_inner.id = nutrition_inner.parent_food_id
-                    LEFT JOIN myAPI_useraccount AS useraccount_inner
-                    ON recipe_inner.username = useraccount_inner.username
-                    WHERE 
-                    recipe_inner.is_hidden = 0 AND
-                    (recipe_inner.is_private = 0 OR (recipe_inner.is_private = 1 AND recipe_inner.username = '{username}')) AND
-                    ((nutrition_inner.name = 'salt' AND nutrition_inner.value >= {salt_value})  OR
-                    (nutrition_inner.name = 'free_sugars' AND nutrition_inner.value >= {sugar_value}) OR
-                    (nutrition_inner.name = 'fat' AND nutrition_inner.value >= {fat_value}) OR
-                    (nutrition_inner.name = 'energy_kj' AND nutrition_inner.value >= {energy_kj_value}) OR
-                    (nutrition_inner.name = 'energy_kcal' AND nutrition_inner.value >= {energy_kcal_value}) OR
-                    (nutrition_inner.name = 'saturated_fat' AND nutrition_inner.value >= {sat_fat_value})))
-            '''.format(
+        sql_sub_inner2 = '''
+                (SELECT recipe_inner.id, recipe_inner.is_private, recipe_inner.is_hidden, ingredient_inner.id, ingredient_inner.food_data_id, ingredient_inner.amount, ingredient_inner.unit, food_data_inner.id, food_data_inner.amount_in_grams, nutrition_inner.id, nutrition_inner.value, nutrition_inner.unit, nutrition_inner.name, 
+                ((ingredient_inner.amount*1.0 / food_data_inner.amount_in_grams*1.0) * 
+                (CASE 
+                WHEN ingredient_inner.unit = 'g' THEN 1
+                WHEN ingredient_inner.unit = 'mg' THEN 1/1000
+                WHEN ingredient_inner.unit = 'microg' THEN 1/1000000
+                ELSE 0
+                END
+                ) *
+                nutrition_inner.value) AS total
+                FROM myAPI_recipe AS recipe_inner 
+                LEFT JOIN myAPI_recipeingredient AS ingredient_inner
+                ON recipe_inner.id = ingredient_inner.recipe_id
+                LEFT JOIN myAPI_fooddata as food_data_inner
+                ON ingredient_inner.food_data_id = food_data_inner.id
+                LEFT JOIN myAPI_nutritionaldata AS nutrition_inner
+                ON food_data_inner.id = nutrition_inner.parent_food_id
+                LEFT JOIN myAPI_useraccount AS useraccount_inner
+                ON recipe_inner.username = useraccount_inner.username
+                WHERE 
+                recipe_inner.is_hidden = 0 AND
+                (recipe_inner.is_private = 0 OR (recipe_inner.is_private = 1 AND recipe_inner.username = '{username}')) AND
+                ((nutrition_inner.name = 'salt' AND nutrition_inner.value >= {salt_value})  OR
+                (nutrition_inner.name = 'free_sugars' AND nutrition_inner.value >= {sugar_value}) OR
+                (nutrition_inner.name = 'fat' AND nutrition_inner.value >= {fat_value}) OR
+                (nutrition_inner.name = 'energy_kj' AND nutrition_inner.value >= {energy_kj_value}) OR
+                (nutrition_inner.name = 'energy_kcal' AND nutrition_inner.value >= {energy_kcal_value}) OR
+                (nutrition_inner.name = 'saturated_fat' AND nutrition_inner.value >= {sat_fat_value})))
+        '''.format(
+            username=kwargs['username'],
+            salt_value=gov_recommendation[age][gender]['salt'],
+            sugar_value=gov_recommendation[age][gender]['free_sugars'],
+            fat_value=gov_recommendation[age][gender]['fat'],
+            energy_kcal_value=gov_recommendation[age][gender]['energy_kcal'],
+            energy_kj_value=gov_recommendation[age][gender]['energy_kj'],
+            sat_fat_value=gov_recommendation[age][gender]['saturated_fat'],
+        )
+
+        recipe_recommended = []
+        random.shuffle(sorted_percent[:5])
+        for element in sorted_percent[:3]:
+            sql_sub_inner = '''
+                (SELECT recipe.id, recipe.is_private, recipe.is_hidden, ingredient.id, ingredient.food_data_id, ingredient.amount, ingredient.unit, food_data.id, food_data.amount_in_grams, nutrition.id, nutrition.value, nutrition.unit, nutrition.name, 
+                MAX((ingredient.amount*1.0 / food_data.amount_in_grams* 1.0) * 
+                (CASE 
+                WHEN ingredient.unit = 'g' THEN 1
+                WHEN ingredient.unit = 'mg' THEN 1/1000
+                WHEN ingredient.unit = 'microg' THEN 1/1000000
+                ELSE 0
+                END
+                ) *
+                nutrition.value)
+                FROM myAPI_recipe AS recipe 
+                LEFT JOIN myAPI_recipeingredient AS ingredient
+                ON recipe.id = ingredient.recipe_id
+                LEFT JOIN myAPI_fooddata as food_data
+                ON ingredient.food_data_id = food_data.id
+                LEFT JOIN myAPI_nutritionaldata AS nutrition
+                ON food_data.id = nutrition.parent_food_id
+                LEFT JOIN myAPI_useraccount AS useraccount
+                ON recipe.username = useraccount.username
+                WHERE 
+                recipe.is_hidden = 0 AND
+                nutrition.name = '{name}' AND
+                (recipe.is_private = 0 OR (recipe.is_private = 1 AND recipe.username = '{username}')) AND
+                recipe.id NOT IN
+                (SELECT recipe.id FROM {sql_sub_inner2} AS recipe))
+        '''.format(
                 username=kwargs['username'],
-                salt_value=gov_recommendation[age][gender]['salt'],
-                sugar_value=gov_recommendation[age][gender]['free_sugars'],
-                fat_value=gov_recommendation[age][gender]['fat'],
-                energy_kcal_value=gov_recommendation[age][gender]['energy_kcal'],
-                energy_kj_value=gov_recommendation[age][gender]['energy_kj'],
-                sat_fat_value=gov_recommendation[age][gender]['saturated_fat'],
+                sql_sub_inner2=sql_sub_inner2,
+                name=element[0]
             )
+            recipe_max_id = Recipe.objects.raw(
+                '''
+                SELECT recipe.id FROM
+                {sql_sub_inner} AS recipe
+                '''.format(sql_sub_inner=sql_sub_inner))
 
-            recipe_recommended = []
-            random.shuffle(sorted_percent[:5])
-            for element in sorted_percent[:3]:
-                sql_sub_inner = '''
-                    (SELECT recipe.id, recipe.is_private, recipe.is_hidden, ingredient.id, ingredient.food_data_id, ingredient.amount, ingredient.unit, food_data.id, food_data.amount_in_grams, nutrition.id, nutrition.value, nutrition.unit, nutrition.name, 
-                    MAX((ingredient.amount*1.0 / food_data.amount_in_grams* 1.0) * 
-                    (CASE 
-                    WHEN ingredient.unit = 'g' THEN 1
-                    WHEN ingredient.unit = 'mg' THEN 1/1000
-                    WHEN ingredient.unit = 'microg' THEN 1/1000000
-                    ELSE 0
-                    END
-                    ) *
-                    nutrition.value)
-                    FROM myAPI_recipe AS recipe 
-                    LEFT JOIN myAPI_recipeingredient AS ingredient
-                    ON recipe.id = ingredient.recipe_id
-                    LEFT JOIN myAPI_fooddata as food_data
-                    ON ingredient.food_data_id = food_data.id
-                    LEFT JOIN myAPI_nutritionaldata AS nutrition
-                    ON food_data.id = nutrition.parent_food_id
-                    LEFT JOIN myAPI_useraccount AS useraccount
-                    ON recipe.username = useraccount.username
-                    WHERE 
-                    recipe.is_hidden = 0 AND
-                    nutrition.name = '{name}' AND
-                    (recipe.is_private = 0 OR (recipe.is_private = 1 AND recipe.username = '{username}')) AND
-                    recipe.id NOT IN
-                    (SELECT recipe.id FROM {sql_sub_inner2} AS recipe))
-            '''.format(
-                    username=kwargs['username'],
-                    sql_sub_inner2=sql_sub_inner2,
-                    name=element[0]
-                )
-                recipe_max_id = Recipe.objects.raw(
-                    '''
-                    SELECT recipe.id FROM
-                    {sql_sub_inner} AS recipe
-                    '''.format(sql_sub_inner=sql_sub_inner))
+            try:
+                recipe_max_nutrition_name = Recipe.objects.get(
+                    id=recipe_max_id[0].id)
+                serializer = RecipeSerializer(
+                    recipe_max_nutrition_name)
+                data = serializer.data
+                data['high_in'] = element[0]
+                recipe_recommended.append(data)
+            except ObjectDoesNotExist:
+                pass
 
-                try:
-                    recipe_max_nutrition_name = Recipe.objects.get(
-                        id=recipe_max_id[0].id)
-                    serializer = RecipeSerializer(
-                        recipe_max_nutrition_name)
-                    data = serializer.data
-                    data['high_in'] = element[0]
-                    recipe_recommended.append(data)
-                except ObjectDoesNotExist:
-                    pass
-
-            return Response(recipe_recommended)
-
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(recipe_recommended)
 
 
 class PersonalRecipeViewSet(viewsets.ModelViewSet):
@@ -1063,13 +1058,14 @@ class UserRequestViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response('requries login', status=status.HTTP_401_UNAUTHORIZED)
 
-        share_request = get_object_or_404(id=kwargs['request_id'])
+        share_request = get_object_or_404(
+            UserShareRequest, id=kwargs['request_id'])
 
-        if request.user.username != share_request.request_received_from or request.user.username != share_request.request_sent_to:
+        if request.user.username != share_request.request_received_from.username and request.user.username != share_request.request_sent_to.username:
             return Response('action not allowed.', status=status.HTTP_401_UNAUTHORIZED)
 
         share_request.delete()
-        return Response(status=status.HTTP_200_OK)
+        return Response('deleted', status=status.HTTP_200_OK)
 
 
 class UserShareRequestReceivedViewSet(UserRequestViewSet):
@@ -1115,3 +1111,37 @@ class UserShareRequestSentViewSet(UserRequestViewSet):
             request_received_from=request.user)
         serializer = self.serializer_class(share_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserShareViewSet(viewsets.ModelViewSet):
+    queryset = UserAccount.objects.all()
+    serializer_class = UserAccountSerializer
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.username != kwargs['username']:
+            return Response('not allowed on this account', status=status.HTTP_401_UNAUTHORIZED)
+
+        print(request.data['recordable_subuser'])
+        print(request.data['viewable_subuser'])
+
+        to_user = get_object_or_404(
+            UserAccount, username=request.data['share_with_user'])
+
+        if 'recordable_subuser' in request.data:
+            for subuser_id in request.data['recordable_subuser']:
+                subuser = get_object_or_404(Subuser, id=subuser_id)
+                to_user.recordable_subuser.add(subuser)
+
+        if 'viewable_subuser' in request.data:
+            for subuser_id in request.data['viewable_subuser']:
+                subuser = get_object_or_404(Subuser, id=subuser_id)
+                to_user.viewable_subuser.add(subuser)
+
+        requests = UserShareRequest.objects.filter(request_received_from=to_user,
+                                                   request_sent_to=request.user)
+
+        if requests.exists():
+            for req in requests:
+                req.delete()
+
+        return Response('success', status=status.HTTP_200_OK)

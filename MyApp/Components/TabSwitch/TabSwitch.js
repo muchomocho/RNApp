@@ -54,7 +54,7 @@ export default function TabSwitch({titleComponentArray=[]}) {
                 const component = () => {
                     
                         return (
-                            <View key={index} style={[styles.componentContainer, {height: (height - (tabDimensions.height + headerHeight + 60 + 30)), width: '100%', marginTop: tabDimensions.height, position: 'absolute'}]}>
+                            <View key={index} style={[styles.componentContainer, {height: (height - (tabDimensions.height + headerHeight + 60 + 30)), width: '100%', marginTop: tabDimensions.height, position: 'absolute'}, element.id != showIndex ? {transform: [{scale: 0}], zIndex: -1} : { zIndex: 1, flex: 1 } ]}>
                                 {/* https://stackoverflow.com/questions/47378068/using-display-none-instead-of-condition-state-rendering */}
                                 <View style={[element.id != showIndex ? {transform: [{scale: 0}], zIndex: -1} : { zIndex: 1, flex: 1 } ]}>
                                     {element.component}

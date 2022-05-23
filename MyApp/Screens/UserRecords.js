@@ -43,7 +43,7 @@ function UserRecord(props) {
             await getUserRecord();
             await getUserMealRecord();
         } catch (error) {
-            console.log(error)
+            
         }
     };
         
@@ -87,8 +87,7 @@ function UserRecord(props) {
         currentDate.setMinutes(0)
         currentDate.setSeconds(0)
         var dates = new Array();
-        console.log(currentDate)
-        console.log(date)
+
         for (;currentDate <= date; currentDate.setDate(currentDate.getDate() + 1)) {
             dates.push(formatDate(currentDate));
         }
@@ -112,10 +111,9 @@ function UserRecord(props) {
             });
             setData(result.json);
             setDataLoading(false);
-            // console.log('result',result.json)
         
         } catch (error) {
-            console.log('userrecord', error)
+
         }
     };
 
@@ -125,7 +123,7 @@ function UserRecord(props) {
 
         for (var recordDate in dates) {
             try {
-                console.log(recordDate)
+           
                 const result = await APIRequest.httpRequest({
                     method: 'GET',
                     endpoint: `api/useraccounts/${user.username}/subuser/${currentSubuser.id}/usermealrecord/?date=${dates[recordDate]}`,
@@ -214,16 +212,18 @@ function UserRecord(props) {
                 </View>    
             )
         }
-        return (
-            <CustomButton
-                text={'Create Record'}
-                onPress={()=>{
-                    dispatch(clearRecord());
-                    dispatch(setIsMealUpdate(false));
-                    props.navigation.navigate('Create record');
-                }}
-            />
-        );
+        if (currentSubuser.privilege_all || currentSubuser.privilege_recordable) {
+            return (
+                <CustomButton
+                    text={'Create Record'}
+                    onPress={()=>{
+                        dispatch(clearRecord());
+                        dispatch(setIsMealUpdate(false));
+                        props.navigation.navigate('Create record');
+                    }}
+                />
+            );
+        }
     };
 
     const recipeRecommendation = () => {

@@ -63,6 +63,8 @@ class SubuserSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     subuser = SubuserSerializer(many=True)
+    recordable_subuser = SubuserSerializer(many=True)
+    viewable_subuser = SubuserSerializer(many=True)
 
     class Meta:
         model = UserAccount

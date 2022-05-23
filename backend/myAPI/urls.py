@@ -130,13 +130,24 @@ subuser_urls = [
 
 request_from_url = useraccount_url_detail + 'request-from/'
 request_to_url = useraccount_url_detail + 'request-to/'
+request_from_url_detail = request_from_url + '<request_id>/'
+request_to_url_detail = request_to_url + '<request_id>/'
 
 userrequest_urls = [
     path(request_from_url, views.UserShareRequestReceivedViewSet.as_view(
-        {'get': 'list', 'delete': 'destroy'}), name='request-from'),
+        {'get': 'list'}), name='request-from'),
     path(request_to_url, views.UserShareRequestSentViewSet.as_view(
-        {'get': 'list', 'post': 'create', 'delete': 'destroy'}), name='request-to'),
+        {'get': 'list', 'post': 'create'}), name='request-to'),
+    path(request_from_url_detail, views.UserShareRequestReceivedViewSet.as_view(
+        {'delete': 'destroy'}), name='request-from'),
+    path(request_to_url_detail, views.UserShareRequestSentViewSet.as_view(
+        {'delete': 'destroy'}), name='request-to'),
+]
 
+share_url = useraccount_url_detail + 'share/'
+usershare_urls = [
+    path(share_url, views.UserShareViewSet.as_view(
+        {'post': 'create'}), name='share'),
 ]
 
 # model : `~myAPI.UserMealRecord`
@@ -194,6 +205,7 @@ urlpatterns = [
 ]\
     + useraccount_urls\
     + userrequest_urls \
+    + usershare_urls \
     + recipe_urls\
     + fooddata_urls\
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
