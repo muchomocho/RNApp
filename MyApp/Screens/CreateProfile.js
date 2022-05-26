@@ -82,10 +82,10 @@ function CreateProfile({ navigation, isupdate }) {
     };
 
     const onDateConfirm = (event, date) => {
-      if (event.type == 'set') {
-          const dateObj = new Date(date)
-          setDob(dateObj);
-      }
+      
+      const dateObj = new Date(date)
+      setDob(dateObj);
+      
       setShowDatePicker(false);
     };
 

@@ -1,10 +1,4 @@
-from dataclasses import field
 import decimal
-from re import I
-from tkinter.tix import Tree
-import unicodedata
-from wsgiref import validate
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from .models import *
 import json
@@ -272,7 +266,7 @@ class UserMealRecordSerializer(serializers.ModelSerializer):
 class RecipeTitleSerializer(serializers.ModelSerializer):
     class SimpleTagSerializer(serializers.ModelSerializer):
         class Meta:
-            model = Tag
+            model = RecipeTag
             fields = ['text']
 
     tags = SimpleTagSerializer(many=True)
@@ -288,9 +282,9 @@ class RecipeStepSerializer(serializers.ModelSerializer):
         fields = ['id', 'recipe', 'step_number', 'text']
 
 
-class TagSerializer(serializers.ModelSerializer):
+class RecipeTagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tag
+        model = RecipeTag
         fields = ['id', 'recipe', 'text']
 
 
@@ -312,7 +306,7 @@ This serializer can read / write recipe with nested json with each step.
 class RecipeSerializer(serializers.ModelSerializer):
     class SimpleTagSerializer(serializers.ModelSerializer):
         class Meta:
-            model = Tag
+            model = RecipeTag
             fields = ['text']
 
     class SimpleRecipeIngredientSerializer(serializers.ModelSerializer):
@@ -342,7 +336,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     ingredients = SimpleRecipeIngredientSerializer(many=True)
     steps = SimpleStepSerializer(many=True)
-    tags = SimpleTagSerializer(many=True)
+    tags = SimpleTagSerializer(many=True, allow_null=True)
 
     class Meta:
         model = Recipe
@@ -359,9 +353,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
 
         for tag_data in tags_data:
-            instance_list = Tag.objects.filter(text=tag_data.get('text'))
+            instance_list = RecipeTag.objects.filter(text=tag_data.get('text'))
             if len(instance_list) == 0:
-                recipe.tags.add(Tag.objects.create(**tag_data))
+                recipe.tags.add(RecipeTag.objects.create(**tag_data))
             else:
                 recipe.tags.add(instance_list[0])
 
@@ -384,6 +378,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients_data = validated_data.pop('ingredients')
         steps_data = validated_data.pop('steps')
 
+        instance.title = validated_data.pop('title')
+
         if 'main_img' in validated_data:
             image = validated_data.pop('main_img')
             instance.main_img.delete()
@@ -391,9 +387,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         instance.tags.all().delete()
         for tag_data in tags_data:
-            instance_list = Tag.objects.filter(text=tag_data.get('text'))
+            instance_list = RecipeTag.objects.filter(text=tag_data.get('text'))
             if len(instance_list) == 0:
-                instance.tags.add(Tag.objects.create(**tag_data))
+                instance.tags.add(RecipeTag.objects.create(**tag_data))
             else:
                 instance.tags.add(instance_list[0])
 

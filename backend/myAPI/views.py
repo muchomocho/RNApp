@@ -1,27 +1,20 @@
-from cgitb import lookup
-from contextvars import Context
 from datetime import datetime, timedelta
 import json
 import random
-from os import stat
-from urllib import request
 from .models import *
 from .serializers import *
-from django.http import Http404
-from rest_framework.views import APIView
 from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import mixins
-from rest_framework import generics
 from rest_framework import viewsets
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from . import helper
-
-from myAPI import serializers
+import dotenv
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 
 
 def get_nutrient_keys():
@@ -65,8 +58,6 @@ def userrecord_single(date_str, username, subuser_id):
                 if nutrition_data.name == key:
                     return_json[key] += decimal.Decimal(nutrition_data.value) * (meal_content.amount_in_grams /
                                                                                  food_data.amount_in_grams) * decimal.Decimal(helper.unit_converter(units[key], nutrition_data.unit))
-                    print(key, decimal.Decimal(nutrition_data.value) * (meal_content.amount_in_grams /
-                                                                        food_data.amount_in_grams) * decimal.Decimal(helper.unit_converter(units[key], nutrition_data.unit)))
 
     # details of what recipe user had
     recipe_content_list = UserMealRecipeContent.objects.filter(
@@ -186,7 +177,7 @@ def recipe_nutrient(recipe_id, return_json=None, user=None):
                             units[key], nutrient.unit))
 
     return_json['is_missing_value'] = is_missing_value
-    print(return_json)
+
     return return_json
 
 
@@ -217,7 +208,19 @@ def get_subuser_allow_all(user, subuser_id):
     return subuser
 
 
-    # Create your views here.
+def verify_secret_header(func):
+    APP_SERVER_KEY = os.environ['RNAPP_DJANGO_SERVER_KEY']
+
+    def inner(self, request, *args, **kwargs):
+        if 'app-server-key' not in request.headers or request.headers['app-server-key'] != APP_SERVER_KEY:
+            return Response('key is required', status=status.HTTP_400_BAD_REQUEST)
+
+        return func(self, request, *args, **kwargs)
+
+    return inner
+
+
+# Create your views here.
 """
 django rest framework simple jwt 
 + 
@@ -260,6 +263,7 @@ class UserAccountViewSet(viewsets.ModelViewSet):
     serializer_class = UserAccountSerializer
     lookup_field = 'username'
 
+    @verify_secret_header
     def retrieve(self, request, username):
         if request.user.is_authenticated:
             queryset = UserAccount.objects.all()
@@ -269,7 +273,13 @@ class UserAccountViewSet(viewsets.ModelViewSet):
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
+    @verify_secret_header
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @verify_secret_header
     def update(self, request, *args, **kwargs):
+
         if request.user.is_authenticated and request.user.username == kwargs['username']:
             queryset = UserAccount.objects.all()
             userccount = get_object_or_404(
@@ -283,6 +293,7 @@ class UserAccountViewSet(viewsets.ModelViewSet):
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
+    @verify_secret_header
     def create(self, request):
         serializer = UserAccountSerializer(data=request.data)
         if serializer.is_valid():
@@ -318,6 +329,7 @@ class UserRecordViewSet(viewsets.ModelViewSet):
     requires login to view data and shows the logged in user's only
     """
 
+    @verify_secret_header
     def retrieve(self, request, *args, **kwargs):
         # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -336,6 +348,7 @@ class UserRecordViewSet(viewsets.ModelViewSet):
             return Response(return_json['error'], status.HTTP_400_BAD_REQUEST)
         return Response(return_json)
 
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
        # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -375,6 +388,7 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
 
         return data
 
+    @verify_secret_header
     def retrieve(self, request, *args, **kwargs):
         # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -397,6 +411,7 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
 
         return Response(return_data)
 
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -432,6 +447,7 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
 
         return Response(return_data)
 
+    @verify_secret_header
     def create(self, request, *args, **kwargs):
         # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -464,6 +480,7 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @verify_secret_header
     def update(self, request, *args, **kwargs):
         # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -493,6 +510,7 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @verify_secret_header
     def destroy(self, request, usermealrecord_id, *args, **kwargs):
         # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -568,10 +586,11 @@ class SubuserPermission(BasePermission):
 
 
 class SubuserViewSet(viewsets.ModelViewSet):
-    permission_classes = [SubuserPermission]
+    #permission_classes = [SubuserPermission]
     queryset = Subuser.objects.all()
     serializer_class = SubuserSerializer
 
+    @verify_secret_header
     def create(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
             request.data['user'] = [request.user.id]
@@ -585,6 +604,7 @@ class SubuserViewSet(viewsets.ModelViewSet):
         message = {'requires log in'}
         return Response(message, status=status.HTTP_401_UNAUTHORIZED)
 
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
             subusers = self.queryset.filter(user=request.user) |\
@@ -596,6 +616,7 @@ class SubuserViewSet(viewsets.ModelViewSet):
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
+    @verify_secret_header
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
 
@@ -606,6 +627,10 @@ class SubuserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
+
+    @verify_secret_header
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
 
 class UserProfilePermission(BasePermission):
@@ -631,21 +656,11 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [UserProfilePermission]
     queryset = UserAccount.objects.all()
     serializer_class = UserProfileSerializer
-    lookup_field = 'username'
 
-    # def retrieve(self, request, *args, **kwargs):
-    #     if request.user.is_authenticated:
-    #         serializer = UserProfileSerializer(
-    #             self.queryset.get(username=request.user.username))
-    #         return Response(serializer.data)
-    #     content = {'requires log in to see'}
-    #     return Response(content, status=status.HTTP_401_UNAUTHORIZED)
-
-    def list(self, request, *args, **kwargs):
+    @verify_secret_header
+    def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
-            query_all_subuser = request.user.subuser.all(
-            ) | request.user.recordable_subuser.all() | request.user.viewable_subuser.all()
-            serializer = UserProfileSerializer(query_all_subuser, many=True)
+            serializer = UserProfileSerializer(request.user)
             return Response(serializer.data)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -656,6 +671,7 @@ class RecipeTitleViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeTitleSerializer
 
     # https://docs.djangoproject.com/en/4.0/topics/db/queries/
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         search_query = request.query_params.get('title', None)
 
@@ -672,6 +688,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
+    @verify_secret_header
     def create(self, request, format=None, *args, **kwargs):
 
         serializer = RecipeSerializer(data=request.data)
@@ -680,6 +697,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @verify_secret_header
     def retrieve(self, request, *args, **kwargs):
 
         recipe = get_object_or_404(self.queryset, id=kwargs['recipe_id'])
@@ -693,6 +711,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     # https://docs.djangoproject.com/en/4.0/topics/db/queries/
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         search_query = request.query_params.get('title', None)
 
@@ -714,6 +733,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+    @verify_secret_header
     def update(self, request, *args, **kwargs):
         if request.user.is_authenticated:
 
@@ -730,19 +750,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
+    @verify_secret_header
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
 
 class RecipeNutrientViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
 
+    @verify_secret_header
     def retrieve(self, request, *args, **kwargs):
         return Response(recipe_nutrient(recipe_id=kwargs['recipe_id'], user=request.user))
+
+
+class RecipeTagViewSet(viewsets.ModelViewSet):
+    queryset = RecipeTag.objects.all()
+    serializer_class = RecipeTagSerializer
+
+
+class RecipeIngredientViewSet(viewsets.ModelViewSet):
+    queryset = RecipeIngredient.objects.all()
+    serializer_class = RecipeIngredientSerializer
 
 
 class RecipeRecommendationViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
 
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         # if user is not logged in recommendation cannot be given
         if not request.user.is_authenticated:
@@ -787,8 +823,37 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
             record_avg_percent, key=lambda percent: percent[1])
 
         sql_sub_inner2 = '''
-                (SELECT recipe_inner.id, recipe_inner.is_private, recipe_inner.is_hidden, ingredient_inner.id, ingredient_inner.food_data_id, ingredient_inner.amount, ingredient_inner.unit, food_data_inner.id, food_data_inner.amount_in_grams, nutrition_inner.id, nutrition_inner.value, nutrition_inner.unit, nutrition_inner.name, 
-                ((ingredient_inner.amount*1.0 / food_data_inner.amount_in_grams*1.0) * 
+                SELECT
+                recipe_inner_wrapper.recipe_id_inner,
+                recipe_inner_wrapper.recipe_title_inner,
+                recipe_inner_wrapper.nut_name_inner,
+                recipe_inner_wrapper.total_inner
+                FROM
+                (
+                SELECT
+                recipe_inner.recipe_id_inner,
+                recipe_inner.recipe_title_inner,
+                recipe_inner.nut_name_inner,
+                SUM(recipe_inner.real_nut_val) AS total_inner
+                FROM
+                (
+                SELECT 
+                recipe_inner.id as recipe_id_inner, 
+                recipe_inner.title as recipe_title_inner,
+                recipe_inner.is_private as recipe_private_inner, 
+                recipe_inner.is_hidden as recipe_hidden_inner, 
+                recipe_inner.username as recipe_username_inner,
+                ingredient_inner.id as ingredient_id_inner, 
+                ingredient_inner.food_data_id as ingredient_food_inner, 
+                ingredient_inner.amount as ingredient_amount_inner, 
+                ingredient_inner.unit as ingredient_unit_inner, 
+                food_data_inner.id as food_id_inner, 
+                food_data_inner.amount_in_grams as food_amount_inner, 
+                nutrition_inner.id as nut_id_inner, 
+                nutrition_inner.value as nut_val_inner, 
+                nutrition_inner.unit as nut_unit_inner, 
+                nutrition_inner.name as nut_name_inner, 
+                ((ingredient_inner.amount*1.0 / food_data_inner.amount_in_grams* 1.0) * 
                 (CASE 
                 WHEN ingredient_inner.unit = 'g' THEN 1
                 WHEN ingredient_inner.unit = 'mg' THEN 1/1000
@@ -796,41 +861,89 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
                 ELSE 0
                 END
                 ) *
-                nutrition_inner.value) AS total
-                FROM myAPI_recipe AS recipe_inner 
-                LEFT JOIN myAPI_recipeingredient AS ingredient_inner
+                nutrition_inner.value) AS real_nut_val
+                FROM "myAPI_recipe" AS recipe_inner
+                LEFT JOIN "myAPI_recipeingredient" AS ingredient_inner
                 ON recipe_inner.id = ingredient_inner.recipe_id
-                LEFT JOIN myAPI_fooddata as food_data_inner
+                LEFT JOIN "myAPI_fooddata" AS food_data_inner
                 ON ingredient_inner.food_data_id = food_data_inner.id
-                LEFT JOIN myAPI_nutritionaldata AS nutrition_inner
+                LEFT JOIN "myAPI_nutritionaldata" AS nutrition_inner
                 ON food_data_inner.id = nutrition_inner.parent_food_id
-                LEFT JOIN myAPI_useraccount AS useraccount_inner
+                LEFT JOIN "myAPI_useraccount" AS useraccount_inner
                 ON recipe_inner.username = useraccount_inner.username
                 WHERE 
-                recipe_inner.is_hidden = 0 AND
-                (recipe_inner.is_private = 0 OR (recipe_inner.is_private = 1 AND recipe_inner.username = '{username}')) AND
-                ((nutrition_inner.name = 'salt' AND nutrition_inner.value >= {salt_value})  OR
-                (nutrition_inner.name = 'free_sugars' AND nutrition_inner.value >= {sugar_value}) OR
-                (nutrition_inner.name = 'fat' AND nutrition_inner.value >= {fat_value}) OR
-                (nutrition_inner.name = 'energy_kj' AND nutrition_inner.value >= {energy_kj_value}) OR
-                (nutrition_inner.name = 'energy_kcal' AND nutrition_inner.value >= {energy_kcal_value}) OR
-                (nutrition_inner.name = 'saturated_fat' AND nutrition_inner.value >= {sat_fat_value})))
+                recipe_inner.is_hidden = FALSE AND
+                (recipe_inner.is_private = FALSE OR (recipe_inner.is_private = TRUE AND recipe_inner.username = '{username}'))
+                GROUP BY
+                recipe_inner.id, 
+                recipe_inner.is_private, 
+                recipe_inner.is_hidden, 
+                recipe_inner.username,
+                ingredient_inner.id, 
+                ingredient_inner.food_data_id, 
+                ingredient_inner.amount, 
+                ingredient_inner.unit, 
+                food_data_inner.id, 
+                food_data_inner.amount_in_grams, 
+                nutrition_inner.id, 
+                nutrition_inner.value, 
+                nutrition_inner.unit, 
+                nutrition_inner.name
+                ) 
+                AS recipe_inner
+                GROUP BY 
+                recipe_inner.recipe_id_inner,
+                recipe_inner.recipe_title_inner,
+                recipe_inner.nut_name_inner   
+                )
+                AS recipe_inner_wrapper
+                WHERE
+                (
+                (recipe_inner_wrapper.nut_name_inner = 'salt' AND recipe_inner_wrapper.total_inner >= {salt})  OR
+                (recipe_inner_wrapper.nut_name_inner = 'free_sugars' AND recipe_inner_wrapper.total_inner >= {free_sugars}) OR
+                (recipe_inner_wrapper.nut_name_inner = 'fat' AND recipe_inner_wrapper.total_inner >= {fat}) OR
+                (recipe_inner_wrapper.nut_name_inner = 'energy_kj' AND recipe_inner_wrapper.total_inner >= {energy_kj}) OR
+                (recipe_inner_wrapper.nut_name_inner = 'energy_kcal' AND recipe_inner_wrapper.total_inner >= {energy_kcal}) OR
+                (recipe_inner_wrapper.nut_name_inner = 'saturated_fat' AND recipe_inner_wrapper.total_inner >= {saturated_fat})
+                )
         '''.format(
             username=kwargs['username'],
-            salt_value=gov_recommendation[age][gender]['salt'],
-            sugar_value=gov_recommendation[age][gender]['free_sugars'],
-            fat_value=gov_recommendation[age][gender]['fat'],
-            energy_kcal_value=gov_recommendation[age][gender]['energy_kcal'],
-            energy_kj_value=gov_recommendation[age][gender]['energy_kj'],
-            sat_fat_value=gov_recommendation[age][gender]['saturated_fat'],
+            salt=gov_recommendation[age][gender]['salt'],
+            free_sugars=gov_recommendation[age][gender]['free_sugars'],
+            fat=gov_recommendation[age][gender]['fat'],
+            energy_kcal=gov_recommendation[age][gender]['energy_kcal'],
+            energy_kj=gov_recommendation[age][gender]['energy_kj'],
+            saturated_fat=gov_recommendation[age][gender]['saturated_fat'],
         )
 
         recipe_recommended = []
         random.shuffle(sorted_percent[:5])
         for element in sorted_percent[:3]:
             sql_sub_inner = '''
-                (SELECT recipe.id, recipe.is_private, recipe.is_hidden, ingredient.id, ingredient.food_data_id, ingredient.amount, ingredient.unit, food_data.id, food_data.amount_in_grams, nutrition.id, nutrition.value, nutrition.unit, nutrition.name, 
-                MAX((ingredient.amount*1.0 / food_data.amount_in_grams* 1.0) * 
+            SELECT
+            recipe.recipe_id_middle as recipe_id_middle,
+            recipe.recipe_title_middle as recipe_title_middle,
+            recipe.nut_name_middle as nut_name_middle,
+            SUM(recipe.actual_nut_val) as recipe_total
+            FROM
+            (
+                SELECT 
+                recipe.id as recipe_id_middle, 
+                recipe.is_private as recipe_private_middle, 
+                recipe.is_hidden as recipe_hidden_middle, 
+                recipe.title as recipe_title_middle,
+                recipe.username as recipe_username_middle,
+                ingredient.id as ingredient_id_middle, 
+                ingredient.food_data_id as ingredient_food_middle, 
+                ingredient.amount as ingredient_amount_middle, 
+                ingredient.unit as ingredient_unit_middle, 
+                food_data.id as food_id_middle, 
+                food_data.amount_in_grams as food_amount_middle, 
+                nutrition.id as nut_id_middle, 
+                nutrition.value as nut_val_middle, 
+                nutrition.unit as nut_unit_middle, 
+                nutrition.name as nut_name_middle, 
+                ((ingredient.amount*1.0 / food_data.amount_in_grams* 1.0) * 
                 (CASE 
                 WHEN ingredient.unit = 'g' THEN 1
                 WHEN ingredient.unit = 'mg' THEN 1/1000
@@ -838,31 +951,80 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
                 ELSE 0
                 END
                 ) *
-                nutrition.value)
-                FROM myAPI_recipe AS recipe 
-                LEFT JOIN myAPI_recipeingredient AS ingredient
+                nutrition.value) AS actual_nut_val
+                FROM "myAPI_recipe" AS recipe 
+                LEFT JOIN "myAPI_recipeingredient" AS ingredient
                 ON recipe.id = ingredient.recipe_id
-                LEFT JOIN myAPI_fooddata as food_data
+                LEFT JOIN "myAPI_fooddata" as food_data
                 ON ingredient.food_data_id = food_data.id
-                LEFT JOIN myAPI_nutritionaldata AS nutrition
+                LEFT JOIN "myAPI_nutritionaldata" AS nutrition
                 ON food_data.id = nutrition.parent_food_id
-                LEFT JOIN myAPI_useraccount AS useraccount
+                LEFT JOIN "myAPI_useraccount" AS useraccount
                 ON recipe.username = useraccount.username
                 WHERE 
-                recipe.is_hidden = 0 AND
+                recipe.is_hidden = FALSE AND
+                (recipe.is_private = FALSE OR (recipe.is_private = TRUE AND recipe.username = '{username}')) AND
                 nutrition.name = '{name}' AND
-                (recipe.is_private = 0 OR (recipe.is_private = 1 AND recipe.username = '{username}')) AND
                 recipe.id NOT IN
-                (SELECT recipe.id FROM {sql_sub_inner2} AS recipe))
-        '''.format(
+                (
+                    SELECT 
+                    recipe_inner_wrapper.recipe_id_inner
+                    FROM 
+                    (
+                        {sql_sub_inner2}
+                    ) AS recipe_inner_wrapper
+                )
+                GROUP BY
+                recipe.id, 
+                recipe.is_private, 
+                recipe.is_hidden, 
+                recipe.username,
+                ingredient.id, 
+                ingredient.food_data_id, 
+                ingredient.amount, 
+                ingredient.unit, 
+                food_data.id, 
+                food_data.amount_in_grams, 
+                nutrition.id, 
+                nutrition.value, 
+                nutrition.unit, 
+                nutrition.name
+            )
+            AS recipe
+            GROUP BY
+            recipe.recipe_id_middle,
+            recipe.recipe_title_middle,
+            recipe.nut_name_middle
+            '''.format(
                 username=kwargs['username'],
                 sql_sub_inner2=sql_sub_inner2,
                 name=element[0]
             )
             recipe_max_id = Recipe.objects.raw(
                 '''
-                SELECT recipe.id FROM
-                {sql_sub_inner} AS recipe
+                SELECT
+                recipe.id
+                FROM
+                (
+                    SELECT 
+                    recipe_outer.recipe_id_middle AS id,
+                    recipe_outer.recipe_title_middle,
+                    recipe_outer.nut_name_middle,
+                    recipe_outer.recipe_total
+                    FROM
+                    ({sql_sub_inner}) 
+                    AS recipe_outer
+                    GROUP BY 
+                    recipe_outer.recipe_id_middle,
+                    recipe_outer.recipe_title_middle,
+                    recipe_outer.nut_name_middle,
+                    recipe_outer.recipe_total
+                    ORDER BY
+                    recipe_outer.recipe_total
+                    DESC
+                    LIMIT 1
+                )
+                AS recipe
                 '''.format(sql_sub_inner=sql_sub_inner))
 
             try:
@@ -883,6 +1045,7 @@ class PersonalRecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
 
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         search_query = request.query_params.get('title', None)
 
@@ -903,6 +1066,7 @@ class PersonalRecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+    @verify_secret_header
     def destroy(self, request, *args, **kwargs):
         # due to possibilty of data being used in the past data is not completely deleted, only disallows future usage and deletes image, but data is still referenced in records
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -916,19 +1080,21 @@ class PersonalRecipeViewSet(viewsets.ModelViewSet):
         return Response('deleted', status=status.HTTP_200_OK)
 
 
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-
-
-class RecipeStepViewSet(viewsets.ModelViewSet):
-    queryset = RecipeStep.objects.all()
-    serializer_class = RecipeStepSerializer
-
-
-class CommentViewSet(viewsets.ModelViewSet):
+class RecipeCommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+
+    @verify_secret_header
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @verify_secret_header
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @verify_secret_header
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
 
 class FoodDataViewSet(viewsets.ModelViewSet):
@@ -936,6 +1102,7 @@ class FoodDataViewSet(viewsets.ModelViewSet):
     serializer_class = FoodDataSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+    @verify_secret_header
     def retrieve(self, request, *args, **kwargs):
         food_data = get_object_or_404(self.queryset, id=kwargs['id'])
         if food_data.is_hidden:
@@ -946,6 +1113,7 @@ class FoodDataViewSet(viewsets.ModelViewSet):
         serializer = FoodDataSerializer(food_data)
         return Response(serializer.data)
 
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         search_query = request.query_params.get('name', None)
 
@@ -969,6 +1137,7 @@ class FoodDataViewSet(viewsets.ModelViewSet):
             food_data.extra(select={'length': 'Length(name)'}).order_by('-last_used', 'length'), many=True)
         return Response(serializer.data)
 
+    @verify_secret_header
     def create(self, request, *args, **kwargs):
         if request.user.is_authenticated == False:
             return Response({'you need to log in to upload.'}, status.HTTP_401_UNAUTHORIZED)
@@ -982,6 +1151,7 @@ class FoodDataViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
+    @verify_secret_header
     def update(self, request, *args, **kwargs):
         if request.user.is_authenticated == False:
             return Response({'you need to log in to upload.'}, status.HTTP_401_UNAUTHORIZED)
@@ -1003,6 +1173,7 @@ class PersonalFoodDataViewSet(viewsets.ModelViewSet):
     queryset = FoodData.objects.all()
     serializer_class = FoodDataSerializer
 
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         search_query = request.query_params.get('name', None)
 
@@ -1027,6 +1198,7 @@ class PersonalFoodDataViewSet(viewsets.ModelViewSet):
             food_data.extra(select={'length': 'Length(name)'}).order_by('-last_used', 'length'), many=True)
         return Response(serializer.data)
 
+    @verify_secret_header
     def destroy(self, request, *args, **kwargs):
         # due to possibilty of data being used in the past data is not completely deleted, only disallows future usage and deletes image, but data is still referenced in records
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -1040,20 +1212,11 @@ class PersonalFoodDataViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_200_OK)
 
 
-class NutritionalViewSet(viewsets.ModelViewSet):
-    queryset = NutritionalData.objects.all()
-    serializer_class = NutritionalData
-
-
-class RecipeIngredientViewSet(viewsets.ModelViewSet):
-    queryset = RecipeIngredient.objects.all()
-    serializer_class = RecipeIngredientSerializer
-
-
 class UserRequestViewSet(viewsets.ModelViewSet):
     queryset = UserShareRequest.objects.all()
     serializer_class = UserShareRequestSerializer
 
+    @verify_secret_header
     def destroy(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response('requries login', status=status.HTTP_401_UNAUTHORIZED)
@@ -1070,6 +1233,7 @@ class UserRequestViewSet(viewsets.ModelViewSet):
 
 class UserShareRequestReceivedViewSet(UserRequestViewSet):
 
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response('requries login', status=status.HTTP_401_UNAUTHORIZED)
@@ -1083,6 +1247,7 @@ class UserShareRequestReceivedViewSet(UserRequestViewSet):
 
 class UserShareRequestSentViewSet(UserRequestViewSet):
 
+    @verify_secret_header
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
             return Response('requires log in', status=status.HTTP_401_UNAUTHORIZED)
@@ -1103,6 +1268,7 @@ class UserShareRequestSentViewSet(UserRequestViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @verify_secret_header
     def list(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response('requries login', status=status.HTTP_401_UNAUTHORIZED)
@@ -1117,12 +1283,10 @@ class UserShareViewSet(viewsets.ModelViewSet):
     queryset = UserAccount.objects.all()
     serializer_class = UserAccountSerializer
 
+    @verify_secret_header
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
             return Response('not allowed on this account', status=status.HTTP_401_UNAUTHORIZED)
-
-        print(request.data['recordable_subuser'])
-        print(request.data['viewable_subuser'])
 
         to_user = get_object_or_404(
             UserAccount, username=request.data['share_with_user'])

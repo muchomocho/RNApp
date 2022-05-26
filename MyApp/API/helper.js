@@ -98,6 +98,9 @@ export const genderMap = (genderChar) => {
 
 // function to return recommended nutrition amount from age
 export const ageMap = (age) => {
+    if (age <= 0) {
+        return 1;
+    }
     if (age === 3 ) {
         return 2;
     }

@@ -90,7 +90,10 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
 
             if (result.response.status == 201) {
                 dispatch(clearRecord());
-                onSubmit();
+
+                setTimeout(() => {
+                    onSubmit();
+                }, 300);
             } 
             else {
                 Alert.alert(
@@ -119,26 +122,26 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
 
     
     const onDateConfirm = (event, date) => {
-        if (event.type == 'set') {
-            var dateTemp = datetime;
-            const dateObj = new Date(date)
-            dateTemp.setFullYear(dateObj.getFullYear());
-            dateTemp.setMonth(dateObj.getMonth());
-            dateTemp.setDate(dateObj.getDate());
-            setDatetime(dateTemp);
-        }
+        
+        var dateTemp = datetime;
+        const dateObj = new Date(date)
+        dateTemp.setFullYear(dateObj.getFullYear());
+        dateTemp.setMonth(dateObj.getMonth());
+        dateTemp.setDate(dateObj.getDate());
+        setDatetime(dateTemp);
+        
         setShowDatePicker(false);
     };
 
     const onTimeConfirm = (event, date) => {
-        if (event.type == 'set') {           
-            var dateTemp = datetime;
-            const dateObj = new Date(date)
-            console.log(dateObj.getHours())
-            dateTemp.setHours(dateObj.getHours());
-            dateTemp.setMinutes(dateObj.getMinutes());
-            setDatetime(dateTemp);
-        }
+                
+        var dateTemp = datetime;
+        const dateObj = new Date(date)
+        console.log(dateObj.getHours())
+        dateTemp.setHours(dateObj.getHours());
+        dateTemp.setMinutes(dateObj.getMinutes());
+        setDatetime(dateTemp);
+        
         setShowTimePicker(false);
     };
 

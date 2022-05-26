@@ -25,7 +25,7 @@ function UserRecord(props) {
     
     const { user, currentSubuser } = useSelector(state => state.user);
     const dispatch = useDispatch();
-
+    console.log('userrec', currentSubuser)
     const [isDataLoading, setDataLoading] = useState(true);
     const [isMealDataLoading, setMealDataLoading] = useState(true);
     const [data, setData] = useState([]);

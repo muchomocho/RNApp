@@ -10,9 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import dj_database_url
 import os
+
+from dotenv import load_dotenv, find_dotenv
 from pathlib import Path
 from datetime import timedelta
+import django_heroku
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,18 +26,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fdo+5i6ua$2e%2mkv9ivccf5e=i9k7wqqg(^(9wgdlmf_-t!&&'
+load_dotenv(find_dotenv())
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ['DEBUG'] == 'TRUE'
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    '192.168.0.32',
-    '192.168.0.33',
-    '192.168.0.16',
-    '0.0.0.0:8000'
-]
+ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS']
 
 # python manage.py runserver 192.168.0.32:8081
 
@@ -47,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',  # legacy not used? - used for admin
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     'rest_framework',
     'myAPI',
     'debug_toolbar',
@@ -101,6 +101,8 @@ DATABASES = {
     }
 }
 
+DATABASES['default'] = dj_database_url.config(
+    default=os.environ['DATABASE_URL'])
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -135,7 +137,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = 'static/'
 
 # Default primary key field type
@@ -161,3 +163,15 @@ SIMPLE_JWT = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/uploads/'
+
+django_heroku.settings(locals())
+
+# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
+AWS_S3_REGION_NAME = 'eu-west-2'  # Your region name
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEEFAULT_ACL = None
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

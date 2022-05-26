@@ -1,4 +1,3 @@
-from tkinter import CASCADE
 from django.utils import timezone
 from django.db import models
 from django.conf import settings
@@ -182,7 +181,7 @@ class RecipeStep(models.Model):
         unique_together = ['recipe', 'step_number']
 
 
-class Tag(models.Model):
+class RecipeTag(models.Model):
     recipe = models.ManyToManyField(Recipe, related_name='tags')
     text = models.CharField(max_length=20, validators=[
         RegexValidator(regex='^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$', message='Name must consist of alphanumeric, underscore or hyphen',

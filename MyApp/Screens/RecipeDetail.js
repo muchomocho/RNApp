@@ -258,7 +258,7 @@ function RecipeDetail(props) {
 
     const onEdit = () => {
         dispatch(setRecipeID(data.id));
-        dispatch(setRecipeImage({ uri: `${Constant.ROOT_URL}${data.main_img.substring(1)}`, type: '', name: '' }));
+        dispatch(setRecipeImage({ uri: data.main_img, type: '', name: '' }));
         dispatch(setSteps(data.steps));
         dispatch(setTags(data.tags));
         dispatch(setTitle(data.title));
@@ -325,7 +325,7 @@ function RecipeDetail(props) {
                         
                         (data != undefined && typeof(data.main_img) == 'string' && data.main_img.length > 0) ?
                         (<View style={styles.imageContainer}>
-                            <Image source={{ uri : `${Constant.ROOT_URL}${data.main_img.substring(1)}` }}
+                            <Image source={{ uri : data.main_img }}
                             resizeMode="center"
                             style={styles.image}
                         

@@ -10,6 +10,7 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
+            'app-server-key': 'fdf03d813f4190725026b4e95087daeaadc4432e37f184c3',
             ...headers
         },
     };

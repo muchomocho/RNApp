@@ -11,7 +11,7 @@ import CustomButton from "../CustomButton";
 import LoadingView from "../LoadingView";
 import TabSwitch from "../TabSwitch";
 
-function FoodDataSelection({navigation, isRecording=false, isRecipe=false}) {
+function FoodDataSelection({navigation, onPressfunc, isRecording=false, isRecipe=false, }) {
     
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
     const { name: foodName, image, amount_in_grams, nutrient_data, id } = useSelector(state => state.fooddata.fooddata);
@@ -69,15 +69,16 @@ function FoodDataSelection({navigation, isRecording=false, isRecipe=false}) {
     }, [navigation]);
 
     const onPress = (id) => {
-        navigation.navigate('Check fooddata', { fooddataID: id, isRecording: isRecording, isRecipe: isRecipe })
+        setTimeout(() => {
+            navigation.navigate('Check fooddata', { fooddataID: id, isRecording: isRecording, isRecipe: isRecipe });
+            if (onPressfunc) onPressfunc();
+        }, 100);
     };
 
     const renderData = (item) => {
         var image = null;
         
-        var url = Constant.ROOT_URL + item.main_img
-        url = url.replace(/\/\//g, '/')
-        url = url.replace(':/', '://')
+        const url = item.main_img
 
         if (typeof(item.main_img)=='string' && item.main_img != '') {
             image = 
@@ -90,6 +91,7 @@ function FoodDataSelection({navigation, isRecording=false, isRecipe=false}) {
                     />
                 </View>
         }
+  
         return(
             <TouchableOpacity 
             style={styles.foodContainer}

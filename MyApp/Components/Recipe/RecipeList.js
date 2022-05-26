@@ -26,7 +26,8 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
         try {
                 var endpoint = ''
                 var isLoggedin = false
-                if (isRecommendation && user != undefined && currentSubuser != undefined) {
+                if (isRecommendation && user != undefined && currentSubuser.name != '') {
+                    console.log('recom', currentSubuser)
                     endpoint = `api/useraccounts/${user.username}/subuser/${currentSubuser.id}/reciperecommendation/`;
                     isLoggedin = true;
                 }
@@ -65,6 +66,7 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     useEffect(() => {
         const reload = navigation.addListener('focus', () => {
+            console.log('relad')
           // The screen is focused
           // Call any action
           if (isRecommendation) {
@@ -78,14 +80,11 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
         return reload;
-    }, [navigation]);
+    }, [navigation, user, currentSubuser]);
 
     const renderData = (item) => {
         var image = null;
-        
-        var url = Constant.ROOT_URL + item.main_img
-        url = url.replace(/\/\//g, '/')
-        url = url.replace(':/', '://')
+        const url = item.main_img;
 
         if (typeof(item.main_img)=='string' && item.main_img != '') {
             image = 

@@ -28,70 +28,6 @@ function CreateRecord(props) {
         return reload;
     }, [props]);
 
-    // const floatButton = () => {
-        
-    //     const listIndicator = () => {
-    //         if (recordList.length > 0) {
-    //             return (
-    //                 <View style={styles.listNumberIndicator}>
-    //                     <Text> { recordList.length } </Text>
-    //                 </View>
-    //             );
-    //         }
-    //         return
-    //     }
-
-    //     const manualIndicator = () => {
-    //         console.log(name, amount_in_grams, id, nutrient_data)
-    //         if (nutrient_data.length > 0 || name.length > 0 || amount_in_grams.length > 0 || id > -1 || image.uri.lenght > 0 ) {
-    //             return (
-    //                 <View style={styles.listNumberIndicator}>
-    //                     <Text> ! </Text>
-    //                 </View>
-    //             );
-    //         }
-    //         return
-    //     }
-
-    //     const onPressManual = () => { 
-    //         setIsShowManualModal(true);
-    //     };
-
-    //     const onPressList = () => {
-    //         setIsShowListModal(!isShowListModal);
-    //     };
-
-    //     return (
-    //         <View style={styles.buttonContainer}>
-    //             <View>
-    //                 { manualIndicator() }
-    //                 <CustomButton
-    //                     buttonStyle={styles.button}
-    //                     textStyle={styles.buttonText}
-    //                     text="manual input"
-    //                     onPress={onPressManual}
-    //                 />
-    //             </View>
-
-    //             <View>
-    //                 { listIndicator() }
-
-    //                 <CustomButton
-    //                     buttonStyle={styles.button}
-    //                     textStyle={styles.buttonText}
-    //                     text="list"
-    //                     onPress={onPressList}
-    //                 />
-    //             </View>
-    //         </View>
-    //     );
-    // };
-
-
-    // const switchShowManualModal = () => { setIsShowManualModal(!isShowManualModal); };
-    // const switchShowListModal = () => { setIsShowListModal(!isShowListModal) };
-    // const foodDataOnSubmit = () => { props.navigation.navigate('User record'); };
-
     const components = [
         { 
             title: 'Recipe', 
@@ -106,14 +42,6 @@ function CreateRecord(props) {
             /> 
         }
     ]
-
-    // const onPressManual = () => { 
-    //     setIsShowManualModal(true);
-    // };
-
-    // const onPressList = () => {
-    //     setIsShowListModal(!isShowListModal);
-    // };
 
     return(
         <View style={styles.container}>

@@ -1,11 +1,7 @@
-import cv2
-from posixpath import basename
 from django.urls import path, include
 from . import views
-import os
 from healthydiet import settings
 from django.conf.urls.static import static
-from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -50,9 +46,9 @@ recipetag_url_base = recipe_url_detail + 'tags/'
 recipetag_url_detail = recipetag_url_base + '<int:recipetag_id>/'
 
 recipetag_urls = [
-    path(recipetag_url_base, views.TagViewSet.as_view(
+    path(recipetag_url_base, views.RecipeTagViewSet.as_view(
         {'get': 'list', 'post': 'create'}), name='recipetag'),
-    path(recipetag_url_detail, views.TagViewSet.as_view({
+    path(recipetag_url_detail, views.RecipeTagViewSet.as_view({
         'get': 'retrieve',
         'put': 'update',
         'delete': 'destroy'
@@ -66,9 +62,9 @@ recipecomment_url_base = recipe_url_detail + 'comments/'
 recipecomment_url_detail = recipetag_url_base + '<int:recipecomment_id>/'
 
 recipecomment_urls = [
-    path(recipecomment_url_base, views.CommentViewSet.as_view(
+    path(recipecomment_url_base, views.RecipeCommentViewSet.as_view(
         {'get': 'list', 'post': 'create'}), name='recipecomment'),
-    path(recipecomment_url_detail, views.CommentViewSet.as_view({
+    path(recipecomment_url_detail, views.RecipeCommentViewSet.as_view({
         'get': 'retrieve',
         'put': 'update',
         'delete': 'destroy'

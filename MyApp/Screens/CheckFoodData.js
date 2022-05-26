@@ -20,7 +20,7 @@ function CheckFoodData (props) {
             const isLoggedin = (user != undefined && typeof(user.username) == 'string' && user.username !== '');
             const result = await httpRequest({
                 method: 'GET',
-                endpoint: `api/fooddata/${id}`,
+                endpoint: `api/fooddata/${id}/`,
                 isAuthRequired: isLoggedin,
                 navigation: props.navigation
             });
@@ -60,7 +60,7 @@ function CheckFoodData (props) {
             />
         );
     }
-
+    
     return(
         <View style={styles.container}>
             { foodspec() }

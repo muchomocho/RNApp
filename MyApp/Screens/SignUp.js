@@ -76,6 +76,7 @@ function SignUp (props) {
                 email: email,
                 password: password1
               },
+              isAuthRequired: true,
               navigation: props.navigation
             });
           }
@@ -91,6 +92,7 @@ function SignUp (props) {
               navigation: props.navigation
             });
           }
+          console.log(result.json)
 
             if (result.response.status == 201) {
               props.navigation.navigate('Profile')
@@ -104,10 +106,10 @@ function SignUp (props) {
               if (Object.prototype.hasOwnProperty.call(result.json,'password') && result.json.password.length > 0)
                 setPasswordWarning(result.json.password);
             } else {
-              console.warn(result.json)
+              console.log(result.json)
             }
           } catch (error) {
-            console.warn(result.error);
+   
           }
         }
       }

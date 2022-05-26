@@ -71,7 +71,7 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
         dispatch(setFoodName(fooddata.name));
 
         if (typeof(fooddata.main_img) == 'string') {
-            dispatch(setImage({ uri: `${Constant.ROOT_URL}${fooddata.main_img.substring(1)}`, type: '',  name: ''}))
+            dispatch(setImage({ uri: fooddata.main_img, type: '',  name: ''}))
         }
 
         dispatchCleanNutrientData()

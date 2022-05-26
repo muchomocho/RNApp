@@ -12,7 +12,7 @@ import { Picker } from '@react-native-picker/picker';
 import { NavigationContainer } from "@react-navigation/native";
 import { FoodDataSelection, FoodDataSelectionList } from "../Components/FoodData";
 import ImagePickerComponent from "../Components/ImagePicker/ImagePickerComponent";
-import { formatToFormdata } from "../API/helper"
+import { amountFormatter, formatToFormdata } from "../API/helper"
 import { httpRequest } from '../API/ServerRequest'
 
 
@@ -63,8 +63,9 @@ function CreateRecipe(props) {
         if (title.match(/^[a-zA-Z0-9][a-zA-Z0-9_\-, ]*$/)) {
             isTitleValid = true;
         }
+        
         if (ingredients.length > 0 && !ingredients.some(element => 
-            element.amount == '0' || element.amount == 0 || !element.amount.match(/^(\d+)(\.\d+[1-9])?$/) ||
+            element.amount == '0' || element.amount == 0 || !amountFormatter(element.amount).match(/^(\d+)(\.\d+[1-9])?$/) ||
             element.unit == '-')) {
             isIngredientValid = true;
         }
@@ -367,7 +368,7 @@ function CreateRecipe(props) {
                                     text="close"
                                     onPress={switchShowFoodModal}
                                 />
-                                <FoodDataSelection navigation={props.navigation} isRecording={true} isRecipe={true} />
+                                <FoodDataSelection navigation={props.navigation} isRecording={true} isRecipe={true} onPressfunc={switchShowFoodModal}/>
                             </Modal>
                      
                         </View>
@@ -391,6 +392,7 @@ function CreateRecipe(props) {
                 type: `${type}/${ext}`,
             }));
         };
+        console.log('im', image.uri)
         return (
                 <ScrollView style={styles.subContainer}>
                 
@@ -405,7 +407,7 @@ function CreateRecipe(props) {
                 {
                     image !== null && image !== undefined && image.uri !== '' ?
                     (<View style={styles.imageContainer}>
-                        <Image source={ image }
+                        <Image source={{ uri: image.uri}}
                         style={styles.image}
                     
                         />
