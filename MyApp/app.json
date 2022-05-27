@@ -4,7 +4,7 @@
     "slug": "MyHelathyDiet",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon/main.png",
     "privacy": "unlisted",
     "splash": {
       "image": "./assets/splash.png",
@@ -18,10 +18,11 @@
       "**/*"
     ],
     "ios": {
+      "bundleIdentifier": "mczkmtmt.myhealhtydiet",
       "supportsTablet": true
     },
     "android": {
-      "package": "myhealthydiet",
+      "package": "mczkmtmt.myhealthydiet",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
