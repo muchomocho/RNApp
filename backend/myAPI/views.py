@@ -1027,7 +1027,7 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
                 AS recipe
                 '''.format(sql_sub_inner=sql_sub_inner))
 
-            try:
+            if len(recipe_max_id) > 0:
                 recipe_max_nutrition_name = Recipe.objects.get(
                     id=recipe_max_id[0].id)
                 serializer = RecipeSerializer(
@@ -1035,8 +1035,6 @@ class RecipeRecommendationViewSet(viewsets.ModelViewSet):
                 data = serializer.data
                 data['high_in'] = element[0]
                 recipe_recommended.append(data)
-            except ObjectDoesNotExist:
-                pass
 
         return Response(recipe_recommended)
 

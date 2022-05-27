@@ -1,9 +1,10 @@
 import React from 'react';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Text, TextInput, View, StyleSheet, Pressable } from 'react-native';
+import { Text, TextInput, View, StyleSheet, Pressable, Image, TouchableOpacity } from 'react-native';
 
-export default function SearchBar({value, setValue, onSearch}) {
+export default function SearchBar({value, setValue, onSearch, searchIconType=1}) {
 
+        const image = searchIconType === 1 ? require("../../assets/icons/search-white.png") : require("../../assets/icons/search.png");
         return (
         <View style={styles.container}>
             <TextInput 
@@ -14,11 +15,12 @@ export default function SearchBar({value, setValue, onSearch}) {
             returnKeyType={'search'}
             onSubmitEditing={onSearch}
             />
-            <Pressable 
+            <TouchableOpacity
             onPress={() => { if (value.length > 0) { onSearch(); }}} 
             style={[styles.button, styles.border]}
             >
-            </Pressable>
+            <Image source={image} style={{alignSelf: 'center', height: 30, width: 30, padding: 0}} />
+            </TouchableOpacity>
         </View>
     );
 
@@ -41,7 +43,8 @@ const styles = StyleSheet.create({
         width: 20,
         borderBottomRightRadius: 5,
         borderTopRightRadius: 5,
-        borderLeftWidth: 0
+        borderLeftWidth: 0,
+        justifyContent: 'center'
     },
 
     border: {

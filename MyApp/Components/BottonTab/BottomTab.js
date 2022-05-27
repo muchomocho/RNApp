@@ -1,9 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { StyleSheet } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
+
 
 import SignIn from '../../Screens/SignIn'
 import RecipeListScreen from '../../Screens/RecipeListScreen';
@@ -57,26 +58,30 @@ const BottomTab = () => {
                     logoutRedirect: false
                 }
             }
-            />
-            {/* <Tab.Screen 
-            name='Sign in' 
-            component={SignIn} 
             options={{
-                tabBarLabel: 'Sign in',
-                tabBarIcon: ({ color, size }) => (
-                  <MaterialCommunityIcons name="home" color={color} size={size} />
-                ),
-              }}
-            /> */}
-            <Tab.Screen name='Recipe' component={RecipeListScreen} />
+                tabBarIcon: () => (<Image source={require("../../assets/icons/profile.png")} style={{height: 30, width: 30}} />)
+            }}
+            />
+            <Tab.Screen name='Recipe' component={RecipeListScreen} 
+            options={{
+                tabBarIcon: () => (<Image source={require("../../assets/icons/recipe.png")} style={{height: 25, width: 25}} />)
+            }}
+            />
             <Tab.Screen name='Fooddata' component={FoodDataList} 
             initialParams={
                 {
                     isRecording: false
                 }
             }
+            options={{
+                tabBarIcon: () => (<Image source={require("../../assets/icons/fooddata.png")} style={{height: 30, width: 20}} />)
+            }}
             />
-            <Tab.Screen name='Request' component={Request} />
+            <Tab.Screen name='Request' component={Request} 
+            options={{
+                tabBarIcon: () => (<Image source={require("../../assets/icons/request.png")} style={{height: 30, width: 30}} />)
+            }}
+            />
 
             
             { /* we want to show tabs on these pages but not their icons in the tabs, so they are included here but hidden by style. */ }

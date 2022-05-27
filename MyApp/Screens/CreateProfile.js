@@ -29,7 +29,7 @@ function CreateProfile({ navigation, isupdate }) {
             const username = await Authentication.getUsername();
             const result = await APIrequest.httpRequest({
                 endpoint: `api/useraccounts/${username}/subuser/`,
-                method: "POST",
+                method: isupdate ? "POST" : "PUT",
                 body: {
                     name: name,
                     date_of_birth: `${dob.getFullYear()}-${dob.getMonth()+1}-${dob.getDate()}`,

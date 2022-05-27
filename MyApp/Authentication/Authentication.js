@@ -1,10 +1,6 @@
 import React from 'react';
 import * as Constant from '../Constant/Constant';
 import * as SecureStore from 'expo-secure-store';
-import { Alert } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import { setSubuserArray, setCurrentSubuser, setLogout } from '../redux/actions'
-import { store } from '../redux/store';
 
 export const fetchToken = async (username, password) => {
     try {
