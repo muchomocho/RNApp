@@ -42,7 +42,7 @@ function RecipeDetail(props) {
 
             }
         } catch (error) {
-            console.log('recipedetail', error)
+
         }
     }
 
@@ -82,10 +82,9 @@ function RecipeDetail(props) {
             });
             if (result.response.status == 200) {
                 setNutrientData(result.json);
-                console.log('nuteitn',result.json)
             }
         } catch (error) {
-            console.log('recipedetail', error)
+
         }
     };
 
@@ -108,10 +107,9 @@ function RecipeDetail(props) {
             });
             if (result.response.status == 200) {
                 setRecord(result.json);
-                console.log('rec', result.json)
             }
         } catch (error) {
-            console.log('userrecord...', error)
+
         }
     }
 

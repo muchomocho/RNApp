@@ -4,7 +4,7 @@
     "slug": "MyHelathyDiet",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon/main.png",
+    "icon": "./assets/icons/main.png",
     "privacy": "unlisted",
     "splash": {
       "image": "./assets/splash.png",

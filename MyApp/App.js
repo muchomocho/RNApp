@@ -23,7 +23,12 @@ export default function App() {
           headerShown: false
         }}>
           <Stack.Screen name={'Tab'} component={BottomTab}/>
-          <Stack.Screen name={'Create profile'} component={CreateProfile}/>
+          <Stack.Screen name={'Create profile'} 
+          component={CreateProfile}
+          initialParams={{ 
+            isUpdate: false
+          }}
+          />
           <Stack.Screen name={'Create record'} 
             component={CreateRecord}
             initialParams={{ 

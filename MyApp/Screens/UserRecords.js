@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Dimensions, ScrollView, SafeAreaView } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as APIRequest from '../API/ServerRequest';
-import { dietDataContainer } from "../Constant/Constant";
 import UserGraph from "../Components/Chart/UserGraph";
 import FoodDataSelection from "../Components/FoodData/FoodDataSelection";
 import CustomButton from "../Components/CustomButton";
@@ -25,7 +24,7 @@ function UserRecord(props) {
     
     const { user, currentSubuser } = useSelector(state => state.user);
     const dispatch = useDispatch();
-    console.log('userrec', currentSubuser)
+
     const [isDataLoading, setDataLoading] = useState(true);
     const [isMealDataLoading, setMealDataLoading] = useState(true);
     const [data, setData] = useState([]);
@@ -212,6 +211,7 @@ function UserRecord(props) {
                 </View>    
             )
         }
+
         if (currentSubuser.privilege_all || currentSubuser.privilege_recordable) {
             return (
                 <CustomButton
@@ -230,11 +230,28 @@ function UserRecord(props) {
         return <RecipeList navigation={props.navigation} isRecommendation={true}/>
     };
 
+    const infoTab = () => {
+        return (
+            <View>
+                <Text>{currentSubuser.name}</Text>
+                <Text>{currentSubuser.age}</Text>
+            <CustomButton
+            text="edit"
+            onPress={()=>{props.navigation.navigate('Create profile', { isUpdate: true })}}
+            />
+            </View>
+        );
+    };
+
     const components = [
         { id: 1, title: 'graph', component: plot() }, 
         { id: 2, title: 'records', component: mealRecordList() }, 
         { id: 3, title: 'recommendation', component: recipeRecommendation() }
     ];
+
+    if (currentSubuser.privilege_all) {
+        components.push({ id: 4, title: 'info', component: infoTab() });
+    }
 
     
     return(

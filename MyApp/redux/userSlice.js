@@ -13,6 +13,7 @@ const initialState = {
         name: '',
         age: '',
         gender: '',
+        date_of_birth: '',
         privilege_all: false,
         privilege_recordable: false,
         privilege_viewable: false
@@ -26,7 +27,6 @@ export const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action) => {
-
         return { 
             ...state, 
             logoutAlert: true,
@@ -59,9 +59,10 @@ export const userSlice = createSlice({
                 name: action.payload.name,
                 age: action.payload.age,
                 gender: action.payload.gender,
+                date_of_birth: action.payload.date_of_birth,
                 privilege_all: action.payload.privilege_all,
-                privilege_record: action.payload.privilege_recordable,
-                privilege_view: action.payload.privilege_viewable
+                privilege_recordable: action.payload.privilege_recordable,
+                privilege_viewable: action.payload.privilege_viewable
             }
         } 
     },
@@ -129,9 +130,10 @@ export const userSlice = createSlice({
                 name: '',
                 age: '',
                 gender: '',
+                date_of_birth: '',
                 privilege_all: false,
-                privilege_record: false,
-                privilege_view: false
+                privilege_recordable: false,
+                privilege_viewable: false
             },
 
             subuserArray: []

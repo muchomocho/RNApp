@@ -73,7 +73,6 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
                 formdata.append( 'main_img', {uri: image.uri, name: image.name, type: image.type} )
             }
             
-            console.log(formdata)
             try {
                 var method = '';
                 var endpoint = '';
@@ -98,7 +97,6 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
                         isAuthRequired: true,
                         navigation: navigation
                     });
-                console.log('res', result.json)
 
                 if (result.response.status == 201) {
                     if (isUpdate) {

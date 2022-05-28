@@ -191,7 +191,6 @@ function Request({ navigation }) {
             }
 
         } catch (error) {
-            console.log(error)
             networkErrorAlert();
         }
         
@@ -226,7 +225,6 @@ function Request({ navigation }) {
             networkErrorAlert();
 
         } catch (error) {
-            console.log(error)
             networkErrorAlert();
         }
     };

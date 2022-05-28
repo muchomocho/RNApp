@@ -25,14 +25,13 @@ function CheckFoodData (props) {
                 navigation: props.navigation
             });
 
-            console.log(result.json)
             if (result.response.status == 200) {
                 setFooddata(result.json);
             }
             setStatus(result.response.status);
         }
         catch (error) {
-            console.log(error)
+
         }
     };
 

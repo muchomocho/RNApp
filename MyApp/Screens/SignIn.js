@@ -63,7 +63,6 @@ function Signin ({ navigation }) {
     return (
         <View style={styles.container}>
             <Text>
-                Hello from Home!
             </Text>
             
             {

@@ -49,7 +49,6 @@ export default function ImagePickerComponent({onImageSelect}) {
         }
         catch (error) {
             failAlert();
-            console.log(error)
         }
       };
 
@@ -58,7 +57,6 @@ export default function ImagePickerComponent({onImageSelect}) {
             if (Platform.OS === 'ios') {
                 //await Permissions.askAsync(Permissions.CAMERA_ROLL);
                 await requestCameraPermission();
-                console.log(camerastatus)
                 if (camerastatus.status !== 'granted') {
                     return;
                 }

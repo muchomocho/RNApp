@@ -74,7 +74,7 @@ export const storeAccessToken = async (accessToken) => {
         );
     } catch (error) {
         // Error saving data
-        console.log('store access token failed: ' + error)
+
     }
 };
 
@@ -85,7 +85,7 @@ export const storeRefreshToken = async (refreshToken) => {
         );
         } catch (error) {
         // Error saving data
-        console.log('store refresh token failed: ' + error)
+
         }
 };
 
@@ -105,11 +105,11 @@ export const getStoredRefreshToken = async () => {
         value = await SecureStore.getItemAsync('refresh');
         if (value !== '') {
             // We have data!!
-            console.log('from funtion get refresh', value);
+
         }
     } catch (error) {
         // Error retrieving data
-        console.log('get refresh token failed: ' + error)
+
     }
     return value
 };
@@ -120,11 +120,11 @@ export const getStoredAccessToken = async () => {
         value = await SecureStore.getItemAsync('access');
         if (value !== '') {
             // We have data!!
-            console.log('from funtion get access', value);
+
         }
     } catch (error) {
         // Error retrieving data
-        console.log('get access token failed: ' + error)
+
     }
     return value
 };
@@ -135,11 +135,11 @@ export const getUsername = async () => {
         value = await SecureStore.getItemAsync('username');
         if (value !== '') {
             // We have data!!
-            console.log('from funtion get username', value);
+
         }
     } catch (error) {
         // Error retrieving data
-        console.log('get access token failed: ' + error)
+
     }
     return value
 };

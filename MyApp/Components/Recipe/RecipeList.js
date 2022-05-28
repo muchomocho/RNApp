@@ -27,7 +27,6 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
                 var endpoint = ''
                 var isLoggedin = false
                 if (isRecommendation && user != undefined && currentSubuser.name != '') {
-                    console.log('recom', currentSubuser)
                     endpoint = `api/useraccounts/${user.username}/subuser/${currentSubuser.id}/reciperecommendation/`;
                     isLoggedin = true;
                 }
@@ -66,7 +65,6 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     useEffect(() => {
         const reload = navigation.addListener('focus', () => {
-            console.log('relad')
           // The screen is focused
           // Call any action
           if (isRecommendation) {

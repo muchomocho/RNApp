@@ -77,8 +77,6 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
             recipe_meal_content: recipeRecordList.map(element=>{ return { recipe: element.recipe.id }})
         };
 
-        console.log(body)
-
         try {
             const result = await httpRequest({
                 method: method,
@@ -137,7 +135,7 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
                 
         var dateTemp = datetime;
         const dateObj = new Date(date)
-        console.log(dateObj.getHours())
+
         dateTemp.setHours(dateObj.getHours());
         dateTemp.setMinutes(dateObj.getMinutes());
         setDatetime(dateTemp);
@@ -216,7 +214,7 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
             const onDelete = () => {
                 dispatch(deleteRecipeRecordSelection(item.tempID));
             };
-            console.log(item)
+
             return(
                 <View style={styles.itemContainer}>
                     <View style={styles.item}>

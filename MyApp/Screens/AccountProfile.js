@@ -185,7 +185,6 @@ function AccountProfile(props) {
         const privilegeBanner = () => {
             if (item.privilege_all) return;
             if (item.privilege_recordable) {
-                console.log('ayaya')
                 return (
                     <View style={styles.peopleExtraBanner}>
                         <Text style={{color: '#fff'}}>This subuser is for viewing / recording</Text>
@@ -193,8 +192,6 @@ function AccountProfile(props) {
                 );
             }
             if (item.privilege_viewable) {
-                console.log('ayaya')
-
                 return (
                     <View style={styles.peopleExtraBanner}>
                         <Text style={{color: '#fff'}}>This subuser is for viewing</Text>

@@ -92,8 +92,6 @@ function SignUp (props) {
               navigation: props.navigation
             });
           }
-          console.log(result.json)
-
             if (result.response.status == 201) {
               props.navigation.navigate('Profile')
             } else if (result.response.status === 400) {
@@ -106,7 +104,7 @@ function SignUp (props) {
               if (Object.prototype.hasOwnProperty.call(result.json,'password') && result.json.password.length > 0)
                 setPasswordWarning(result.json.password);
             } else {
-              console.log(result.json)
+
             }
           } catch (error) {
    

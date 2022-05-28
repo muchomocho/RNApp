@@ -95,7 +95,6 @@ function CreateRecipe(props) {
                 formdata.append( 'main_img', {uri: image.uri, name: image.name, type: image.type} )
             }
             
-            console.log(formdata)
             try {
                 var method = '';
                 var endpoint = '';
@@ -120,7 +119,6 @@ function CreateRecipe(props) {
                     isAuthRequired: true,
                     navigation: props.navigation
                 });
-                console.log('res', result.json)
 
                 if (result.response.status == 201) {
      
@@ -132,7 +130,6 @@ function CreateRecipe(props) {
                 }
             } 
             catch (error) {
-                console.log(error)
                 networkErrorAlert();
             }
         }
@@ -280,7 +277,6 @@ function CreateRecipe(props) {
             setShowFoodModal(!isShowFoodModal);
         };
         const renderItem = ({item}) => {
-            console.log('item', item)
             const units = ['g', 'mg']
             const onDelete = () => {
                 dispatch(deleteIngredient(item.food_data.id))
@@ -392,7 +388,7 @@ function CreateRecipe(props) {
                 type: `${type}/${ext}`,
             }));
         };
-        console.log('im', image.uri)
+
         return (
                 <ScrollView style={styles.subContainer}>
                 

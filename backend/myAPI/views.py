@@ -288,7 +288,7 @@ class UserAccountViewSet(viewsets.ModelViewSet):
             serializer = UserAccountSerializer(userccount, data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
@@ -600,6 +600,20 @@ class SubuserViewSet(viewsets.ModelViewSet):
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        message = {'requires log in'}
+        return Response(message, status=status.HTTP_401_UNAUTHORIZED)
+
+    @verify_secret_header
+    def update(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.username == kwargs['username']:
+            subuser = Subuser(id=kwargs['subuser_id'])
+            serializer = SubuserSerializer(subuser,
+                                           data=request.data, context={'request': request})
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         message = {'requires log in'}
         return Response(message, status=status.HTTP_401_UNAUTHORIZED)

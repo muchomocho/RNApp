@@ -19,11 +19,9 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
             request.body = body;
         }
         else { request.body = JSON.stringify(body);}
-        console.log('body', request.body);
     }
     
     try {
-        console.log(endpoint)
         if (isAuthRequired) {
             const token = await Authentication.getStoredAccessToken();
             request.headers.Authorization = 'Bearer ' + token; 
@@ -34,13 +32,11 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
         returnObj.json = json;
 
         if (isAuthRequired && json.code === 'token_not_valid') {
-            //console.log('refreshing');
             const refreshedToken = await Authentication.refreshAccessToken();
 
             if ((refreshedToken == null || refreshedToken == '')) {
                 Authentication.logOut(navigation);
             }
-            //console.log('refreshed', refreshedToken);
             request.headers.Authorization = ('Bearer ' + refreshedToken); 
 
             const response = await fetch(Constant.ROOT_URL + endpoint, request);
@@ -48,9 +44,7 @@ export const httpRequest = async ({method, endpoint, headers={}, body={}, isAuth
             const json = await response.json();
             returnObj.json = json;
         }
-        //console.log('request', request);
     } catch (error) {
-        console.error(error);
         returnObj.error = error;
     } 
     return returnObj;

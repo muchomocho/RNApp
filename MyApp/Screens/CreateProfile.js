@@ -7,12 +7,15 @@ import * as Authentication from "../Authentication/Authentication";
 import * as APIrequest from "../API/ServerRequest";
 import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
+import { useSelector, useDispatch } from 'react-redux';
 
-function CreateProfile({ navigation, isupdate }) {
 
-    const [name, setName] = useState('');
-    const [dob, setDob] = useState(new Date());
-    const [gender, setGender] = useState('');
+function CreateProfile(props) {
+    const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
+    console.log(typeof(currentSubuser.date_of_birth))
+    const [name, setName] = useState(props.route.params.isUpdate && currentSubuser != undefined ? currentSubuser.name : '');
+    const [dob, setDob] = useState(props.route.params.isUpdate && currentSubuser != undefined ? new Date(currentSubuser.date_of_birth) : new Date());
+    const [gender, setGender] = useState(props.route.params.isUpdate && currentSubuser != undefined ? currentSubuser.gender : 'Male');
 
     const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -23,23 +26,34 @@ function CreateProfile({ navigation, isupdate }) {
     const [isNameValid, setIsNameValid] = useState(true);
     const [isAgeValid, setIsAgeValid] = useState(true);
 
+    
+
+    console.log(dob)
+    // if (props.route.params.isUpdate) {
+    //   setName(currentSubuser.name);
+    //   setDob(new Date(currentSubuser.date_of_birth));
+    //   setGender(currentSubuser.gender);
+    // }
+
     // https://reactnative.dev/docs/network
     const createUserProfile = async () => {
         try {
             const username = await Authentication.getUsername();
             const result = await APIrequest.httpRequest({
-                endpoint: `api/useraccounts/${username}/subuser/`,
-                method: isupdate ? "POST" : "PUT",
+                endpoint: props.route.params.isUpdate ? `api/useraccounts/${username}/subuser/${currentSubuser.id}/` : `api/useraccounts/${username}/subuser/`,
+                method: props.route.params.isUpdate ? "PUT" : "POST",
                 body: {
                     name: name,
                     date_of_birth: `${dob.getFullYear()}-${dob.getMonth()+1}-${dob.getDate()}`,
                     gender: gender,
                 },
                 isAuthRequired: true,
-                navigation: navigation
+                navigation: props.navigation
               });
+              console.log(result.json)
+
             if (result.response.status == 201) {
-              navigation.navigate('Profile');
+              props.navigation.navigate('Profile');
             }
             if (result.response.status == 400) {
               if (Object.prototype.hasOwnProperty.call(result.json, 'name') && result.json.name.length > 0)
@@ -52,7 +66,7 @@ function CreateProfile({ navigation, isupdate }) {
                 setGenderWarning(result.json.gender);
             }
           } catch (error) {
-            console.error(error);
+
           } 
     };
 
