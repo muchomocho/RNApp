@@ -14,6 +14,8 @@ const initialState = {
         age: '',
         gender: '',
         date_of_birth: '',
+        icon_number: 0,
+        icon_background: 0,
         privilege_all: false,
         privilege_recordable: false,
         privilege_viewable: false
@@ -51,7 +53,7 @@ export const userSlice = createSlice({
         state.user.email = action.payload;
     },
     setCurrentSubuser: (state, action) => {
-        
+        console.log(action.payload)
         return {
             ...state,
             currentSubuser: {
@@ -59,6 +61,8 @@ export const userSlice = createSlice({
                 name: action.payload.name,
                 age: action.payload.age,
                 gender: action.payload.gender,
+                icon_number: action.payload.icon_number,
+                icon_background: action.payload.icon_background,
                 date_of_birth: action.payload.date_of_birth,
                 privilege_all: action.payload.privilege_all,
                 privilege_recordable: action.payload.privilege_recordable,
@@ -131,6 +135,8 @@ export const userSlice = createSlice({
                 age: '',
                 gender: '',
                 date_of_birth: '',
+                icon_number: 0,
+                icon_background: 0,
                 privilege_all: false,
                 privilege_recordable: false,
                 privilege_viewable: false

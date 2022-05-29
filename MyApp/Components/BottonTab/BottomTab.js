@@ -59,12 +59,12 @@ const BottomTab = () => {
                 }
             }
             options={{
-                tabBarIcon: () => (<Image source={require("../../assets/icons/profile.png")} style={{height: 30, width: 30}} />)
+                tabBarIcon: () => (<Image source={require("../../assets/icons/tabIcons/profile.png")} style={{height: 30, width: 30}} />)
             }}
             />
             <Tab.Screen name='Recipe' component={RecipeListScreen} 
             options={{
-                tabBarIcon: () => (<Image source={require("../../assets/icons/recipe.png")} style={{height: 25, width: 25}} />)
+                tabBarIcon: () => (<Image source={require("../../assets/icons/tabIcons/recipe.png")} style={{height: 25, width: 25}} />)
             }}
             />
             <Tab.Screen name='Fooddata' component={FoodDataList} 
@@ -74,12 +74,12 @@ const BottomTab = () => {
                 }
             }
             options={{
-                tabBarIcon: () => (<Image source={require("../../assets/icons/fooddata.png")} style={{height: 30, width: 20}} />)
+                tabBarIcon: () => (<Image source={require("../../assets/icons/tabIcons/fooddata.png")} style={{height: 30, width: 20}} />)
             }}
             />
             <Tab.Screen name='Request' component={Request} 
             options={{
-                tabBarIcon: () => (<Image source={require("../../assets/icons/request.png")} style={{height: 30, width: 30}} />)
+                tabBarIcon: () => (<Image source={require("../../assets/icons/tabIcons/request.png")} style={{height: 30, width: 30}} />)
             }}
             />
 

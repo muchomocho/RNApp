@@ -102,6 +102,9 @@ class Subuser(models.Model):
                                                code=None, inverse_match=None, flags=0), ])
     date_of_birth = models.DateField()
 
+    icon_number = models.IntegerField(default=0)
+    icon_background = models.IntegerField(default=0)
+
     # https://docs.djangoproject.com/en/4.0/ref/models/fields/
     # 'Generally, it’s best to define choices inside a model class,
     # and to define a suitably-named constant for each value:'
@@ -188,10 +191,11 @@ class RecipeTag(models.Model):
                        code=None, inverse_match=None, flags=0), ])
 
 
-class Comment(models.Model):
+class RecipeComment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, to_field='username',
                              db_column='username', on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe, related_name='comment', on_delete=models.CASCADE)
     text = models.TextField(max_length=300)
     date_created = models.DateTimeField(default=timezone.now)
 
@@ -203,6 +207,12 @@ class RecipeIngredient(models.Model):
     amount = models.DecimalField(
         default=0, max_digits=15, decimal_places=5)
     unit = models.CharField(max_length=10)
+
+
+class RecipeRating(models.Model):
+    recipe = models.ForeignKey(
+        Recipe, related_name='ratings', on_delete=models.CASCADE)
+    score = models.IntegerField()
 
 
 """

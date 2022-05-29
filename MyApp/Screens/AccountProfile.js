@@ -15,6 +15,7 @@ import { clearAllFoodData } from "../redux/foodDataSlice";
 import { clearRecord } from "../redux/mealRecordSlice";
 import LoadingView from "../Components/LoadingView";
 import LogoutAlert from "../Components/LogoutAlert/LogoutAlert";
+import ProfileIcon from "../Components/ProfileIcon";
 
 function AccountProfile(props) {
     
@@ -22,40 +23,6 @@ function AccountProfile(props) {
     const [loggedIn, setLoggedIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const dispatch = useDispatch();
-
-    const deleteSubUser = async () => {
-        try {
-            const endpoint = 'api/useraccounts/' + user.username + '/subuser/' + currentSubuser.id + '/';
-            const result = await APIRequest.httpRequest({
-                method: 'DELETE',
-                endpoint: endpoint,
-                isAuthRequired: true,
-                navigation: props.navigation
-            });
-        } catch (error) {
-            failAlert();
-        }
-    };
-    
-    const failAlert = () => {
-        return Alert.alert(
-            "Error",
-            "Could not complete action",
-            [
-              { text: "OK", onPress: () => {} }
-            ]
-          );
-    };
-
-    const deleteSubUserAlert = () => {
-        return Alert.alert(
-            "Warning",
-            "Are you sure you wan to delete?",
-            [
-              { text: "OK", onPress: () => { deleteSubUser(); getUserProfile(); } }
-            ]
-          );
-    };
 
     const onLogout = () => {
         setLoggedIn(false);
@@ -81,8 +48,8 @@ function AccountProfile(props) {
                 isAuthRequired: true,
                 navigation: props.navigation
             });
-  
-            if (result.response.status === 401) {
+            console.log(result.json)
+            if (result.response.status !== 200) {
                 Authentication.logOut(props.navigation);
                 setLoggedIn(false);
                 setIsLoading(false);
@@ -199,6 +166,13 @@ function AccountProfile(props) {
                 );
             }
         };
+        const formatGender = (gender) => {
+            return {
+                    'M': 'Male',
+                    'F': 'Female',
+                    'O': 'Other'
+                }[gender]
+        };
         return(
             <View style={styles.peopleTabOuter}>
                 { privilegeBanner() }
@@ -211,6 +185,7 @@ function AccountProfile(props) {
                     
                     <View style={styles.peopleTabInner}>
                         <View style={styles.iconContainer}>
+                            <ProfileIcon iconNumber={item.icon_number} iconBackground={item.icon_background}/>
                         </View>
                         <View style={styles.peopleDetailContainer}>
                             <Text style={styles.peopleTextName}>{item.name}</Text>
@@ -220,7 +195,7 @@ function AccountProfile(props) {
                             </View>
                             <View style={styles.labelContainer}>
                                 <Text>Gender</Text>
-                                <Text style={styles.peopleText}>{item.gender}</Text>
+                                <Text style={styles.peopleText}>{formatGender(item.gender)}</Text>
                             </View>
                         </View>
                     </View>
@@ -350,8 +325,8 @@ const styles = StyleSheet.create({
     },
 
     iconContainer: {
-        flex: 1,
-        backgroundColor: '#eee',
+        width: 80,
+        //backgroundColor: '#eee',
         borderRadius: 100
     },
     peopleExtraBanner: {

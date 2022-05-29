@@ -4,7 +4,7 @@ import { Text, TextInput, View, StyleSheet, Pressable, Image, TouchableOpacity }
 
 export default function SearchBar({value, setValue, onSearch, searchIconType=1}) {
 
-        const image = searchIconType === 1 ? require("../../assets/icons/search-white.png") : require("../../assets/icons/search.png");
+        const image = searchIconType === 1 ? require("../../assets/icons/componentIcons/search-white.png") : require("../../assets/icons/componentIcons/search.png");
         return (
         <View style={styles.container}>
             <TextInput 

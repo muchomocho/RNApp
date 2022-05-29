@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, FlatList, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Constant from '../Constant/Constant'
@@ -8,6 +8,8 @@ import * as APIrequest from "../API/ServerRequest";
 import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
 import { useSelector, useDispatch } from 'react-redux';
+import { backgroundColor } from "react-native/Libraries/Components/View/ReactNativeStyleAttributes";
+import ProfileIcon from "../Components/ProfileIcon";
 
 
 function CreateProfile(props) {
@@ -15,7 +17,9 @@ function CreateProfile(props) {
     console.log(typeof(currentSubuser.date_of_birth))
     const [name, setName] = useState(props.route.params.isUpdate && currentSubuser != undefined ? currentSubuser.name : '');
     const [dob, setDob] = useState(props.route.params.isUpdate && currentSubuser != undefined ? new Date(currentSubuser.date_of_birth) : new Date());
-    const [gender, setGender] = useState(props.route.params.isUpdate && currentSubuser != undefined ? currentSubuser.gender : 'Male');
+    const [gender, setGender] = useState(props.route.params.isUpdate && currentSubuser != undefined ? currentSubuser.gender : 'M');
+    const [iconNumber, setIconNumber] = useState(props.route.params.isUpdate && currentSubuser != undefined ? currentSubuser.icon_number : 0)
+    const [iconBackground, setIconBackground] = useState(props.route.params.isUpdate && currentSubuser != undefined ? currentSubuser.icon_background : 0)
 
     const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -25,15 +29,6 @@ function CreateProfile(props) {
 
     const [isNameValid, setIsNameValid] = useState(true);
     const [isAgeValid, setIsAgeValid] = useState(true);
-
-    
-
-    console.log(dob)
-    // if (props.route.params.isUpdate) {
-    //   setName(currentSubuser.name);
-    //   setDob(new Date(currentSubuser.date_of_birth));
-    //   setGender(currentSubuser.gender);
-    // }
 
     // https://reactnative.dev/docs/network
     const createUserProfile = async () => {
@@ -46,13 +41,19 @@ function CreateProfile(props) {
                     name: name,
                     date_of_birth: `${dob.getFullYear()}-${dob.getMonth()+1}-${dob.getDate()}`,
                     gender: gender,
+                    icon_number: iconNumber,
+                    icon_background: iconBackground
                 },
                 isAuthRequired: true,
                 navigation: props.navigation
               });
+              console.log(name, dob, gender)
               console.log(result.json)
 
-            if (result.response.status == 201) {
+            if (!props.route.params.isUpdate && result.response.status == 201 ||
+              props.route.params.isUpdate && result.response.status == 200
+              ) {
+                console.log('a')
               props.navigation.navigate('Profile');
             }
             if (result.response.status == 400) {
@@ -96,64 +97,146 @@ function CreateProfile(props) {
     };
 
     const onDateConfirm = (event, date) => {
-      
+      console.log(date)
       const dateObj = new Date(date)
+      date.setFullYear(dateObj.getFullYear());
+      date.setMonth(dateObj.getMonth());
+      date.setDate(dateObj.getDate());
       setDob(dateObj);
       
       setShowDatePicker(false);
     };
 
     const switchShowDatePicker = () => {
-      setShowDatePicker(!showDatePicker);
+      setShowDatePicker(true);
+    };
+
+    const iconNumberPicker = () => {
+      const icons = [
+        { id: 0, req: require('../assets/icons/profIcons/proficon0.png')},
+        { id: 1, req: require('../assets/icons/profIcons/proficon1.png')},
+        { id: 2, req: require('../assets/icons/profIcons/proficon2.png')},
+        { id: 3, req: require('../assets/icons/profIcons/proficon3.png')},
+        { id: 4, req: require('../assets/icons/profIcons/proficon4.png')},
+        { id: 5, req: require('../assets/icons/profIcons/proficon5.png')},
+        { id: 6, req: require('../assets/icons/profIcons/proficon6.png')},
+        { id: 7, req: require('../assets/icons/profIcons/proficon7.png')}
+      ];
+      const onPress = (id) => {
+        setIconNumber(id)
+      };
+      const renderData = ({item}) => {
+        return ( 
+          <TouchableOpacity 
+            style={{width: 50, height: 50, margin: 5, borderWidth: 2, borderRadius: 5, borderColor: item.id === iconNumber ? '#000' : '#aaa'}}
+            onPress={()=>{onPress(item.id)}}
+          >
+            <Image source={item.req} style={{ width: '100%',
+                height: undefined,
+                aspectRatio: 1,}} 
+            />
+          </TouchableOpacity>
+        );
+      };
+      return (
+        <FlatList 
+        // style={{borderWidth: 2, borderRadius: 5}}
+          horizontal
+          data={icons}
+          renderItem={renderData}
+        />
+      );
+    }
+
+    const iconBackgroundPicker = () => {
+      const colors = [
+        { id: 0, color: '#fff'},
+        { id: 1, color: '#27ad15'},
+        { id: 2, color: '#d93909'},
+        { id: 3, color: '#f5b42a'},
+        { id: 4, color: '#093dd9'},
+        { id: 5, color: '#a131bd'},
+        { id: 6, color: '#31bdb6'},
+        { id: 7, color: '#e3d83b'},
+        { id: 8, color: '#000'}
+      ];
+      const onPress = (id) => {
+        setIconBackground(id)
+      };
+      const renderData = ({item}) => {
+        return ( 
+          <TouchableOpacity 
+            style={{backgroundColor: item.color, margin: 5, width: 50, height: 50, borderWidth: 2, borderRadius: 5, borderColor: item.id === iconBackground ? '#000' : '#aaa'}}
+            onPress={()=>{onPress(item.id)}}
+          >
+          </TouchableOpacity>
+        );
+      };
+      return (
+        <FlatList 
+        // style={{borderWidth: 2, borderRadius: 5}}
+          horizontal
+          data={colors}
+          renderItem={renderData}
+        />
+      );
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <View >
+            { 
+            // conditional rendering
+            !isNameValid && 
+            <Text style={styles.alert}>
+              Enter name properly!
+            </Text>
+            }
 
-          { 
-          // conditional rendering
-          !isNameValid && 
-          <Text style={styles.alert}>
-            Enter name properly!
-          </Text>
-          }
+            { warning(nameWarning) }
 
-          { warning(nameWarning) }
+            <CustomInput 
+            value = {name}
+            setValue={setName}
+            placeholder="Enter your name"
+            />
+            
+            { warning(ageWarning) }
 
-          <CustomInput 
-          value = {name}
-          setValue={setName}
-          placeholder="Enter your name"
-          />
-          
-          { warning(ageWarning) }
+            <View>
+              <Text> { dob.getFullYear() } / { dob.getMonth()+1 } / { dob.getDate() } </Text>
+            </View>
 
-          <View>
-            <Text> { dob.getFullYear() } / { dob.getMonth()+1 } / { dob.getDate() } </Text>
+            <CustomButton
+            onPress={switchShowDatePicker}
+            text="Choose your birthday"
+            />
+            
+            { showDatePicker && <DateTimePicker value={dob} onChange={onDateConfirm} maximumDate={new Date()} mode="date" />}
+
+            <Text> Enter your gender </Text>
+
+            {/* https://github.com/react-native-picker/picker */}
+            <Picker
+              selectedValue={gender}
+              style={{ height: 50, width: 150 }}
+              onValueChange={(itemValue, itemIndex) => setGender(itemValue)}
+            >
+              <Picker.Item label="Male" value="M" />
+              <Picker.Item label="Female" value="F" />
+              <Picker.Item label="Other" value="O" />
+            </Picker>
+            
+            <View style={{width: 100, alignSelf: 'center'}}>
+              <Text>Icon</Text>
+              <ProfileIcon iconNumber={iconNumber} iconBackground={iconBackground} />
+            </View>
+            { iconNumberPicker() }
+            { iconBackgroundPicker() }
+
+            <CustomButton onPress={onSubmit} text={'submit'}/>
           </View>
-
-          <CustomButton
-          onPress={switchShowDatePicker}
-          text="Choose your birthday"
-          />
-          
-          { showDatePicker && <DateTimePicker value={dob} onChange={onDateConfirm} mode="date" />}
-
-          <Text> Enter your gender </Text>
-
-          {/* https://github.com/react-native-picker/picker */}
-          <Picker
-            selectedValue={gender}
-            style={{ height: 50, width: 150 }}
-            onValueChange={(itemValue, itemIndex) => setGender(itemValue)}
-          >
-            <Picker.Item label="Male" value="M" />
-            <Picker.Item label="Female" value="F" />
-            <Picker.Item label="Other" value="O" />
-          </Picker>
-
-          <CustomButton onPress={onSubmit} text={'submit'}/>
-        </View>
+        </ScrollView>
     )  
 }
 
@@ -163,9 +246,7 @@ const styles = StyleSheet.create({
     },
 
     container: {
-      flex: 1,
-      width: '100%',
-      height: '100%',
+   
       padding: 20,
       margin: 0,
       alignItems: 'stretch',

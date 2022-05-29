@@ -4,6 +4,7 @@ import random
 from .models import *
 from .serializers import *
 from django.db.models import Q
+from django.db.models import Avg
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
@@ -53,7 +54,7 @@ def userrecord_single(date_str, username, subuser_id):
 
             if len(nutrition_list) <= 0:
                 continue
-            #value * (meal_content.amount_in_grams / foodData['amount_in_grams'] ) * decimal.Decimal(_unit_converter(target_unit, from_unit))
+            # value * (meal_content.amount_in_grams / foodData['amount_in_grams'] ) * decimal.Decimal(_unit_converter(target_unit, from_unit))
             for nutrition_data in nutrition_list:
                 if nutrition_data.name == key:
                     return_json[key] += decimal.Decimal(nutrition_data.value) * (meal_content.amount_in_grams /
@@ -222,8 +223,8 @@ def verify_secret_header(func):
 
 # Create your views here.
 """
-django rest framework simple jwt 
-+ 
+django rest framework simple jwt
++
 django rest frame work permissions
 """
 
@@ -323,7 +324,7 @@ class UserMealRecordPermission(BasePermission):
 class UserRecordViewSet(viewsets.ModelViewSet):
     permission_classes = [UserMealRecordPermission]
     queryset = UserMealRecord.objects.all()
-    #serializer_class = UserRecordSerializer
+    # serializer_class = UserRecordSerializer
 
     """
     requires login to view data and shows the logged in user's only
@@ -586,7 +587,7 @@ class SubuserPermission(BasePermission):
 
 
 class SubuserViewSet(viewsets.ModelViewSet):
-    #permission_classes = [SubuserPermission]
+    # permission_classes = [SubuserPermission]
     queryset = Subuser.objects.all()
     serializer_class = SubuserSerializer
 
@@ -644,7 +645,18 @@ class SubuserViewSet(viewsets.ModelViewSet):
 
     @verify_secret_header
     def destroy(self, request, *args, **kwargs):
-        return super().destroy(request, *args, **kwargs)
+        if not request.user.is_authenticated \
+                or request.user.username != kwargs['username']:
+            return Response('requires log in', status=status.HTTP_401_UNAUTHORIZED)
+
+        subuser = get_subuser_allow_all(
+            user=request.user, subuser_id=kwargs['subuser_id'])
+
+        if not subuser:
+            return Response('you are not allowed to delete this subuser', status=status.HTTP_401_UNAUTHORIZED)
+
+        subuser.delete()
+        return Response('subuser deleted', status=status.HTTP_200_OK)
 
 
 class UserProfilePermission(BasePermission):
@@ -675,7 +687,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
             serializer = UserProfileSerializer(request.user)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -786,6 +798,34 @@ class RecipeTagViewSet(viewsets.ModelViewSet):
 class RecipeIngredientViewSet(viewsets.ModelViewSet):
     queryset = RecipeIngredient.objects.all()
     serializer_class = RecipeIngredientSerializer
+
+
+class RecipeRatingViewSet(viewsets.ModelViewSet):
+    queryset = RecipeRating.objects.all()
+    serializer_class = RecipeRatingSerializer
+
+    @verify_secret_header
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response('need login')
+
+        recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
+        if RecipeRating.objects.filter(user=request.user).exists():
+            recipe.ratings.filter(user=request.user).delete()
+        rating = self.queryset.create(
+            recipe=recipe, user=request.user, data=request.data)
+
+        recipe.ratings.add(rating)
+        serializer = self.serializer_class(rating)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @verify_secret_header
+    def retrieve(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
+        rating = recipe.ratings.all().aggregate(Avg('score'))
+
+        return Response(rating, status=status.HTTP_201_CREATED)
 
 
 class RecipeRecommendationViewSet(viewsets.ModelViewSet):
@@ -1093,20 +1133,49 @@ class PersonalRecipeViewSet(viewsets.ModelViewSet):
 
 
 class RecipeCommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+    queryset = RecipeComment.objects.all()
+    serializer_class = RecipeCommentSerializer
+
+    @verify_secret_header
+    def create(self, request, *args, **kwargs):
+        parent_recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
+
+        comment = RecipeComment.objects.create(
+            recipe=parent_recipe, data=request.data)
+        parent_recipe.comment.add(comment)
+        serializer = self.serializer_class(comment)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @verify_secret_header
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        parent_recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
 
-    @verify_secret_header
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
+        comment = RecipeComment.objects.filter(recipe=parent_recipe)
+        serializer = self.serializer_class(comment, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @verify_secret_header
     def destroy(self, request, *args, **kwargs):
-        return super().destroy(request, *args, **kwargs)
+        comment = RecipeComment.objects.filter(id=kwargs['recipecomment_id'])
+        serializer = self.serializer_class(comment, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PersonalRecipeCommentViewSet(viewsets.ModelViewSet):
+    queryset = RecipeComment.objects.all()
+    serializer_class = RecipeCommentSerializer
+
+    @verify_secret_header
+    def list(self, request, *args, **kwargs):
+        user = get_object_or_404(UserAccount, username=kwargs['username'])
+
+        comment = RecipeComment.objects.filter(user=user)
+        serializer = self.serializer_class(comment, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FoodDataViewSet(viewsets.ModelViewSet):

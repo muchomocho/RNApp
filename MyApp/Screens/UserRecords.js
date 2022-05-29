@@ -16,6 +16,7 @@ import { formatDate } from "../API/helper";
 import TabSwitch from "../Components/TabSwitch";
 import SubuserBanner from "../Components/SubuserBanner";
 import RecipeList from "../Components/Recipe/RecipeList";
+import ProfileIcon from "../Components/ProfileIcon";
 
 // https://reactnative.dev/docs/navigation
 const Stack = createNativeStackNavigator(); 
@@ -231,15 +232,75 @@ function UserRecord(props) {
     };
 
     const infoTab = () => {
+        const deleteSubUser = async () => {
+            try {
+                const endpoint = `api/useraccounts/${user.username}/subuser/${currentSubuser.id}/`;
+                const result = await APIRequest.httpRequest({
+                    method: 'DELETE',
+                    endpoint: endpoint,
+                    isAuthRequired: true,
+                    navigation: props.navigation
+                });
+            } catch (error) {
+                failAlert();
+            }
+        };
+        
+        const failAlert = () => {
+            return Alert.alert(
+                "Error",
+                "Could not complete action",
+                [
+                  { text: "OK", onPress: () => {} }
+                ]
+              );
+        };
+
+        const deleteSubUserAlert = () => {
+            return Alert.alert(
+                "Warning",
+                "Are you sure you wan to delete?",
+                [
+                    { 
+                        text: "OK", 
+                        onPress: () => { 
+                            deleteSubUser(); 
+                            props.navigation.navigate('Profile')
+                        }
+                    },
+                    {
+                        text: "cancel",
+                        onPress: () => {}
+                    }
+                ]
+              );
+        };
         return (
-            <View>
-                <Text>{currentSubuser.name}</Text>
-                <Text>{currentSubuser.age}</Text>
-            <CustomButton
-            text="edit"
-            onPress={()=>{props.navigation.navigate('Create profile', { isUpdate: true })}}
-            />
-            </View>
+            <ScrollView style={styles.infoTab}>
+                <View style={{ width: '100%', alignItems:'center', justifyContent: 'center'}}>
+                    <View style={{width: '30%', }}>    
+                        <ProfileIcon iconNumber={currentSubuser.icon_number} iconBackground={currentSubuser.icon_background}/>
+                    </View>
+                </View>
+                <View style={styles.subuserDetailContainer}>
+                    <Text style={{fontWeight: "bold", marginBottom: 5}}>Details</Text>
+                    <Text>Name: {currentSubuser.name}</Text>
+                    <Text>Age: {currentSubuser.age}</Text>
+                    <Text>Date of birth: {currentSubuser.date_of_birth}</Text>
+                </View>
+                
+                <View style={styles.subuserDetailButtonContainer}>
+                    <CustomButton
+                    text="edit"
+                    onPress={()=>{props.navigation.navigate('Create profile', { isUpdate: true })}}
+                    />
+                    <CustomButton
+                    modest
+                    text="delete"
+                    onPress={()=>{deleteSubUserAlert()}}
+                    />
+                </View>
+            </ScrollView>
         );
     };
 
@@ -265,13 +326,9 @@ function UserRecord(props) {
 
 const styles = StyleSheet.create({
     container: {
-        //minHeight: 300,
         height: '100%',
-        //width: '95%',
         backgroundColor: '#fff',
         borderRadius: 5,
-        //marginTop: '5%',
-        //marginLeft: '2.5%',
 
         elevation: 1,
         shadowColor: '#eee',
@@ -289,7 +346,15 @@ const styles = StyleSheet.create({
     header: {
         marginTop: '15%'
     },
-    button: {
+    infoTab: {
+        paddingTop: 50,
+        padding: 10,
+        backgroundColor: '#fff'
+    },
+    subuserDetailContainer: {
+        padding: 20
+    },
+    subuserDetailButtonContainer: {
 
     },
     footer: {

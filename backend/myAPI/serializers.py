@@ -39,13 +39,22 @@ class UserAccountSerializer(serializers.ModelSerializer):
 class SubuserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subuser
-        fields = ['id', 'name', 'date_of_birth', 'gender']
+        fields = ['id', 'name', 'date_of_birth',
+                  'gender', 'icon_number', 'icon_background']
 
     def create(self, validated_data):
-
         instance = self.Meta.model(**validated_data)
         instance.save()
         self.context['request'].user.subuser.add(instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.pop('name')
+        instance.date_of_birth = validated_data.pop('date_of_birth')
+        instance.gender = validated_data.pop('gender')
+        instance.icon_number = validated_data.pop('icon_number')
+        instance.icon_background = validated_data.pop('icon_background')
+        instance.save()
         return instance
 
     # custom extra information to give age to client
@@ -407,10 +416,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class RecipeCommentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Comment
+        model = RecipeComment
         fields = ['id', 'user', 'recipe', 'text']
+
+
+class RecipeRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecipeRating
+        fields = '__all__'
 
 
 class UserShareRequestSerializer(serializers.ModelSerializer):
