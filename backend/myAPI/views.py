@@ -812,20 +812,20 @@ class RecipeRatingViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
         if RecipeRating.objects.filter(user=request.user).exists():
             recipe.ratings.filter(user=request.user).delete()
-        rating = self.queryset.create(
-            recipe=recipe, user=request.user, data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
-        recipe.ratings.add(rating)
-        serializer = self.serializer_class(rating)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @verify_secret_header
     def retrieve(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
         rating = recipe.ratings.all().aggregate(Avg('score'))
 
-        return Response(rating, status=status.HTTP_201_CREATED)
+        return Response(rating, status=status.HTTP_200_OK)
 
 
 class RecipeRecommendationViewSet(viewsets.ModelViewSet):

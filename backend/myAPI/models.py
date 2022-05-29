@@ -212,6 +212,8 @@ class RecipeIngredient(models.Model):
 class RecipeRating(models.Model):
     recipe = models.ForeignKey(
         Recipe, related_name='ratings', on_delete=models.CASCADE)
+    user = models.ForeignKey(UserAccount, to_field='username',
+                             db_column='username', on_delete=models.CASCADE)
     score = models.IntegerField()
 
 

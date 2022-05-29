@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View, Button, FlatList, Alert, Image } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, TouchableOpacity, FlatList, Alert, Image } from 'react-native';
 import * as ServerRequest from '../API/ServerRequest';
 import * as Constant from '../Constant/Constant'
 import { useSelector, useDispatch } from 'react-redux';
@@ -13,6 +13,7 @@ import Svg from "react-native-svg";
 import { formatDate, lessThanNutrients } from '../API/helper';
 import { setRecipeID, setRecipeImage, setSteps, setTags, setTitle, setIngredient, addTag, addStep, addIngredient, updateIngredient, updateStep, deleteTag, deleteStep, deleteIngredient, clearAllRecipe } from '../redux/recipeSlice'
 import CustomInput from "../Components/CustomInput";
+import { backgroundColor } from "react-native/Libraries/Components/View/ReactNativeStyleAttributes";
 
 
 const green = '#27ad15';
@@ -29,6 +30,8 @@ function RecipeDetail(props) {
     const [isShowLegend, setIsShowLegend] = useState(false);
     const [commentList, setCommentList] = useState([]);
     const [comment, setComment] = useState('');
+    const [ratingAll, setRatingAll] = useState(0)
+    const [rating, setRating] = useState(0)
 
     const dispatch = useDispatch();
 
@@ -117,7 +120,7 @@ function RecipeDetail(props) {
     }
     
     const getComment = async () => {
-        if (user.username === '' || currentSubuser.id === '') {
+        if (user.username === '') {
             return;
         }
         try {
@@ -127,6 +130,7 @@ function RecipeDetail(props) {
             isAuthRequired: true,
             navigation: props.navigation
             });
+
             if (result.response.status == 200) {
                 setCommentList(result.json);
             }
@@ -136,8 +140,8 @@ function RecipeDetail(props) {
     };
 
     const makeComment = async () => {
-
-        if (user.username === '' || currentSubuser.id === '' || comment === '') {
+        
+        if (user.username === '' || comment === '') {
                 return;
             }
         try {
@@ -162,6 +166,53 @@ function RecipeDetail(props) {
         }
     }
 
+    const getRatingAll = async () => {
+        if (user.username === '') {
+            return;
+        }
+        try {
+            const result = await ServerRequest.httpRequest({
+            method: 'GET',
+            endpoint: `api/recipes/${props.route.params.recipe.id}/rating/`,
+            isAuthRequired: true,
+            navigation: props.navigation
+            });
+            console.log(result.json)
+            if (result.response.status == 200) {
+                var rating_raw = result.json.score__avg;
+                var rating_clean = rating_raw === null ? 0 : rating_raw;
+                setRatingAll(rating_clean);
+            }
+        } catch (error) {
+
+        }
+    };
+
+    const makeRating = async (value) => {
+        if (user.username === '') {
+                return;
+            }
+        try {
+            const result = await ServerRequest.httpRequest({
+                method: 'POST',
+                endpoint: `api/recipes/${props.route.params.recipe.id}/rating/`,
+                body: {
+                    user: user.username,
+                    recipe: props.route.params.recipe.id,
+                    score: value
+                },
+                isAuthRequired: true,
+                navigation: props.navigation
+            });
+            if (result.response.status == 201) {
+                getRatingAll();
+                setRating(0);
+            }
+        } catch (error) {
+
+        }
+    }
+
     // https://reactnative.dev/docs/network
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     useEffect(() => {
@@ -171,6 +222,7 @@ function RecipeDetail(props) {
             await getRecipeData();
             await getRecipeNutrientData();
             await getUserRecord();
+            await getRatingAll();
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
@@ -348,12 +400,50 @@ function RecipeDetail(props) {
         );
     };
 
-    const commentsRender = ({item}) => {
-        console.log(item)
+    const ratings = () => {
+        const onRate = (value) => {
+            return (
+                Alert.alert(
+                    "Rating",
+                    `Make rating as ${value}?`,
+                    [
+                        { text: "OK", onPress: () => { makeRating(value); } },
+                        { text: "Cancel", onPress: () => { } }
+                    ]
+                )
+            );
+        }
+        const ratingEach = () => {
+            return (
+                [1, 2, 3, 4, 5].map((element, index) => {
+                    return (
+                        <TouchableOpacity 
+                        style={{borderRadius: 100, width: 30, height: 30, borderWidth: 3, borderColor: '#000', backgroundColor: ratingAll >= element ? '#ebdb34' : '#fff' }}
+                        onPress={()=>onRate(element)}
+                        >
+
+                        </TouchableOpacity>
+                    );
+                })
+            );
+        }
         return (
             <View>
-                <Text>{item.user}</Text>
-                <Text>{item.date_created}</Text>
+                <Text style={{textAlign: 'right', color: '#fff'}}>Rating: {ratingAll}</Text>
+                <View style={{flexDirection: 'row', justifyContent:'flex-end'}}>
+                    { ratingEach() }
+                </View>
+            </View>
+        );
+    }
+
+    const commentsRender = ({item}) => {
+        const datetime = item.date_created.split('T')
+        return (
+            <View style={{backgroundColor: '#fff', borderWidth: 1, borderRadius: 5, borderColor: '#aaa', elevation: 3, padding: 10, marginVertical: 5}}>
+                <Text>user: {item.user}</Text>
+                <Text>{datetime[0]} {datetime[1].split('.')[0]}</Text>
+                <Text>Commented: </Text>
                 <Text>{item.text}</Text>
             </View>
         );
@@ -410,6 +500,8 @@ function RecipeDetail(props) {
                             </View>
                         )
                     }
+
+                    { ratings() }
                     </View>
                  
                     { nutrientPanel()}
@@ -430,9 +522,9 @@ function RecipeDetail(props) {
             ListFooterComponent={
                 <View style={styles.footer}>
                     <FlatList
-                    style={styles.container}
+                    style={[styles.container, {padding: 10}]}
                     ListHeaderComponent={
-                        <View style={{padding: 10}}>
+                        <View >
                             <Text>make a comment</Text>
                             <CustomInput
                             value={comment}
