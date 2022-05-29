@@ -1140,12 +1140,15 @@ class RecipeCommentViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         parent_recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
 
-        comment = RecipeComment.objects.create(
-            recipe=parent_recipe, data=request.data)
-        parent_recipe.comment.add(comment)
-        serializer = self.serializer_class(comment)
+        # comment = RecipeComment.objects.create(
+        #     recipe=parent_recipe, data=request.data)
+        # parent_recipe.comment.add(comment)
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @verify_secret_header
     def list(self, request, *args, **kwargs):
@@ -1153,6 +1156,7 @@ class RecipeCommentViewSet(viewsets.ModelViewSet):
 
         comment = RecipeComment.objects.filter(recipe=parent_recipe)
         serializer = self.serializer_class(comment, many=True)
+        print('a', serializer.data)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 

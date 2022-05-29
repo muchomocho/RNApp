@@ -419,7 +419,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeComment
-        fields = ['id', 'user', 'recipe', 'text']
+        fields = '__all__'
+
+    def create(self, validated_data):
+        return super().create(validated_data)
 
 
 class RecipeRatingSerializer(serializers.ModelSerializer):

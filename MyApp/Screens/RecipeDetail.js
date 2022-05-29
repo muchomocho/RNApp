@@ -12,6 +12,7 @@ import { genderMap, ageMap, amountFormatter } from '../API/helper'
 import Svg from "react-native-svg";
 import { formatDate, lessThanNutrients } from '../API/helper';
 import { setRecipeID, setRecipeImage, setSteps, setTags, setTitle, setIngredient, addTag, addStep, addIngredient, updateIngredient, updateStep, deleteTag, deleteStep, deleteIngredient, clearAllRecipe } from '../redux/recipeSlice'
+import CustomInput from "../Components/CustomInput";
 
 
 const green = '#27ad15';
@@ -26,6 +27,8 @@ function RecipeDetail(props) {
     const [nutrientData, setNutrientData] = useState();
     const [isShowModal, setIsShowModal] = useState(false);
     const [isShowLegend, setIsShowLegend] = useState(false);
+    const [commentList, setCommentList] = useState([]);
+    const [comment, setComment] = useState('');
 
     const dispatch = useDispatch();
 
@@ -107,6 +110,52 @@ function RecipeDetail(props) {
             });
             if (result.response.status == 200) {
                 setRecord(result.json);
+            }
+        } catch (error) {
+
+        }
+    }
+    
+    const getComment = async () => {
+        if (user.username === '' || currentSubuser.id === '') {
+            return;
+        }
+        try {
+            const result = await ServerRequest.httpRequest({
+            method: 'GET',
+            endpoint: `api/recipes/${props.route.params.recipe.id}/comments/`,
+            isAuthRequired: true,
+            navigation: props.navigation
+            });
+            if (result.response.status == 200) {
+                setCommentList(result.json);
+            }
+        } catch (error) {
+
+        }
+    };
+
+    const makeComment = async () => {
+
+        if (user.username === '' || currentSubuser.id === '' || comment === '') {
+                return;
+            }
+        try {
+            const result = await ServerRequest.httpRequest({
+                method: 'POST',
+                endpoint: `api/recipes/${props.route.params.recipe.id}/comments/`,
+                body: {
+                    user: user.username,
+                    recipe: props.route.params.recipe.id,
+                    text: comment
+                },
+                isAuthRequired: true,
+                navigation: props.navigation
+            });
+            console.log(result.json)
+            if (result.response.status == 201) {
+                getComment();
+                setComment('');
             }
         } catch (error) {
 
@@ -276,6 +325,8 @@ function RecipeDetail(props) {
 
     };
 
+    
+
     const ingredients = () => {
         const renderItem = ({item}) => {
             
@@ -294,6 +345,17 @@ function RecipeDetail(props) {
             renderItem={renderItem}
             keyExtractor={item=>item.food_data.id}
             />
+        );
+    };
+
+    const commentsRender = ({item}) => {
+        console.log(item)
+        return (
+            <View>
+                <Text>{item.user}</Text>
+                <Text>{item.date_created}</Text>
+                <Text>{item.text}</Text>
+            </View>
         );
     };
 
@@ -362,9 +424,30 @@ function RecipeDetail(props) {
             }}
             keyExtractor = {item => `${item.step_number}`}
             
+            onEndReached={getComment}
+            onEndReachedThreshold={0.5}
             // bottom of list
             ListFooterComponent={
                 <View style={styles.footer}>
+                    <FlatList
+                    style={styles.container}
+                    ListHeaderComponent={
+                        <View style={{padding: 10}}>
+                            <Text>make a comment</Text>
+                            <CustomInput
+                            value={comment}
+                            setValue={setComment}
+                            />
+                            <CustomButton 
+                            text="submit"
+                            onPress={makeComment}
+                            />
+                        </View>
+                    }
+                    data={commentList}
+                    renderItem={commentsRender}
+                    keyExtractor={item=>item.id}
+                    />
                 </View>
             }
             />
@@ -404,8 +487,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row'
     },
     footer: {
+        width: '100%',
         alignItems: 'center',
-        marginBottom: '30%'
+        marginBottom: '100%'
     },
     nutrientInfoText: {
         borderWidth: 1,
