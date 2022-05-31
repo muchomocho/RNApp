@@ -2,6 +2,8 @@ import React from 'react';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Text, TextInput, View, StyleSheet, Pressable } from 'react-native';
 import { useSelector } from 'react-redux';
+import ProfileIcon from '../ProfileIcon';
+import { MAIN_COLOUR } from '../../Constant/Constant';
 
 export default function SubuserBanner() {
 
@@ -11,11 +13,10 @@ export default function SubuserBanner() {
         
         return (
             <View style={styles.container}>
-                <Text style={styles.user}>user : { user.username }</Text>
-                <View style={styles.subuserContainer}>
-                    <View style={styles.tri}></View>
-                    <Text style={styles.subuser}>{currentSubuser.name}</Text>
-                </View>
+                <View style={{width: '10%'}}>
+                    <ProfileIcon iconNumber={currentSubuser.icon_number} iconBackground={currentSubuser.icon_background} />
+                </View>  
+                <Text style={styles.user}>{ user.username } > {currentSubuser.name}</Text>
             </View>
         );
     }
@@ -29,30 +30,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         height: 30,
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: '#c3d6ca',
+        paddingHorizontal: 10
     },
     user: {
         height: '100%',
         color: '#000',
-        flex: 2,
+        flex: 1,
         paddingLeft: 20,
+        fontWeight: 'bold',
         textAlignVertical: 'center',
         backgroundColor: '#c3d6ca'
-    },
-
-    // https://stackoverflow.com/questions/30216929/css-triangles-in-react-native
-    tri: {
-        backgroundColor: '#561ddb',
-        height: 10,
-        width: 10,
-        // borderTopWidth: 15,
-        // borderRightWidth: 0,
-        // borderBottomWidth: 15,
-        // borderLeftWidth: 15,
-        // borderTopColor: 'transparent',
-        // borderRightColor: 'transparent',
-        // borderBottomColor: 'transparent',
-        // borderLeftColor: "#c3d6ca",
     },
     subuserContainer: {
         height: '100%',
@@ -62,10 +50,5 @@ const styles = StyleSheet.create({
         //transform: [ { skewY: '45deg' } ],
         backgroundColor: '#561ddb'
     },
-    subuser: {
-        textAlignVertical: 'center',
-        color: '#fff',
-        paddingLeft: 10
-    }
   });
 

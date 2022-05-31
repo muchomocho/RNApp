@@ -7,6 +7,7 @@ import CustomButton from "../CustomButton";
 import { useSelector, useDispatch } from 'react-redux';
 import { setSubuserArray, setCurrentSubuser, setUser } from '../../redux/userSlice'
 import { genderMap, ageMap, lessThanNutrients } from "../../API/helper";
+import { MAIN_COLOUR } from "../../Constant/Constant";
 
 export default function UserGraph ({ data, dates }) {
 
@@ -73,7 +74,7 @@ export default function UserGraph ({ data, dates }) {
                 <CustomButton
                     text={item.replace('_', ' ')}
                     onPress={() => {setFocusData(item); }}
-                    buttonStyle={[styles.button, (focusData === item ? {backgroundColor: '#561ddbcc'} : {})]}
+                    buttonStyle={[styles.button, (focusData === item ? {backgroundColor: `${MAIN_COLOUR}cc`} : {})]}
                 />
             )
         };

@@ -8,6 +8,8 @@ import TabSwitch from "../Components/TabSwitch";
 import CustomButton from "../Components/CustomButton";
 import * as Authentication from "../Authentication/Authentication";
 import { setSubuserArray, setCurrentSubuser, setUser, setLogout } from '../redux/userSlice'
+import ProfileIcon from "../Components/ProfileIcon";
+import SubuserBanner from "../Components/SubuserBanner";
 
 
 function Request({ navigation }) {
@@ -28,7 +30,6 @@ function Request({ navigation }) {
 
     const[chosenSubusers, setChosenSubuser] = useState({});
 
-    //console.log('req', user)
     // https://reactnative.dev/docs/network
     // https://reactnavigation.org/docs/function-after-focusing-screen/
     useEffect(() => {
@@ -39,8 +40,8 @@ function Request({ navigation }) {
             await getRequestTo();
             await getUserProfile();
             setChosenSubuser({});
-            isRecordableRequest(false);
-            isViewableRequest(false);
+            setIsRecordableRequest(false);
+            setIsViewableRequest(false);
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
@@ -264,6 +265,8 @@ function Request({ navigation }) {
                     text="close"
                     onPress={switchShowModal}
                     />
+                    <Text>Request will be sent to the user you choose.</Text>
+                    <Text>They will respond to choose which sub-user they will share.</Text>
                     <Text>Send to user:</Text>
                     <CustomInput
                     value={toUser}
@@ -309,6 +312,9 @@ function Request({ navigation }) {
                         <Checkbox
                             status={Object.prototype.hasOwnProperty.call(chosenSubusers, item.id) ? 'checked' : 'unchecked'}
                         /> 
+                        <View style={{width: '15%', marginHorizontal: 10}}>
+                            <ProfileIcon iconNumber={item.icon_number} iconBackground={item.icon_background}/>
+                        </View>
                         <View>
                             <Text>{item.name}</Text>
                             <Text>{item.date_of_birth}</Text>
@@ -497,6 +503,7 @@ function Request({ navigation }) {
     if (user.username != '') {
         return (
             < >  
+                <SubuserBanner />
                 { makeRequestButton() }
                 { makeRequestModal() }
                 { detailModal() }
@@ -589,6 +596,7 @@ const styles = StyleSheet.create({
         padding: 10,
         marginVertical: 10,
         flexDirection: 'row',
+        alignItems: 'center'
     },
 });
 

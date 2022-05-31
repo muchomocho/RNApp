@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 import json
 import random
+
+from django.http import Http404
 from .models import *
 from .serializers import *
-from django.db.models import Q
-from django.db.models import Avg
+from django.db.models import Avg, Q
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
@@ -283,8 +284,11 @@ class UserAccountViewSet(viewsets.ModelViewSet):
 
         if request.user.is_authenticated and request.user.username == kwargs['username']:
             queryset = UserAccount.objects.all()
-            userccount = get_object_or_404(
-                queryset, username=kwargs['username'])
+
+            if not self.queryset.filter(username=kwargs['username']).exists():
+                return Response('does not exist', status=status.HTTP_404_NOT_FOUND)
+            userccount = self.queryset.select_for_update().get(
+                username=kwargs['username'])
             request.data['username'] = kwargs['username']
             serializer = UserAccountSerializer(userccount, data=request.data)
             if serializer.is_valid():
@@ -469,9 +473,6 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         if len(request.data['meal_content']) == 0 and len(request.data['recipe_meal_content']) == 0:
             return Response("requires at least some food or recipe data", status=status.HTTP_400_BAD_REQUEST)
 
-        user = get_object_or_404(
-            UserAccount.objects.all(), username=kwargs['username'])
-
         request.data['subuser'] = subuser.id
         serializer = self.serializer_class(data=request.data)
 
@@ -493,8 +494,10 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         if not isFoodDataCreationSuccess:
             return Response("requires fooddata", status=status.HTTP_400_BAD_REQUEST)
 
-        meal_record = get_object_or_404(
-            self.queryset, id=kwargs['usermealrecord_id'])
+        if not self.queryset.filter(id=kwargs['usermealrecord_id']).exists():
+            return Response('does not exist', status=status.HTTP_404_NOT_FOUND)
+        meal_record = self.queryset.select_for_update().get(
+            id=kwargs['usermealrecord_id'])
 
         subuser = get_subuser_allow_record(
             user=request.user, subuser_id=kwargs['subuser_id'])
@@ -608,7 +611,10 @@ class SubuserViewSet(viewsets.ModelViewSet):
     @verify_secret_header
     def update(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
-            subuser = Subuser(id=kwargs['subuser_id'])
+            if not self.queryset.filter(id=kwargs['subuser_id']).exists():
+                return Response('does not exist', status=status.HTTP_404_NOT_FOUND)
+            subuser = self.queryset.select_for_update().get(
+                id=kwargs['subuser_id'])
             serializer = SubuserSerializer(subuser,
                                            data=request.data, context={'request': request})
 
@@ -627,7 +633,7 @@ class SubuserViewSet(viewsets.ModelViewSet):
                 request.user.viewable_subuser.all()
 
             serializer = SubuserSerializer(subusers, many=True)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -639,7 +645,7 @@ class SubuserViewSet(viewsets.ModelViewSet):
                 user=request.user, subuser_id=kwargs['subuser_id'])
             serializer = SubuserSerializer(subuser)
 
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         content = {'requires log in to see'}
         return Response(content, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -745,8 +751,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             query_together = Q()
             search_query_as_list = search_query.split(' ')
             for query in search_query_as_list:
-
-                query_together |= Q(title__contains=query)
+                query_together |= Q(title__icontains=query) | Q(
+                    tags__text__icontains=query)
 
             recipe = self.queryset.filter(
                 is_private=False, is_hidden=False) & self.queryset.filter(query_together)
@@ -762,9 +768,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @verify_secret_header
     def update(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-
-            recipe = get_object_or_404(
-                self.queryset, id=kwargs['recipe_id'])
+            if not self.queryset.filter(id=kwargs['recipe_id']).exists():
+                return Response('does not exist', status=status.HTTP_404_NOT_FOUND)
+            recipe = self.queryset.select_for_update().get(
+                id=kwargs['recipe_id'])
             if recipe.user != request.user:
                 return Response({'editing is for owner only'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -824,6 +831,7 @@ class RecipeRatingViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
         rating = recipe.ratings.all().aggregate(Avg('score'))
+        rating['score__avg'] = round(rating['score__avg'], 2)
 
         return Response(rating, status=status.HTTP_200_OK)
 
@@ -1109,7 +1117,8 @@ class PersonalRecipeViewSet(viewsets.ModelViewSet):
                 query_together = Q()
                 search_query_clean = search_query.split(' ')
                 for query in search_query_clean:
-                    query_together |= Q(title__contains=query)
+                    query_together |= Q(title__contains=query) | Q(
+                        tags__text__icontains=query)
 
                 recipe &= self.queryset.filter(query_together)
 
@@ -1240,7 +1249,9 @@ class FoodDataViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         if request.user.is_authenticated == False:
             return Response({'you need to log in to upload.'}, status.HTTP_401_UNAUTHORIZED)
-        food_data = get_object_or_404(FoodData, id=kwargs['id'])
+        if not self.queryset.filter(id=kwargs['id']).exists():
+            return Response('does not exist', status=status.HTTP_404_NOT_FOUND)
+        food_data = self.queryset.select_for_update().get(id=kwargs['id'])
         if food_data.is_hidden:
             return Response({'not found.'}, status.HTTP_404_UNAUTHORIZED)
         if food_data.uploader != request.user:

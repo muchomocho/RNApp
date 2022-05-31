@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Modal } from 'react-native';
+import { StyleSheet, Text, View, Modal, TouchableOpacity } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomButton from "../CustomButton";
 import ManualFoodDataInput  from "./ManualFoodDataInput";
@@ -56,7 +56,7 @@ export default function FloatButton({ navigation, isEditingFood=false, isShowMan
                         <CustomButton
                             buttonStyle={styles.button}
                             textStyle={styles.buttonText}
-                            text="Create"
+                            text="+"
                             onPress={onPressManual}
                         />
                     </View>
@@ -66,12 +66,16 @@ export default function FloatButton({ navigation, isEditingFood=false, isShowMan
                     <View>
                         { listIndicator() }
 
-                        <CustomButton
-                            buttonStyle={styles.button}
-                            textStyle={styles.buttonText}
-                            text="list"
+                        <TouchableOpacity
+                            style={[styles.defaultButton, styles.button]}
                             onPress={onPressList}
-                        />
+                        > 
+                        <View style={{borderWidth: 2, borderColor: '#fff', borderRadius: 5, width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center'}}>
+                            <View style={styles.hamburger}></View>
+                            <View style={styles.hamburger}></View>
+                            <View style={styles.hamburger}></View>
+                        </View>
+                        </TouchableOpacity>
                     </View>
                 }
             </View>
@@ -140,11 +144,10 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         position: 'absolute',
-        bottom: 70,
+        bottom: 50,
         right: 20,
     },
     button: {
-        backgroundColor: '#fff',
         width: 70,
         height: 70,
         borderRadius: 45,
@@ -164,11 +167,32 @@ const styles = StyleSheet.create({
         elevation: 11
     },
     buttonText: {
-        color: '#000'
+        color: '#fff',
+        fontSize: 30,
+        alignSelf: 'center',
+        height: '100%',
+        alignItems: 'center',
+        textAlignVertical: 'center'
     },
     closeButton: {
         marginTop: 50,
         backgroundColor: '#ffffff00'
+    },
+    defaultButton: {
+        width: '100%',
+        backgroundColor: '#561ddb',
+        alignItems: 'center',
+        padding: 15,
+        marginVertical: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    hamburger: {
+        backgroundColor: '#fff',
+        width: '70%',
+        height: '5%',
+        margin: '10%'
     },
     closeButtontext: {
         color: '#000'

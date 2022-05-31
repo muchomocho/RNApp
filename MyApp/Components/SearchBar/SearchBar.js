@@ -1,6 +1,7 @@
 import React from 'react';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Text, TextInput, View, StyleSheet, Pressable, Image, TouchableOpacity } from 'react-native';
+import { MAIN_COLOUR } from '../../Constant/Constant';
 
 export default function SearchBar({value, setValue, onSearch, searchIconType=1}) {
 
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
 
     button:{
         flex: 2,
-        backgroundColor: '#561ddb',
+        backgroundColor: MAIN_COLOUR,
         width: 20,
         borderBottomRightRadius: 5,
         borderTopRightRadius: 5,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Text, TextInput, View, StyleSheet, Pressable, TouchableOpacity } from 'react-native';
+import {MAIN_COLOUR} from '../../Constant/Constant';
 
 // derived from 
 // https://www.youtube.com/watch?v=ALnJLbjI7EY&t=1837s&ab_channel=notJust%E2%80%A4dev
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
 
     container: {
         width: '100%',
-        backgroundColor: '#561ddb',
+        backgroundColor: MAIN_COLOUR,
         alignItems: 'center',
         padding: 15,
         marginVertical: 10,

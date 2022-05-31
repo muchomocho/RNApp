@@ -105,7 +105,7 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
                 <View style={styles.detail}>
                     <Text style={styles.detailTitle}>{item.title}</Text>
                     {
-                        item.user != 'admin' &&
+                        !item.user.includes('admin') &&
                         <Text style={styles.detailText}>created by {item.user}</Text>
                     }
                     { 

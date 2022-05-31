@@ -77,7 +77,7 @@ const BottomTab = () => {
                 tabBarIcon: () => (<Image source={require("../../assets/icons/tabIcons/fooddata.png")} style={{height: 30, width: 20}} />)
             }}
             />
-            <Tab.Screen name='Request' component={Request} 
+            <Tab.Screen name='Share Request' component={Request} 
             options={{
                 tabBarIcon: () => (<Image source={require("../../assets/icons/tabIcons/request.png")} style={{height: 30, width: 30}} />)
             }}

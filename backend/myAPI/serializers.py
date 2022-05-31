@@ -351,7 +351,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = ['id', 'user', 'title', 'main_img',
                   'tags', 'ingredients', 'is_private', 'steps']
-        #fields = '__all__'
 
     def create(self, validated_data):
         tags_data = validated_data.pop('tags')

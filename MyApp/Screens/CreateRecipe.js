@@ -30,6 +30,7 @@ function CreateRecipe(props) {
     const [isPrivate, setIsPrivate] = useState(true);
     const [tagText, setTagText] = useState('');
     const [isShowFoodModal, setShowFoodModal] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const dispatch = useDispatch();
 
 
@@ -43,7 +44,7 @@ function CreateRecipe(props) {
                 ${isStepValid ? '' : 'you must have at least one entry of step. steps must not be empty'}\
                 `,
                 [
-                  { text: "OK", onPress: () => {} }
+                    { text: "OK", onPress: () => { setIsSubmitted(false); } }
                 ]
               );
         };
@@ -53,7 +54,7 @@ function CreateRecipe(props) {
                 "Error",
                 `Could not send due to network error`,
                 [
-                  { text: "OK", onPress: () => {} }
+                    { text: "OK", onPress: () => { setIsSubmitted(false); } }
                 ]
               );
         };
@@ -107,11 +108,11 @@ function CreateRecipe(props) {
                     method = 'POST';
                     endpoint = `api/recipes/`;
                 }
-                
+                setIsSubmitted(true);
                 const result = await httpRequest({
                     headers: {
                         Accept: 'application/json',
-                        'Content-Type': 'multipart/form-data; boundary=---randomawesomeboundaryforservertoknowboundary'
+                        'Content-Type': 'multipart/form-data; boundary=---randomawesomeboundaryforservertoknowboundary' // server needs to know boundary for formdata to extract data.
                     },
                     method: method,
                     body: formdata,
@@ -135,7 +136,6 @@ function CreateRecipe(props) {
         }
         else {
             submitAlert(isTitleValid, isIngredientValid, isStepValid);
-            
         }
     };
 
@@ -143,6 +143,7 @@ function CreateRecipe(props) {
     useEffect(() => {
         const reload = props.navigation.addListener('focus', async () => {
             setShowFoodModal(false);
+            setIsSubmitted(false);
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount

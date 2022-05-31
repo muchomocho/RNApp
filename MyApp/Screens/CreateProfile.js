@@ -14,7 +14,6 @@ import ProfileIcon from "../Components/ProfileIcon";
 
 function CreateProfile(props) {
     const { user, currentSubuser, subuserArray } = useSelector(state => state.user);
-    console.log(typeof(currentSubuser.date_of_birth))
     const [name, setName] = useState(props.route.params.isUpdate && currentSubuser != undefined ? currentSubuser.name : '');
     const [dob, setDob] = useState(props.route.params.isUpdate && currentSubuser != undefined ? new Date(currentSubuser.date_of_birth) : new Date());
     const [gender, setGender] = useState(props.route.params.isUpdate && currentSubuser != undefined ? currentSubuser.gender : 'M');
@@ -47,13 +46,10 @@ function CreateProfile(props) {
                 isAuthRequired: true,
                 navigation: props.navigation
               });
-              console.log(name, dob, gender)
-              console.log(result.json)
 
             if (!props.route.params.isUpdate && result.response.status == 201 ||
               props.route.params.isUpdate && result.response.status == 200
               ) {
-                console.log('a')
               props.navigation.navigate('Profile');
             }
             if (result.response.status == 400) {
@@ -97,7 +93,6 @@ function CreateProfile(props) {
     };
 
     const onDateConfirm = (event, date) => {
-      console.log(date)
       const dateObj = new Date(date)
       date.setFullYear(dateObj.getFullYear());
       date.setMonth(dateObj.getMonth());
@@ -184,6 +179,8 @@ function CreateProfile(props) {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
+          <Text>These data are necessary to calculate the optimal nutrient values for you.</Text>
+          <Text>If you enter your gender as other you will not be able to see the optimal value.</Text>
           <View >
             { 
             // conditional rendering
@@ -219,7 +216,7 @@ function CreateProfile(props) {
             {/* https://github.com/react-native-picker/picker */}
             <Picker
               selectedValue={gender}
-              style={{ height: 50, width: 150 }}
+              style={[{ height: 50, width: 150 }, Platform.OS === 'ios' ? { marginBottom: 50 } : null]}
               onValueChange={(itemValue, itemIndex) => setGender(itemValue)}
             >
               <Picker.Item label="Male" value="M" />
@@ -246,9 +243,9 @@ const styles = StyleSheet.create({
     },
 
     container: {
-   
+      flex: 1,
       padding: 20,
-      margin: 0,
+      marginTop: 20,
       alignItems: 'stretch',
       justifyContent: 'center',
       backgroundColor: '#fff'

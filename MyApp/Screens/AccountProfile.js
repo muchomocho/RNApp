@@ -48,7 +48,7 @@ function AccountProfile(props) {
                 isAuthRequired: true,
                 navigation: props.navigation
             });
-            console.log(result.json)
+          
             if (result.response.status !== 200) {
                 Authentication.logOut(props.navigation);
                 setLoggedIn(false);
@@ -227,7 +227,7 @@ function AccountProfile(props) {
                     <View style={styles.footer}>
                         <CustomButton
                         buttonStyle={styles.button}
-                        text={'create new'}
+                        text={'create new sub-user'}
                         onPress={()=>{props.navigation.navigate('Create profile')}}
                         />
                     </View>
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
         marginBottom: '30%'
     },
     account:{
-        backgroundColor: '#561ddb',
+        backgroundColor: Constant.MAIN_COLOUR,
         borderRadius: 5,
         paddingVertical: 10,
         paddingHorizontal: 20,

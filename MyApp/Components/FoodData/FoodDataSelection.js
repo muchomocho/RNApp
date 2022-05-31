@@ -102,7 +102,7 @@ function FoodDataSelection({navigation, onPressfunc, isRecording=false, isRecipe
                 <View style={styles.detail}>
                     <Text style={styles.detailTitle}>{item.name}</Text>
                     {
-                        item.uploader != 'admin' &&
+                        !item.uploader.includes('admin') &&
                         <Text style={styles.detailText}>created by {item.uploader}</Text>
                     }   
                 </View>

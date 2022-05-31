@@ -44,11 +44,9 @@ function Signin ({ navigation }) {
             }
             else {
                 setIsShowwarning(true);
-                setIsLoggedIn(false);
             }
         } catch (error) {
             setIsShowwarning(true);
-            setIsLoggedIn(false);
         }
     }
 

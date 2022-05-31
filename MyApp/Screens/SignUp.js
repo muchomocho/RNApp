@@ -1,11 +1,12 @@
 import { enableExpoCliLogging } from "expo/build/logs/Logs";
 import React, { Component, useState, useEffect } from "react";
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { StyleSheet, Text, View, Alert } from 'react-native';
 import CustomInput from "../Components/CustomInput";
 import CustomButton from "../Components/CustomButton";
 import * as Constant from "../Constant/Constant";
 import * as APIRequest from '../API/ServerRequest';
 import { useSelector, useDispatch } from 'react-redux';
+import Authentication from '../Authentication/Authentication'
 
 function SignUp (props) {
 
@@ -71,7 +72,7 @@ function SignUp (props) {
           if (props.route.params.isupdate) {
             result = await APIRequest.httpRequest({
               method: 'PUT',
-              endpoint: 'api/useraccounts/' + user.username + '/',
+              endpoint: `api/useraccounts/ ${user.username}/`,
               body: {
                 email: email,
                 password: password1
@@ -92,7 +93,7 @@ function SignUp (props) {
               navigation: props.navigation
             });
           }
-            if (result.response.status == 201) {
+            if (!props.route.params.isupdate && result.response.status == 201 || props.route.params.isupdate && result.response.status == 200) {
               props.navigation.navigate('Profile')
             } else if (result.response.status === 400) {
               if (Object.prototype.hasOwnProperty.call(result.json, 'username') && result.json.username.length > 0)
@@ -107,10 +108,50 @@ function SignUp (props) {
 
             }
           } catch (error) {
-   
+            return Alert.alert(
+              "Network error",
+              "Creation was unsuccessful",
+              [
+                  { 
+                      text: "OK", 
+                      onPress: () => { 
+                      }
+                  },
+              ]
+            );
           }
         }
-      }
+    }
+
+    const deleteUser = async () => {
+      try {
+        var result = null;
+        if (props.route.params.isupdate) {
+          result = await APIRequest.httpRequest({
+            method: 'DELETE',
+            endpoint: `api/useraccounts/'${user.username}/${user.id}`,
+            isAuthRequired: true,
+            navigation: props.navigation
+          });
+        }
+          if (result.response.status == 200) {
+            Authentication.logOut(props.navigation);
+            props.navigation.navigate('Profile')
+          } 
+        } catch (error) {
+          return Alert.alert(
+            "Network Error",
+            "Delete was unsuccessful",
+            [
+                { 
+                    text: "OK", 
+                    onPress: () => { 
+                    }
+                },
+            ]
+          );
+        }
+    };
 
 
     const warning = (warningArray) => {
@@ -176,6 +217,31 @@ function SignUp (props) {
           />
 
           <CustomButton onPress={createUser} text={'submit'}/>
+
+          {
+            props.route.params.isupdate &&
+            <CustomButton 
+            text='delete'
+            onPress={()=>{
+              return Alert.alert(
+                "Warning",
+                "Are you sure you wan to delete?",
+                [
+                    { 
+                        text: "OK", 
+                        onPress: () => { 
+                            deleteUser(); 
+                        }
+                    },
+                    {
+                        text: "cancel",
+                        onPress: () => {}
+                    }
+                ]
+              );
+            }}
+            />
+          }
         </View>
       );
     }

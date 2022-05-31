@@ -10,3 +10,5 @@ export const ROOT_URL = LOCAL_NETWORK
 export const BIG_MONTH = [1, 3, 5, 7, 8, 10, 12]
 
 export const SMALL_MONTH = [4, 6, 9, 11]
+
+export const MAIN_COLOUR = '#4d9452';

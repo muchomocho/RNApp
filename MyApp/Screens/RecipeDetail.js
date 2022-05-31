@@ -156,7 +156,7 @@ function RecipeDetail(props) {
                 isAuthRequired: true,
                 navigation: props.navigation
             });
-            console.log(result.json)
+           
             if (result.response.status == 201) {
                 getComment();
                 setComment('');
@@ -177,7 +177,7 @@ function RecipeDetail(props) {
             isAuthRequired: true,
             navigation: props.navigation
             });
-            console.log(result.json)
+        
             if (result.response.status == 200) {
                 var rating_raw = result.json.score__avg;
                 var rating_clean = rating_raw === null ? 0 : rating_raw;

@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons/main.png",
-    "privacy": "unlisted",
+    "privacy": "hidden",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
