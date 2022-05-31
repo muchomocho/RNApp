@@ -14,6 +14,7 @@ import { formatDate, lessThanNutrients } from '../API/helper';
 import { setRecipeID, setRecipeImage, setSteps, setTags, setTitle, setIngredient, addTag, addStep, addIngredient, updateIngredient, updateStep, deleteTag, deleteStep, deleteIngredient, clearAllRecipe } from '../redux/recipeSlice'
 import CustomInput from "../Components/CustomInput";
 import { backgroundColor } from "react-native/Libraries/Components/View/ReactNativeStyleAttributes";
+import { Chip } from "react-native-paper";
 
 
 const green = '#27ad15';
@@ -35,6 +36,18 @@ function RecipeDetail(props) {
 
     const dispatch = useDispatch();
 
+    const networkErrorAlert = () => {
+        return (
+            Alert.alert(
+                "NetworkError",
+                `Could not complete action`,
+                [
+                    { text: "OK", onPress: () => { } },
+                ]
+            )
+        )
+    };
+
     const getRecipeData = async () => {
         try {
             const result = await ServerRequest.httpRequest({
@@ -45,10 +58,9 @@ function RecipeDetail(props) {
             });
             if (result.response.status == 200) {
                 setData(result.json);
-
             }
         } catch (error) {
-
+            networkErrorAlert();
         }
     }
 
@@ -90,7 +102,7 @@ function RecipeDetail(props) {
                 setNutrientData(result.json);
             }
         } catch (error) {
-
+            networkErrorAlert();
         }
     };
 
@@ -115,7 +127,7 @@ function RecipeDetail(props) {
                 setRecord(result.json);
             }
         } catch (error) {
-
+            networkErrorAlert();
         }
     }
     
@@ -135,7 +147,7 @@ function RecipeDetail(props) {
                 setCommentList(result.json);
             }
         } catch (error) {
-
+            networkErrorAlert();
         }
     };
 
@@ -162,7 +174,29 @@ function RecipeDetail(props) {
                 setComment('');
             }
         } catch (error) {
+            networkErrorAlert();
+        }
+    }
 
+    const deleteComment = async (comment_id) => {
+        
+        if (user.username === '') {
+                return;
+            }
+        try {
+            const result = await ServerRequest.httpRequest({
+                method: 'DELETE',
+                endpoint: `api/recipes/${props.route.params.recipe.id}/comments/${comment_id}/`,
+                isAuthRequired: true,
+                navigation: props.navigation
+            });
+           
+            if (result.response.status == 200) {
+                getComment();
+                setComment('');
+            }
+        } catch (error) {
+            networkErrorAlert();
         }
     }
 
@@ -184,7 +218,7 @@ function RecipeDetail(props) {
                 setRatingAll(rating_clean);
             }
         } catch (error) {
-
+            networkErrorAlert();
         }
     };
 
@@ -209,7 +243,7 @@ function RecipeDetail(props) {
                 setRating(0);
             }
         } catch (error) {
-
+            networkErrorAlert();
         }
     }
 
@@ -250,7 +284,7 @@ function RecipeDetail(props) {
         if (nutrient.name == 'is_missing_value') {
             return;
         }
-        const targetValue = targetJson[ageMap(currentSubuser.age)][genderMap(currentSubuser.gender)][nutrient.name];
+        const targetValue = currentSubuser.gender !== 'O' ? targetJson[ageMap(currentSubuser.age)][genderMap(currentSubuser.gender)][nutrient.name] : -1;
         const recordValue = record[nutrient.name];
         const percent = Math.round(100 * (nutrient.value / targetValue))
         const totalPercent = Math.round(100 * ((nutrient.value + recordValue) / targetValue))
@@ -259,40 +293,46 @@ function RecipeDetail(props) {
         // https://formidable.com/open-source/victory/gallery/animating-circular-progress-bar/
         return (
         <View key={nutrient.name}>
-            <View style={{backgroundColor: '#fff', margin: 5, width: 100, height: 100}}>
-                <Svg style={{backgroundColor:'#fff', elevation: 3}} viewBox="0 0 400 400" width="100%" height="100%">
-                    <VictoryPie
-                        standalone={false}
-                        width={400} height={400}
-                        labels={()=>null}
-                        data={[{ x: 1, y: recordValue }, { x: 2, y: nutrient.value}, { x: 3, y:  targetValue - (nutrient.value + recordValue) }]}
-                        innerRadius={120}
-                        cornerRadius={25}
-                        style={{
-                            data: { 
-                                fill: ({ datum }) => {
-                                    const color = datum.y > targetValue && (lessThanNutrients.includes(nutrient.name)) ? red : green;
-                                    return datum.x === 2 ? color : ( datum.x === 1 ? "orange" : "#e6ebea");
+            {
+                currentSubuser.gender !== 'O' &&
+                <View style={{backgroundColor: '#fff', margin: 5, width: 100, height: 100}}>
+                    <Svg style={{backgroundColor:'#fff', elevation: 3}} viewBox="0 0 400 400" width="100%" height="100%">
+                        <VictoryPie
+                            standalone={false}
+                            width={400} height={400}
+                            labels={()=>null}
+                            data={[{ x: 1, y: recordValue }, { x: 2, y: nutrient.value}, { x: 3, y:  targetValue - (nutrient.value + recordValue) }]}
+                            innerRadius={120}
+                            cornerRadius={25}
+                            style={{
+                                data: { 
+                                    fill: ({ datum }) => {
+                                        const color = targetValue > -1 && datum.y > targetValue && (lessThanNutrients.includes(nutrient.name)) ? red : green;
+                                        return datum.x === 2 ? color : ( datum.x === 1 ? "orange" : "#e6ebea");
+                                    }
                                 }
-                            }
-                        }}
-                    />
-                    <VictoryLabel
-                        textAnchor="middle" verticalAnchor="middle"
-                        x={200} y={200}
-                        text={[`+${percent}%\n`,`Total: ${totalPercent}%`]}
-                        style={[
-                            { fontSize: 50 },
-                            { fontSize: 40  },
-                        ]}
-                    />
-                </Svg>
-            </View>
+                            }}
+                        />
+                        <VictoryLabel
+                            textAnchor="middle" verticalAnchor="middle"
+                            x={200} y={200}
+                            text={[`+${percent}%\n`,`Total: ${totalPercent}%`]}
+                            style={[
+                                { fontSize: 50 },
+                                { fontSize: 40  },
+                            ]}
+                        />
+                    </Svg>
+                </View>
+            }
             <View style={{height: 'auto'}}>
                 <Text style={styles.nutrientInfoText}>{ nutrient.name.replace('_', ' ') }</Text>
                 <Text style={[styles.nutrientInfoText, percent > 100 ? styles.recipeInfoExceed : styles.recipeInfo ]}>{ nutrient.value } {unit}</Text>
                 <Text style={[styles.nutrientInfoText, styles.recordInfo]}>{ recordValue } {unit}</Text>
-                <Text style={[styles.nutrientInfoText, styles.targetInfo]}>{ targetValue } {unit}</Text>
+                {
+                    currentSubuser.gender !== 'O' &&
+                    <Text style={[styles.nutrientInfoText, styles.targetInfo]}>{ targetValue } {unit}</Text>
+                }
             </View>
         </View>
         );
@@ -314,11 +354,11 @@ function RecipeDetail(props) {
         };
 
         if (currentSubuser.name !== '' && currentSubuser.age !== '' && currentSubuser.gender !== '' && record != undefined) {
-
+            console.log('hi')
             return ( 
                 <View style={{padding: 10, backgroundColor: '#fff', elevation: 3}}>
                     {
-                        isShowLegend &&
+                        
                         <View style={{flexDirection: 'column', borderRadius: 5, borderWidth: 1, borderColor: '#000'}}>
                             <View style={[styles.legendContainer]}>
                                 <View style={[styles.legend, {backgroundColor: green}]} /> 
@@ -340,8 +380,7 @@ function RecipeDetail(props) {
                     }
                     <FlatList 
                         horizontal
-                        // style={{height: 'auto'}}
-                        // main list content
+                        // main list content  
                         data = {nutrientFormatted()}
                         renderItem = {({item}) => {
                             return renderData(item)
@@ -377,7 +416,28 @@ function RecipeDetail(props) {
 
     };
 
-    
+    const tags = () => {
+        const renderItem = ({item}) => {
+            return (
+                <View style={{height: 'auto'}}>
+                    <Chip style={{backgroundColor: '#fff', borderColor: '#ddd'}}>
+                        <Text>{item.text}</Text>
+                    </Chip>
+                </View>
+            );
+        };
+        return (
+            <FlatList
+            style={{padding: 10}}
+            ListHeaderComponent={
+                <Text style={{margin: 10}}>Tags:</Text>
+            }
+            data={data.tags}
+            renderItem={renderItem}
+            keyExtractor={item=>item.text}
+            />
+        );
+    };
 
     const ingredients = () => {
         const renderItem = ({item}) => {
@@ -438,6 +498,7 @@ function RecipeDetail(props) {
     }
 
     const commentsRender = ({item}) => {
+
         const datetime = item.date_created.split('T')
         return (
             <View style={{backgroundColor: '#fff', borderWidth: 1, borderRadius: 5, borderColor: '#aaa', elevation: 3, padding: 10, marginVertical: 5}}>
@@ -445,6 +506,13 @@ function RecipeDetail(props) {
                 <Text>{datetime[0]} {datetime[1].split('.')[0]}</Text>
                 <Text>Commented: </Text>
                 <Text>{item.text}</Text>
+                {
+                    item.user === user.username &&
+                    <CustomButton
+                    text="delete"
+                    onPress={()=>{deleteComment(item.id)}}
+                    />
+                }
             </View>
         );
     };
@@ -503,8 +571,9 @@ function RecipeDetail(props) {
 
                     { ratings() }
                     </View>
-                 
+                    
                     { nutrientPanel()}
+                    { tags() }
                     { ingredients() }
                 </View>
             }
@@ -551,7 +620,6 @@ function RecipeDetail(props) {
 const styles = StyleSheet.create({
     container: {
         width: '100%',
-        //alignContent: 'center'
     },
     header: {
         height: 'auto'
@@ -565,7 +633,7 @@ const styles = StyleSheet.create({
     },
     account: {
         height: 'auto',
-        backgroundColor: '#561ddb',
+        backgroundColor: Constant.MAIN_COLOUR,
         borderRadius: 5,
         paddingVertical: 10,
         paddingHorizontal: 20,

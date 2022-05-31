@@ -59,8 +59,7 @@ recipetag_urls = [
 # list gives all comment for particular recipe
 # model : `~myAPI.RecipeComment`
 recipecomment_url_base = recipe_url_detail + 'comments/'
-recipecomment_url_detail = recipetag_url_base + '<int:recipecomment_id>/'
-recipecomment_user_url = recipetag_url_base + 'comments/'
+recipecomment_url_detail = recipecomment_url_base + '<int:recipecomment_id>/'
 
 recipecomment_urls = [
     path(recipecomment_url_base, views.RecipeCommentViewSet.as_view(
@@ -68,8 +67,6 @@ recipecomment_urls = [
     path(recipecomment_url_detail, views.RecipeCommentViewSet.as_view({
         'delete': 'destroy'
     }), name='recipecomment-detail'),
-    path(recipecomment_user_url, views.PersonalRecipeCommentViewSet.as_view(
-        {'get': 'list'}), name='userrecipecomment'),
 ]
 
 reciperating_url = recipe_url_detail + 'rating/'
@@ -99,7 +96,7 @@ recipeingredient_urls = [
 
 # append all urls for recipe
 recipe_urls += recipetag_urls + recipecomment_urls + \
-    recipeingredient_urls + recipecomment_urls + reciperating_urls
+    recipeingredient_urls + reciperating_urls
 
 # url for useraccounts, single get is specified by username
 # model : `~myAPI.UserAccount`

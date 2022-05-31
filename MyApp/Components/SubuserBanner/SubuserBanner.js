@@ -16,7 +16,7 @@ export default function SubuserBanner() {
                 <View style={{width: '10%'}}>
                     <ProfileIcon iconNumber={currentSubuser.icon_number} iconBackground={currentSubuser.icon_background} />
                 </View>  
-                <Text style={styles.user}>{ user.username } > {currentSubuser.name}</Text>
+                <Text style={styles.user}>{ user.username }: {currentSubuser.name}</Text>
             </View>
         );
     }
@@ -46,8 +46,6 @@ const styles = StyleSheet.create({
         height: '100%',
         flexDirection: 'row',
         flex: 6,
-        //padding: 5,
-        //transform: [ { skewY: '45deg' } ],
         backgroundColor: '#561ddb'
     },
   });

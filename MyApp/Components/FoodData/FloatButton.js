@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomButton from "../CustomButton";
 import ManualFoodDataInput  from "./ManualFoodDataInput";
 import FoodDataSelectionList from "./FoodDataSelectionList";
+import { MAIN_COLOUR } from "../../Constant/Constant";
 
 
 
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     },
     defaultButton: {
         width: '100%',
-        backgroundColor: '#561ddb',
+        backgroundColor: MAIN_COLOUR,
         alignItems: 'center',
         padding: 15,
         marginVertical: 10,

@@ -47,6 +47,7 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
     };
 
     const onPress = async () => {
+        console.log(foodName, image, amount_in_grams, nutrient_data)
         var isNameValid = false;
         var isAmountValid = false;
         var isNutritionValid = false;
@@ -55,7 +56,7 @@ export default function ManualFoodDataInput({navigation, onSubmit, isUpdate=fals
         }
         if (!nutrient_data.some(element => 
             element.name == '-' && !element.name.match(/^[a-zA-Z0-9][a-zA-Z0-9_\- ]*$/) ||
-            element.value == '0' || element.value.length == 0 || !element.value.match(/^(\d+)(\.\d+[1-9])?$/) ||
+            element.value == '0' || element.value.length == 0 || !amountFormatter(element.value).match(/^(\d+)(\.\d+[1-9])?$/) ||
             element.unit == '-'
         ) && nutrient_data.length > 0) {
             isNutritionValid = true;

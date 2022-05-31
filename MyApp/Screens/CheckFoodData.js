@@ -29,6 +29,7 @@ function CheckFoodData (props) {
                 setFooddata(result.json);
             }
             setStatus(result.response.status);
+            
         }
         catch (error) {
 

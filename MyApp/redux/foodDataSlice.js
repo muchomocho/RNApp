@@ -87,7 +87,7 @@ export const foodDataSlice = createSlice({
 
     updateNutrition: (state, action) => {
         const index = state.fooddata.nutrient_data.findIndex((element) => element.name === action.payload.oldName)
-        console.log(index)
+
         var newNutrition = state.fooddata.nutrient_data[index] // copy
         for (var key in action.payload.newNutrition) {
             if (Object.prototype.hasOwnProperty.call(action.payload.newNutrition, key)) {
@@ -100,11 +100,7 @@ export const foodDataSlice = createSlice({
         const index = state.fooddata.nutrient_data.findIndex((element) => element.name === action.payload);
         var afterIndex = state.fooddata.nutrient_data.slice(index+1);
         afterIndex.map(element => {element.tempID -= 1;})
-        console.log('del', index)
-        console.log([
-            ...state.fooddata.nutrient_data.slice(0, index),
-            ...afterIndex
-        ])
+  
         if (index >= 0) {
             return {
                 ...state,

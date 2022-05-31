@@ -10,7 +10,7 @@ import { httpRequest } from '../../API/ServerRequest';
 import { amountFormatter, clean } from '../../API/helper';
 import { clearAllFoodData, setFoodAmount, setFoodName, setNutrition, setFoodID, setImage, addNutrition } from '../../redux/foodDataSlice';
 import { addIngredient } from '../../redux/recipeSlice';
-import * as Constant from '../../Constant/Constant';
+import { MAIN_COLOUR } from '../../Constant/Constant';
 
 export default function FoodDataSpec({navigation, fooddata, status, isRecording=false, isRecipe=false}) {
 
@@ -18,7 +18,7 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
     const { mealRecordContent } = useSelector(state => state.mealRecord);
     const dispatch = useDispatch();
     const [foregroundHeight, setForegroundHeight] = useState(0);
-    const [amount, setAmount] = useState(amountFormatter(fooddata.amount_in_grams));
+    const [amount, setAmount] = useState(amountFormatter(fooddata.amount_in_grams ? fooddata.amount_in_grams : '0'));
 
 
     const onDelete = async () => {
@@ -121,16 +121,19 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
                             
                                 
                             <Text> amount : </Text>
-                            <TextInput 
-                                style={styles.amountInput}
-                                keyboardType='numeric'
-                                onChangeText={(input)=> {
-                                    input.replace(/[^0-9]/g, '');
-                                    setAmount(input)
-                                }}
-                                value={amount}
-                                maxLength={4}  //setting limit of input
-                            />
+                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                <TextInput 
+                                    style={styles.amountInput}
+                                    keyboardType='numeric'
+                                    onChangeText={(input)=> {
+                                        input.replace(/[^0-9]/g, '');
+                                        setAmount(input)
+                                    }}
+                                    value={amount}
+                                    maxLength={4}  //setting limit of input
+                                />
+                                <Text>grams</Text>
+                            </View>
             
                         </View>
                     }
@@ -221,10 +224,14 @@ export default function FoodDataSpec({navigation, fooddata, status, isRecording=
         </View>
         );
     }
-    if (fooddata == null || fooddata == undefined) {
+    if (status == -1 || fooddata == null || fooddata == undefined || fooddata.amount_in_grams == undefined || fooddata.nutrient_data == undefined) {
         return (
-            <View>
+            <View style={{justifyContent: 'center', height: '100%', alignItems: 'center'}}>
                 <Text>could not load.</Text>
+                <CustomButton 
+                text="back"
+                onPress={()=>{ navigation.navigate('Fooddata') }}
+                />
             </View>
         );
     }
@@ -239,7 +246,7 @@ const styles = StyleSheet.create({
         marginLeft: '5%',
     },
     nameContainer: {
-        backgroundColor: '#561ddb',
+        backgroundColor: MAIN_COLOUR,
         borderTopLeftRadius: 5,
         borderTopRightRadius: 5,
         height: 'auto',
@@ -295,7 +302,10 @@ const styles = StyleSheet.create({
         borderColor: '#000',
         borderRadius: 5,
         borderWidth: 2,
-        padding: 10
+        padding: 10,
+        margin: 10,
+        width: '70%',
+        alignSelf: 'center'
     },
     footer: {
         alignItems: 'center',

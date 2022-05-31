@@ -52,7 +52,6 @@ export default function MealRecord({data, parentSet, navigation}) {
                 <Modal 
                     transparent={true}
                     visible={visible}
-                    // style={{height: '100%', backgroundColor: '#000'}}
                 >   
                     <View style={{height: '100%', flexDirection: 'column', justifyContent: 'center', backgroundColor: 'rgba(52, 52, 52, 0.8)', padding: '5%' }}>
                         <View style={{backgroundColor: '#fff', borderRadius: 10, height: '30%', justifyContent: 'space-between'}}>
@@ -336,7 +335,6 @@ const styles = StyleSheet.create({
         padding: 5,
         flexDirection: 'column',
         justifyContent: 'center',
-        // textAlignVertical: 'center',
         alignItems: 'center',
         marginBottom: 10,
         marginHorizontal: 10,

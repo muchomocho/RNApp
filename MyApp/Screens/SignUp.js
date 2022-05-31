@@ -72,7 +72,7 @@ function SignUp (props) {
           if (props.route.params.isupdate) {
             result = await APIRequest.httpRequest({
               method: 'PUT',
-              endpoint: `api/useraccounts/ ${user.username}/`,
+              endpoint: `api/useraccounts/${user.username}/`,
               body: {
                 email: email,
                 password: password1
@@ -129,12 +129,12 @@ function SignUp (props) {
         if (props.route.params.isupdate) {
           result = await APIRequest.httpRequest({
             method: 'DELETE',
-            endpoint: `api/useraccounts/'${user.username}/${user.id}`,
+            endpoint: `api/useraccounts/${user.username}/`,
             isAuthRequired: true,
             navigation: props.navigation
           });
         }
-          if (result.response.status == 200) {
+          if (result.response.status == 204) {
             Authentication.logOut(props.navigation);
             props.navigation.navigate('Profile')
           } 
@@ -157,7 +157,7 @@ function SignUp (props) {
     const warning = (warningArray) => {
       if (warningArray == '') return
       return (warningArray.map(element => 
-            <Text> {element} </Text>
+            <Text style={{color: '#d93909'}}>a {element} </Text>
           ));
     };
     
@@ -181,7 +181,7 @@ function SignUp (props) {
           {
           !isEmailValid &&
           <Text style={styles.alert}>
-              Enter email properly!
+              email cannot be empty and must be some@thing.com format.
           </Text>
           }
 
@@ -196,7 +196,7 @@ function SignUp (props) {
           {
             !isPasswordValid &&
             <Text style={styles.alert}>
-            Enter password properly!
+            Password cannot be empty
             </Text>
           }
 
@@ -253,7 +253,7 @@ function SignUp (props) {
           // conditional rendering
           !isUsernameValid && 
           <Text style={styles.alert}>
-            Enter user id properly!
+            Username cannot be empty, must be over 6 characters and only contain characters which are alphanumeric, underscore or hyphen
           </Text>
           }
 
@@ -268,7 +268,7 @@ function SignUp (props) {
           {
           !isEmailValid &&
           <Text style={styles.alert}>
-              Enter email properly!
+              email cannot be empty and must be some@thing.com format.
           </Text>
           }
 
@@ -283,7 +283,7 @@ function SignUp (props) {
           {
             !isPasswordValid &&
             <Text style={styles.alert}>
-            Enter password properly!
+            Password cannot be empty
             </Text>
           }
 

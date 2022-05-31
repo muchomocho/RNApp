@@ -5,6 +5,7 @@ import random
 from django.http import Http404
 from .models import *
 from .serializers import *
+from django.db import transaction
 from django.db.models import Avg, Q
 from rest_framework.response import Response
 from rest_framework import status
@@ -280,6 +281,7 @@ class UserAccountViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     @verify_secret_header
+    @transaction.atomic()
     def update(self, request, *args, **kwargs):
 
         if request.user.is_authenticated and request.user.username == kwargs['username']:
@@ -483,6 +485,7 @@ class UserMealRecordViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @verify_secret_header
+    @transaction.atomic()
     def update(self, request, *args, **kwargs):
         # check user is authenticated
         if not request.user.is_authenticated or request.user.username != kwargs['username']:
@@ -609,6 +612,7 @@ class SubuserViewSet(viewsets.ModelViewSet):
         return Response(message, status=status.HTTP_401_UNAUTHORIZED)
 
     @verify_secret_header
+    @transaction.atomic()
     def update(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.username == kwargs['username']:
             if not self.queryset.filter(id=kwargs['subuser_id']).exists():
@@ -766,6 +770,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @verify_secret_header
+    @transaction.atomic()
     def update(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             if not self.queryset.filter(id=kwargs['recipe_id']).exists():
@@ -831,6 +836,8 @@ class RecipeRatingViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
         rating = recipe.ratings.all().aggregate(Avg('score'))
+        if rating is None:
+            rating = 0
         rating['score__avg'] = round(rating['score__avg'], 2)
 
         return Response(rating, status=status.HTTP_200_OK)
@@ -1117,7 +1124,7 @@ class PersonalRecipeViewSet(viewsets.ModelViewSet):
                 query_together = Q()
                 search_query_clean = search_query.split(' ')
                 for query in search_query_clean:
-                    query_together |= Q(title__contains=query) | Q(
+                    query_together |= Q(title__icontains=query) | Q(
                         tags__text__icontains=query)
 
                 recipe &= self.queryset.filter(query_together)
@@ -1165,14 +1172,17 @@ class RecipeCommentViewSet(viewsets.ModelViewSet):
 
         comment = RecipeComment.objects.filter(recipe=parent_recipe)
         serializer = self.serializer_class(comment, many=True)
-        print('a', serializer.data)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @verify_secret_header
     def destroy(self, request, *args, **kwargs):
-        comment = RecipeComment.objects.filter(id=kwargs['recipecomment_id'])
-        serializer = self.serializer_class(comment, many=True)
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        comment = get_object_or_404(
+            RecipeComment, id=kwargs['recipecomment_id'])
+        serializer = self.serializer_class(comment)
+        comment.delete()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -1218,7 +1228,7 @@ class FoodDataViewSet(viewsets.ModelViewSet):
             query_together = Q()
             search_query_clean = search_query.split(' ')
             for query in search_query_clean:
-                query_together |= Q(name__contains=query)
+                query_together |= Q(name__icontains=query)
 
             food_data = self.queryset.filter(
                 is_private=False, is_hidden=False) & self.queryset.filter(query_together)
@@ -1246,6 +1256,7 @@ class FoodDataViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
     @verify_secret_header
+    @transaction.atomic()
     def update(self, request, *args, **kwargs):
         if request.user.is_authenticated == False:
             return Response({'you need to log in to upload.'}, status.HTTP_401_UNAUTHORIZED)

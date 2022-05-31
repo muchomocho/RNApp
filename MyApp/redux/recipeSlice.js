@@ -93,7 +93,6 @@ export const recipeSlice = createSlice({
         }
     },
     updateStep: (state, action) => {
-        console.log(action.payload)
         const index = state.steps.findIndex((element) => element.step_number === action.payload.old_step_number)
         
         if (index >= 0) {
@@ -147,22 +146,6 @@ export const recipeSlice = createSlice({
 
         if (!state.ingredients.some((element) => element.food_data.id === action.payload.food_data.id)) {
             
-            console.log({ 
-                ...state, 
-                ingredients: [
-                    ...state.ingredients, 
-                    {
-                        food_data: {
-                            id: action.payload.food_data.id,
-                        },
-                        name: action.payload.food_data.name,
-                        is_private: action.payload.food_data.is_private,
-                        amount: 0,
-                        unit: 'g',
-                    }
-
-                ]
-            })
             return { 
                 ...state, 
                 ingredients: [
@@ -192,7 +175,6 @@ export const recipeSlice = createSlice({
     },
     deleteIngredient: (state, action) => {
         for (var index in state.ingredients) {
-            console.log('id', state.ingredients[index].food_data.id, 'id2', action.payload)
             if (state.ingredients[index].food_data.id == action.payload) {
                 state.ingredients.splice(index, 1)
                 return;

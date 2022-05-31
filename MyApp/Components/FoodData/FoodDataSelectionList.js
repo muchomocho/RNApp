@@ -114,10 +114,6 @@ export default function FoodDataSelectionList({onSubmit, navigation}) {
         
     };
 
-    const validate = () => {
-        
-    };
-
     
     const onDateConfirm = (event, date) => {
         

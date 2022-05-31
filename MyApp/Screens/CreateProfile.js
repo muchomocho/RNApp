@@ -88,7 +88,7 @@ function CreateProfile(props) {
     const warning = (warningArray) => {
       if (warningArray == '') return
       return (warningArray.map((element, index) => 
-            <Text key={index}> {element} </Text>
+            <Text style={{color: '#d93909'}} key={index}>{element}</Text>
           ));
     };
 
@@ -186,7 +186,7 @@ function CreateProfile(props) {
             // conditional rendering
             !isNameValid && 
             <Text style={styles.alert}>
-              Enter name properly!
+              name cannot be empty.
             </Text>
             }
 

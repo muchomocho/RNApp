@@ -44,6 +44,7 @@ function RecipeList({ navigation, isRecording=false, isRecommendation=false }) {
                 });
                 setLoading(false);
                 if (response.response.status == 200) {
+                    console.log(response.json)
                     setData(response.json);
                     setLoading(false);
                 } else {

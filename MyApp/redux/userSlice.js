@@ -53,7 +53,6 @@ export const userSlice = createSlice({
         state.user.email = action.payload;
     },
     setCurrentSubuser: (state, action) => {
-        console.log(action.payload)
         return {
             ...state,
             currentSubuser: {

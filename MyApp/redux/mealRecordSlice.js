@@ -63,19 +63,6 @@ export const mealRecordSlice = createSlice({
     },
 
     addRecipeRecordSelection: (state, action) => {
-        console.log({ 
-            ...state, 
-            recipeRecordList: [
-                ...state.recipeRecordList, 
-                {
-                    tempID: state.recipeRecordList.length,
-                    recipe: {
-                        id: action.payload.id,
-                        title: action.payload.title
-                    }
-                }
-            ]
-        })
         return { 
             ...state, 
             recipeRecordList: [

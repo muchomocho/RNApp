@@ -132,9 +132,11 @@ class FoodDataSerializer(serializers.ModelSerializer):
         instance.nutrient_data.all().delete()
         instance.name = validated_data.pop('name')
         instance.amount_in_grams = validated_data.pop('amount_in_grams')
-        instance.main_img.delete()
+
         instance.is_private = validated_data.pop('is_private')
-        instance.main_img = validated_data.pop('main_img')
+        if 'main_img' in validated_data:
+            instance.main_img.delete()
+            instance.main_img = validated_data.pop('main_img')
 
         # reference to balance units
         dir = os.path.dirname(__file__)  # get current directory
@@ -386,6 +388,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients_data = validated_data.pop('ingredients')
         steps_data = validated_data.pop('steps')
 
+        instance.is_private = validated_data.pop('is_private')
         instance.title = validated_data.pop('title')
 
         if 'main_img' in validated_data:

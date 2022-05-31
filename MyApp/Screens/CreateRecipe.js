@@ -35,6 +35,7 @@ function CreateRecipe(props) {
 
 
     const createRecipe = async () => {
+        
         const submitAlert = (isTitleValid, isIngredientValid, isStepValid) => {
             Alert.alert(
                 "Warning",
@@ -109,6 +110,7 @@ function CreateRecipe(props) {
                     endpoint = `api/recipes/`;
                 }
                 setIsSubmitted(true);
+                console.log(formdata)
                 const result = await httpRequest({
                     headers: {
                         Accept: 'application/json',
